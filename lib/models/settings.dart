@@ -42,6 +42,8 @@ class OpenClawInstance {
 
 enum LLMBackend { claude, openaiCompatible }
 
+enum TtsProvider { onDevice, elevenlabs, openai }
+
 class Settings {
   final String? claudeApiKey;
   final String? openaiApiKey;
@@ -55,6 +57,12 @@ class Settings {
   final List<OpenClawInstance> openclawInstances;
   final String? selectedInstanceId;
   final String? selectedAgentId;
+  final TtsProvider ttsProvider;
+  final String? elevenLabsApiKey;
+  final String elevenLabsVoiceId;
+  final String elevenLabsModelId;
+  final String openaiTtsVoice;
+  final String openaiTtsModel;
 
   const Settings({
     this.claudeApiKey,
@@ -72,6 +80,12 @@ class Settings {
     this.openclawInstances = const [],
     this.selectedInstanceId,
     this.selectedAgentId,
+    this.ttsProvider = TtsProvider.onDevice,
+    this.elevenLabsApiKey,
+    this.elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM',
+    this.elevenLabsModelId = 'eleven_multilingual_v2',
+    this.openaiTtsVoice = 'alloy',
+    this.openaiTtsModel = 'tts-1',
   });
 
   String get activeModelName =>
@@ -96,10 +110,17 @@ class Settings {
     List<OpenClawInstance>? openclawInstances,
     String? selectedInstanceId,
     String? selectedAgentId,
+    TtsProvider? ttsProvider,
+    String? elevenLabsApiKey,
+    String? elevenLabsVoiceId,
+    String? elevenLabsModelId,
+    String? openaiTtsVoice,
+    String? openaiTtsModel,
     bool clearClaudeApiKey = false,
     bool clearOpenaiApiKey = false,
     bool clearSelectedInstanceId = false,
     bool clearSelectedAgentId = false,
+    bool clearElevenLabsApiKey = false,
   }) {
     return Settings(
       claudeApiKey:
@@ -120,6 +141,14 @@ class Settings {
       selectedAgentId: clearSelectedAgentId
           ? null
           : (selectedAgentId ?? this.selectedAgentId),
+      ttsProvider: ttsProvider ?? this.ttsProvider,
+      elevenLabsApiKey: clearElevenLabsApiKey
+          ? null
+          : (elevenLabsApiKey ?? this.elevenLabsApiKey),
+      elevenLabsVoiceId: elevenLabsVoiceId ?? this.elevenLabsVoiceId,
+      elevenLabsModelId: elevenLabsModelId ?? this.elevenLabsModelId,
+      openaiTtsVoice: openaiTtsVoice ?? this.openaiTtsVoice,
+      openaiTtsModel: openaiTtsModel ?? this.openaiTtsModel,
     );
   }
 }

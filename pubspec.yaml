@@ -36,6 +36,9 @@ dependencies:
   # HTTP client (used internally by SDKs)
   http: ^1.2.0
 
+  # Audio playback for network TTS
+  audioplayers: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

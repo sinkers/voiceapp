@@ -173,9 +173,13 @@ class ConversationProvider extends ChangeNotifier {
 
     try {
       final historyForLLM = _messages.sublist(0, _messages.length - 1);
+      // When routing through an OpenClaw agent, suppress the app system prompt
+      // so OpenClaw can apply the agent's own persona (SOUL.md, IDENTITY.md, etc.)
+      final effectiveSystemPrompt =
+          _settings.selectedInstance != null ? '' : _settings.systemPrompt;
       final stream = _llmService!.streamResponse(
         historyForLLM,
-        _settings.systemPrompt,
+        effectiveSystemPrompt,
       );
 
       bool firstChunk = true;
