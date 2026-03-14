@@ -332,3 +332,34 @@ ttsPitch: (ttsPitch ?? this.ttsPitch).clamp(0.5, 2.0),
 
 ### 10. `_onStatus` can fire `'notListening'` then `'done'` back-to-back
 Covered by fix in item **#3** above.
+
+---
+
+## OpenClaw Integration — Follow-up Items
+
+### OC1. Expose agent list from OpenClaw gateway
+**Context:** OpenClaw does not expose a `/v1/models` endpoint. The `OpenClawService.fetchAgents()` call hits an unimplemented endpoint and always falls back to `["main"]`. Users can't discover available agents from the app.
+
+**Options:**
+1. **Short-term:** Replace the dropdown with a free-text field + a preset list seeded from the instance config. Let the user type agent IDs (e.g. `main`, `alex`).
+2. **Better:** Query the OpenClaw WebSocket RPC (`agents.list` method) to get the real agent list from the gateway. Requires a small WS client in the app.
+3. **Best:** Ask OpenClaw upstream to expose a `GET /v1/agents` or `GET /v1/models` HTTP endpoint so standard REST clients can discover agents.
+
+**Immediate fix needed in app:** Change `_InstanceFormDialog` to allow manually adding agent IDs alongside the auto-fetch attempt. Show a text field to add custom agent IDs if the fetch returns only `["main"]`.
+
+---
+
+### OC2. Voice interaction — beyond text chat completions
+**Context:** Currently the app connects to OpenClaw via `POST /v1/chat/completions` (text in, text out), then uses on-device TTS to speak the reply. Andrew wants to "talk to the agent" — a richer voice experience.
+
+**What this means / options:**
+
+1. **On-device STT + server TTS:** Keep `speech_to_text` for input, but route TTS through OpenClaw's configured voice (ElevenLabs/OpenAI). Requires OpenClaw to expose a `POST /v1/audio/speech` or similar TTS endpoint — not currently implemented.
+
+2. **Audio input to OpenClaw:** Send the raw audio file (from mic) to OpenClaw for transcription + response in one round-trip. Would require OpenClaw to expose `POST /v1/audio/transcriptions` (Whisper-compatible). Not currently implemented, but OpenClaw supports Whisper/Deepgram for inbound voice notes internally.
+
+3. **Current flow is already voice** — the STT→LLM→TTS pipeline is functional now with on-device voices. Short-term: improve voice quality by using ElevenLabs/OpenAI TTS directly from the Flutter app (already configurable in the existing settings).
+
+4. **WebSocket streaming:** For lowest latency, open a WS connection to the OpenClaw gateway and stream audio/text bidirectionally. Most complex option.
+
+**Recommended next step:** Add ElevenLabs/OpenAI TTS support directly in the Flutter app's `TtsService` as a network TTS option. This gives high-quality voices without waiting for OpenClaw to expose new endpoints.
