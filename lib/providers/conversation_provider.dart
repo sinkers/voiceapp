@@ -285,13 +285,22 @@ class ConversationProvider extends ChangeNotifier {
         );
       }
     } else {
-      final key = _settings.openaiApiKey;
-      if (key != null && key.isNotEmpty) {
+      final instance = _settings.selectedInstance;
+      if (instance != null) {
         _llmService = OpenAIService(
-          apiKey: key,
-          baseUrl: _settings.openaiBaseUrl,
-          model: _settings.openaiModelName,
+          apiKey: instance.token.isNotEmpty ? instance.token : 'no-key',
+          baseUrl: instance.baseUrl,
+          model: 'openclaw:${_settings.selectedAgentId ?? 'main'}',
         );
+      } else {
+        final key = _settings.openaiApiKey;
+        if (key != null && key.isNotEmpty) {
+          _llmService = OpenAIService(
+            apiKey: key,
+            baseUrl: _settings.openaiBaseUrl,
+            model: _settings.openaiModelName,
+          );
+        }
       }
     }
   }

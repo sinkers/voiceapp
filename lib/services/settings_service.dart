@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/settings.dart';
 
@@ -11,10 +12,22 @@ class SettingsService {
   static const _keySystemPrompt = 'system_prompt';
   static const _keyTtsRate = 'tts_rate';
   static const _keyTtsPitch = 'tts_pitch';
+  static const _keyOpenclawInstances = 'openclaw_instances';
+  static const _keySelectedInstanceId = 'selected_instance_id';
+  static const _keySelectedAgentId = 'selected_agent_id';
 
   Future<Settings> load() async {
     final prefs = await SharedPreferences.getInstance();
     final backendIndex = prefs.getInt(_keyBackend) ?? 0;
+
+    final instancesJson = prefs.getString(_keyOpenclawInstances);
+    final openclawInstances = instancesJson != null
+        ? (jsonDecode(instancesJson) as List)
+            .whereType<Map<String, dynamic>>()
+            .map(OpenClawInstance.fromJson)
+            .toList()
+        : <OpenClawInstance>[];
+
     return Settings(
       claudeApiKey: prefs.getString(_keyClaudeApiKey),
       openaiApiKey: prefs.getString(_keyOpenaiApiKey),
@@ -30,6 +43,9 @@ class SettingsService {
               'Speak naturally as if in a conversation.',
       ttsRate: prefs.getDouble(_keyTtsRate) ?? 0.5,
       ttsPitch: prefs.getDouble(_keyTtsPitch) ?? 1.0,
+      openclawInstances: openclawInstances,
+      selectedInstanceId: prefs.getString(_keySelectedInstanceId),
+      selectedAgentId: prefs.getString(_keySelectedAgentId),
     );
   }
 
@@ -52,5 +68,20 @@ class SettingsService {
     await prefs.setString(_keySystemPrompt, settings.systemPrompt);
     await prefs.setDouble(_keyTtsRate, settings.ttsRate);
     await prefs.setDouble(_keyTtsPitch, settings.ttsPitch);
+    await prefs.setString(
+      _keyOpenclawInstances,
+      jsonEncode(settings.openclawInstances.map((i) => i.toJson()).toList()),
+    );
+    if (settings.selectedInstanceId != null) {
+      await prefs.setString(
+          _keySelectedInstanceId, settings.selectedInstanceId!);
+    } else {
+      await prefs.remove(_keySelectedInstanceId);
+    }
+    if (settings.selectedAgentId != null) {
+      await prefs.setString(_keySelectedAgentId, settings.selectedAgentId!);
+    } else {
+      await prefs.remove(_keySelectedAgentId);
+    }
   }
 }

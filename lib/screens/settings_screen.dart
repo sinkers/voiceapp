@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../models/settings.dart';
 import '../providers/conversation_provider.dart';
+import '../services/openclaw_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -18,6 +20,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _claudeModelController = TextEditingController();
   final _openaiModelController = TextEditingController();
   final _systemPromptController = TextEditingController();
+  final _openClawService = OpenClawService();
+  List<String> _agents = [];
+  bool _loadingAgents = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +35,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _claudeModelController.text = settings.claudeModelName;
     _openaiModelController.text = settings.openaiModelName;
     _systemPromptController.text = settings.systemPrompt;
+
+    final selectedInstance = settings.selectedInstance;
+    if (selectedInstance != null) {
+      _loadingAgents = true;
+      _fetchAgentsForInstance(selectedInstance);
+    }
   }
 
   @override
@@ -40,6 +52,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _openaiModelController.dispose();
     _systemPromptController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchAgentsForInstance(OpenClawInstance instance) async {
+    final agents = await _openClawService.fetchAgents(instance);
+    if (!mounted) return;
+    setState(() {
+      _agents = agents;
+      _loadingAgents = false;
+      if (!agents.contains(_draft.selectedAgentId)) {
+        _draft = _draft.copyWith(
+          selectedAgentId: agents.isNotEmpty ? agents.first : null,
+        );
+      }
+    });
+  }
+
+  Future<void> _onInstanceSelected(String? id) async {
+    setState(() {
+      if (id == null) {
+        _draft = _draft.copyWith(
+          clearSelectedInstanceId: true,
+          clearSelectedAgentId: true,
+        );
+        _agents = [];
+        _loadingAgents = false;
+      } else {
+        _draft = _draft.copyWith(
+          selectedInstanceId: id,
+          clearSelectedAgentId: true,
+        );
+        _agents = [];
+        _loadingAgents = true;
+      }
+    });
+    if (id == null) return;
+    final instance = _draft.openclawInstances.firstWhere((i) => i.id == id);
+    await _fetchAgentsForInstance(instance);
+  }
+
+  Future<void> _addInstance() async {
+    final result = await showDialog<OpenClawInstance>(
+      context: context,
+      builder: (_) => const _InstanceFormDialog(),
+    );
+    if (result != null) {
+      setState(() {
+        _draft = _draft.copyWith(
+          openclawInstances: [..._draft.openclawInstances, result],
+        );
+      });
+    }
+  }
+
+  Future<void> _editInstance(OpenClawInstance instance) async {
+    final result = await showDialog<OpenClawInstance>(
+      context: context,
+      builder: (_) => _InstanceFormDialog(instance: instance),
+    );
+    if (result != null) {
+      setState(() {
+        final updated = _draft.openclawInstances
+            .map((i) => i.id == result.id ? result : i)
+            .toList();
+        _draft = _draft.copyWith(openclawInstances: updated);
+      });
+    }
+  }
+
+  void _deleteInstance(OpenClawInstance instance) {
+    final wasSelected = _draft.selectedInstanceId == instance.id;
+    setState(() {
+      final updated =
+          _draft.openclawInstances.where((i) => i.id != instance.id).toList();
+      _draft = _draft.copyWith(
+        openclawInstances: updated,
+        clearSelectedInstanceId: wasSelected,
+        clearSelectedAgentId: wasSelected,
+      );
+      if (wasSelected) _agents = [];
+    });
+  }
+
+  Future<void> _testInstance(OpenClawInstance instance) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Testing connection...'),
+          duration: Duration(seconds: 60),
+        ),
+      );
+    final agents = await _openClawService.fetchAgents(instance);
+    if (!mounted) return;
+    final message = agents.length == 1 && agents.first == 'main'
+        ? 'Connected (no OpenClaw agents found, using fallback)'
+        : 'Found ${agents.length} agent(s): ${agents.join(', ')}';
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 4),
+        ),
+      );
   }
 
   Future<void> _save() async {
@@ -194,6 +311,135 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 12),
 
+          // OpenClaw instances
+          const _SectionHeader(title: 'OpenClaw'),
+          Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_draft.openclawInstances.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      'No instances configured',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ..._draft.openclawInstances.map(
+                  (instance) => ListTile(
+                    title: Text(instance.name),
+                    subtitle: Text(
+                      instance.baseUrl,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.cable_rounded, size: 20),
+                          tooltip: 'Test connection',
+                          onPressed: () => _testInstance(instance),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit_rounded, size: 20),
+                          tooltip: 'Edit',
+                          onPressed: () => _editInstance(instance),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                          tooltip: 'Delete',
+                          onPressed: () => _deleteInstance(instance),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add instance'),
+                    onPressed: _addInstance,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Instance + agent selection
+          if (_draft.openclawInstances.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Active Instance', style: theme.textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String?>(
+                      value: _draft.selectedInstanceId,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('None'),
+                        ),
+                        ..._draft.openclawInstances.map(
+                          (i) => DropdownMenuItem(
+                            value: i.id,
+                            child: Text(i.name),
+                          ),
+                        ),
+                      ],
+                      onChanged: _onInstanceSelected,
+                    ),
+                    if (_draft.selectedInstanceId != null) ...[
+                      const SizedBox(height: 12),
+                      Text('Agent', style: theme.textTheme.labelMedium),
+                      const SizedBox(height: 8),
+                      if (_loadingAgents)
+                        const LinearProgressIndicator()
+                      else if (_agents.isNotEmpty)
+                        DropdownButtonFormField<String>(
+                          value: _agents.contains(_draft.selectedAgentId)
+                              ? _draft.selectedAgentId
+                              : _agents.first,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            isDense: true,
+                          ),
+                          items: _agents
+                              .map(
+                                (a) => DropdownMenuItem(
+                                  value: a,
+                                  child: Text(a),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) {
+                              setState(
+                                () => _draft =
+                                    _draft.copyWith(selectedAgentId: v),
+                              );
+                            }
+                          },
+                        ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 12),
+
           // System prompt
           const _SectionHeader(title: 'System Prompt'),
           Card(
@@ -266,6 +512,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 40),
         ],
       ),
+    );
+  }
+}
+
+class _InstanceFormDialog extends StatefulWidget {
+  final OpenClawInstance? instance;
+
+  const _InstanceFormDialog({this.instance});
+
+  @override
+  State<_InstanceFormDialog> createState() => _InstanceFormDialogState();
+}
+
+class _InstanceFormDialogState extends State<_InstanceFormDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _urlController;
+  late final TextEditingController _tokenController;
+  bool _obscureToken = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController =
+        TextEditingController(text: widget.instance?.name ?? '');
+    _urlController =
+        TextEditingController(text: widget.instance?.baseUrl ?? '');
+    _tokenController =
+        TextEditingController(text: widget.instance?.token ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _urlController.dispose();
+    _tokenController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEdit = widget.instance != null;
+    return AlertDialog(
+      title: Text(isEdit ? 'Edit Instance' : 'Add Instance'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                hintText: 'Home Pi',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _urlController,
+              decoration: const InputDecoration(
+                labelText: 'Base URL',
+                hintText: 'http://192.168.1.100:18789/v1',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _tokenController,
+              obscureText: _obscureToken,
+              decoration: InputDecoration(
+                labelText: 'Token',
+                hintText: 'Bearer token (optional)',
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureToken ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscureToken = !_obscureToken),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final name = _nameController.text.trim();
+            final url = _urlController.text.trim();
+            if (name.isEmpty || url.isEmpty) return;
+            Navigator.pop(
+              context,
+              OpenClawInstance(
+                id: widget.instance?.id ?? const Uuid().v4(),
+                name: name,
+                baseUrl: url,
+                token: _tokenController.text.trim(),
+              ),
+            );
+          },
+          child: Text(isEdit ? 'Save' : 'Add'),
+        ),
+      ],
     );
   }
 }

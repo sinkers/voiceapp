@@ -91,6 +91,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
+              // OpenClaw active instance indicator
+              if (provider.settings.selectedInstance != null)
+                _OpenClawChip(
+                  instanceName: provider.settings.selectedInstance!.name,
+                  agentId: provider.settings.selectedAgentId ?? 'main',
+                ),
+
               // Message list
               Expanded(
                 child: provider.messages.isEmpty
@@ -258,6 +265,38 @@ class _SetupPrompt extends StatelessWidget {
             child: const Text('Setup'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _OpenClawChip extends StatelessWidget {
+  final String instanceName;
+  final String agentId;
+
+  const _OpenClawChip({required this.instanceName, required this.agentId});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Chip(
+          avatar: Icon(
+            Icons.hub_rounded,
+            size: 14,
+            color: theme.colorScheme.primary,
+          ),
+          label: Text(
+            '$instanceName · $agentId',
+            style: theme.textTheme.labelSmall,
+          ),
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          visualDensity: VisualDensity.compact,
+        ),
       ),
     );
   }
