@@ -28,10 +28,13 @@ class OpenClawService {
       final agents = models
           .map((m) => m['id'] as String? ?? '')
           .where((id) => id.startsWith('openclaw:') || id.startsWith('agent:'))
+          .map((id) => id.substring(id.indexOf(':') + 1))
           .toList();
 
       return agents.isEmpty ? ['main'] : agents;
-    } catch (_) {
+    } catch (e, s) {
+      // ignore: avoid_print
+      print('Failed to fetch OpenClaw agents: $e\n$s');
       return ['main'];
     }
   }

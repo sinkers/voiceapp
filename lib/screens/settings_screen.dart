@@ -530,6 +530,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
   late final TextEditingController _urlController;
   late final TextEditingController _tokenController;
   bool _obscureToken = true;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -556,44 +557,51 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
     return AlertDialog(
       title: Text(isEdit ? 'Edit Instance' : 'Add Instance'),
       content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                hintText: 'Home Pi',
-                border: OutlineInputBorder(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  hintText: 'Home Pi',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _urlController,
-              decoration: const InputDecoration(
-                labelText: 'Base URL',
-                hintText: 'http://192.168.1.100:18789/v1',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _urlController,
+                decoration: const InputDecoration(
+                  labelText: 'Base URL',
+                  hintText: 'http://192.168.1.100:18789/v1',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Base URL is required' : null,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _tokenController,
-              obscureText: _obscureToken,
-              decoration: InputDecoration(
-                labelText: 'Token',
-                hintText: 'Bearer token (optional)',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureToken ? Icons.visibility_off : Icons.visibility,
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _tokenController,
+                obscureText: _obscureToken,
+                decoration: InputDecoration(
+                  labelText: 'Token',
+                  hintText: 'Bearer token (optional)',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureToken ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscureToken = !_obscureToken),
                   ),
-                  onPressed: () =>
-                      setState(() => _obscureToken = !_obscureToken),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       actions: [
@@ -603,9 +611,9 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
         ),
         FilledButton(
           onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
             final name = _nameController.text.trim();
             final url = _urlController.text.trim();
-            if (name.isEmpty || url.isEmpty) return;
             Navigator.pop(
               context,
               OpenClawInstance(
