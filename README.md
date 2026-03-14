@@ -68,6 +68,65 @@ OpenClaw doesn't need to be publicly exposed. Options:
 - **Cloudflare Tunnel** — run `cloudflared` on the host machine. Creates an outbound-only HTTPS tunnel, no inbound ports or public IP needed. Can add access controls via Cloudflare Access.
 - **ngrok / localtunnel** — quick to set up for testing, but URLs change on restart (unless on a paid plan).
 
+## Testing on Device
+
+### iOS
+
+**Requirements:** Mac with Xcode, Apple Developer account (free tier works), iPhone/iPad on iOS 14+
+
+1. **Open in Xcode** — always use the workspace, not the project file:
+   ```bash
+   open ios/Runner.xcworkspace
+   ```
+
+2. **Set your Team** — Runner target → Signing & Capabilities → Team → pick your Apple ID. Xcode will manage provisioning automatically.
+
+3. **Bundle ID** — currently `com.voiceapp.voiceapp`. If that conflicts with another app on your account, change it to something unique (e.g. `com.yourname.voiceapp`).
+
+4. **Connect your phone**, select it as the run target, hit ⌘R.
+
+5. **Trust the cert on device** — Settings → General → VPN & Device Management → your Apple ID → Trust.
+
+6. **Permissions** — mic and speech recognition prompts appear on first launch. Both are already configured in `Info.plist`.
+
+> **Note:** Free developer accounts allow 3 installed apps max, and the cert expires after 7 days — just re-run from Xcode to renew.
+
+---
+
+### Android
+
+**Requirements:** Android Studio (or SDK + `adb`), Android 5.0+ device (API 21+)
+
+1. **Enable Developer Options** — Settings → About Phone → tap Build Number 7 times → back → Developer Options → enable USB Debugging.
+
+2. **Connect via USB** and accept the debug prompt on the phone.
+
+3. **Run:**
+   ```bash
+   flutter run
+   ```
+
+4. **Or build a standalone APK:**
+   ```bash
+   flutter build apk --release
+   # Output: build/app/outputs/flutter-apk/app-release.apk
+   ```
+   Transfer to device and install (Settings → install unknown apps must be enabled).
+
+5. **Wireless debugging (Android 11+)** — Settings → Developer Options → Wireless Debugging → pair device. Then `flutter run` works over WiFi with no cable.
+
+6. **Permissions** — mic prompt appears on first use. Already declared in the manifest.
+
+---
+
+### Before You Test
+
+- Have an API key ready (Claude or OpenAI) — required on first launch
+- If testing the OpenClaw feature, have the instance URL and token handy
+- iOS STT uses Apple's on-device recognition (works offline); Android STT may require internet depending on device and Android version
+
+---
+
 ## Architecture
 
 ```
