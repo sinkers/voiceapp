@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 class OpenClawInstance {
   final String id;
   final String name;
@@ -11,6 +13,7 @@ class OpenClawInstance {
     this.token = '',
   });
 
+  // TODO(security): token should be moved to flutter_secure_storage and excluded from serialization
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -91,11 +94,8 @@ class Settings {
   String get activeModelName =>
       backend == LLMBackend.claude ? claudeModelName : openaiModelName;
 
-  OpenClawInstance? get selectedInstance {
-    if (selectedInstanceId == null) return null;
-    final matches = openclawInstances.where((i) => i.id == selectedInstanceId);
-    return matches.isEmpty ? null : matches.first;
-  }
+  OpenClawInstance? get selectedInstance =>
+      openclawInstances.firstWhereOrNull((i) => i.id == selectedInstanceId);
 
   Settings copyWith({
     String? claudeApiKey,

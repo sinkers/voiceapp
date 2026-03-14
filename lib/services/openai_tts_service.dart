@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -143,7 +143,7 @@ class OpenAITtsService implements TtsService {
       await _currentPlayer!.play(DeviceFileSource(tempFile.path));
       await stateCompleter.future;
     } finally {
-      sub?.cancel();
+      sub.cancel();
       await _currentPlayer?.dispose();
       _currentPlayer = null;
       try {

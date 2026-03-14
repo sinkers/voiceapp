@@ -150,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ..showSnackBar(
         const SnackBar(
           content: Text('Testing connection...'),
-          duration: Duration(seconds: 60),
+          duration: Duration(seconds: 3),
         ),
       );
     final agents = await _openClawService.fetchAgents(instance);
@@ -454,7 +454,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       if (_agents.isNotEmpty)
                         DropdownButtonFormField<String>(
                           key: ValueKey(_agents.join(',')),
-                          value: _agents.contains(_draft.selectedAgentId)
+                          initialValue: _agents.contains(_draft.selectedAgentId)
                               ? _draft.selectedAgentId
                               : _agents.first,
                           decoration: const InputDecoration(
@@ -781,8 +781,16 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                   hintText: 'http://192.168.1.100:18789/v1',
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Base URL is required' : null,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) {
+                    return 'Base URL is required';
+                  }
+                  final uri = Uri.tryParse(v.trim());
+                  if (uri == null || uri.scheme.isEmpty || uri.host.isEmpty) {
+                    return 'Enter a valid URL (e.g. http://10.0.0.1:18789/v1)';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -812,9 +820,17 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
         ),
         FilledButton(
           onPressed: () {
-            if (!_formKey.currentState!.validate()) return;
             final name = _nameController.text.trim();
             final url = _urlController.text.trim();
+            if (name.isEmpty || url.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Name and Base URL are required.'),
+                ),
+              );
+              return;
+            }
+            if (!_formKey.currentState!.validate()) return;
             Navigator.pop(
               context,
               OpenClawInstance(

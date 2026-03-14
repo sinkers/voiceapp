@@ -17,7 +17,7 @@ class OpenClawService {
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 5));
 
-      if (response.statusCode != 200) return ['main'];
+      if (response.statusCode != 200) return ['openclaw:main'];
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final models = (data['data'] as List?)
@@ -28,14 +28,13 @@ class OpenClawService {
       final agents = models
           .map((m) => m['id'] as String? ?? '')
           .where((id) => id.startsWith('openclaw:') || id.startsWith('agent:'))
-          .map((id) => id.substring(id.indexOf(':') + 1))
           .toList();
 
-      return agents.isEmpty ? ['main'] : agents;
+      return agents.isEmpty ? ['openclaw:main'] : agents;
     } catch (e, s) {
       // ignore: avoid_print
       print('Failed to fetch OpenClaw agents: $e\n$s');
-      return ['main'];
+      return ['openclaw:main'];
     }
   }
 }

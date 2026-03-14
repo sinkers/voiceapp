@@ -317,9 +317,9 @@ class ConversationProvider extends ChangeNotifier {
       final instance = _settings.selectedInstance;
       if (instance != null) {
         _llmService = OpenAIService(
-          apiKey: instance.token.isNotEmpty ? instance.token : 'no-key',
+          apiKey: instance.token,
           baseUrl: instance.baseUrl,
-          model: 'openclaw:${_settings.selectedAgentId ?? 'main'}',
+          model: _settings.selectedAgentId ?? 'openclaw:main',
         );
       } else {
         final key = _settings.openaiApiKey;
