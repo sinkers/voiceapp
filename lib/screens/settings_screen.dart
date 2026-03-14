@@ -20,6 +20,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _claudeModelController = TextEditingController();
   final _openaiModelController = TextEditingController();
   final _systemPromptController = TextEditingController();
+  final _elevenLabsKeyController = TextEditingController();
+  final _elevenLabsVoiceIdController = TextEditingController();
+  final _elevenLabsModelIdController = TextEditingController();
   final _openClawService = OpenClawService();
   List<String> _agents = [];
   bool _loadingAgents = false;
@@ -35,6 +38,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _claudeModelController.text = settings.claudeModelName;
     _openaiModelController.text = settings.openaiModelName;
     _systemPromptController.text = settings.systemPrompt;
+    _elevenLabsKeyController.text = settings.elevenLabsApiKey ?? '';
+    _elevenLabsVoiceIdController.text = settings.elevenLabsVoiceId;
+    _elevenLabsModelIdController.text = settings.elevenLabsModelId;
 
     final selectedInstance = settings.selectedInstance;
     if (selectedInstance != null) {
@@ -51,6 +57,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _claudeModelController.dispose();
     _openaiModelController.dispose();
     _systemPromptController.dispose();
+    _elevenLabsKeyController.dispose();
+    _elevenLabsVoiceIdController.dispose();
+    _elevenLabsModelIdController.dispose();
     super.dispose();
   }
 
@@ -162,6 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _save() async {
     final claudeKey = _claudeKeyController.text.trim();
     final openaiKey = _openaiKeyController.text.trim();
+    final elevenLabsKey = _elevenLabsKeyController.text.trim();
 
     final newSettings = _draft.copyWith(
       claudeApiKey: claudeKey.isNotEmpty ? claudeKey : null,
@@ -178,6 +188,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ? _openaiModelController.text.trim()
           : 'gpt-4o',
       systemPrompt: _systemPromptController.text,
+      elevenLabsApiKey: elevenLabsKey.isNotEmpty ? elevenLabsKey : null,
+      clearElevenLabsApiKey: elevenLabsKey.isEmpty,
+      elevenLabsVoiceId: _elevenLabsVoiceIdController.text.trim().isNotEmpty
+          ? _elevenLabsVoiceIdController.text.trim()
+          : '21m00Tcm4TlvDq8ikWAM',
+      elevenLabsModelId: _elevenLabsModelIdController.text.trim().isNotEmpty
+          ? _elevenLabsModelIdController.text.trim()
+          : 'eleven_multilingual_v2',
+      selectedInstanceId: _draft.selectedInstanceId,
+      selectedAgentId: _draft.selectedAgentId,
     );
 
     await context.read<ConversationProvider>().updateSettings(newSettings);
@@ -429,6 +449,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
+                      // Always show the agent list once we have at least one entry
+                      // (fallback 'main' counts). Empty only before first fetch.
                       if (_agents.isNotEmpty)
                         DropdownButtonFormField<String>(
                           key: ValueKey(_agents.join(',')),
@@ -449,12 +471,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               .toList(),
                           onChanged: (v) {
                             if (v != null) {
-                              setState(
-                                () => _draft =
-                                    _draft.copyWith(selectedAgentId: v),
-                              );
+                              setState(() =>
+                                  _draft = _draft.copyWith(selectedAgentId: v));
                             }
                           },
+                        )
+                      else if (_loadingAgents)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text('Loading agents…',
+                              style: TextStyle(fontSize: 12)),
+                        )
+                      else
+                        // No agents yet — prompt user to add one manually
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Text(
+                            'No agents found. Add one below.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       const SizedBox(height: 8),
                       _AddAgentField(
@@ -494,52 +532,178 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Voice settings
-          const _SectionHeader(title: 'Voice'),
+          // Text-to-Speech section
+          const _SectionHeader(title: 'Text-to-Speech'),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Speech Rate',
-                          style: theme.textTheme.bodyMedium),
-                      Text('${(_draft.ttsRate * 100).round()}%',
-                          style: theme.textTheme.bodySmall),
-                    ],
-                  ),
-                  Slider(
-                    value: _draft.ttsRate,
-                    min: 0.1,
-                    max: 1.0,
-                    divisions: 18,
-                    onChanged: (v) =>
-                        setState(() => _draft = _draft.copyWith(ttsRate: v)),
-                  ),
+                  Text('Provider', style: theme.textTheme.labelMedium),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Pitch', style: theme.textTheme.bodyMedium),
-                      Text('${(_draft.ttsPitch * 100).round()}%',
-                          style: theme.textTheme.bodySmall),
+                  DropdownButtonFormField<TtsProvider>(
+                    initialValue: _draft.ttsProvider,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: TtsProvider.onDevice,
+                        child: Text('On-device'),
+                      ),
+                      DropdownMenuItem(
+                        value: TtsProvider.elevenlabs,
+                        child: Text('ElevenLabs'),
+                      ),
+                      DropdownMenuItem(
+                        value: TtsProvider.openai,
+                        child: Text('OpenAI'),
+                      ),
                     ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() => _draft = _draft.copyWith(ttsProvider: v));
+                      }
+                    },
                   ),
-                  Slider(
-                    value: _draft.ttsPitch,
-                    min: 0.5,
-                    max: 2.0,
-                    divisions: 30,
-                    onChanged: (v) =>
-                        setState(() => _draft = _draft.copyWith(ttsPitch: v)),
-                  ),
+                  if (_draft.ttsProvider == TtsProvider.elevenlabs) ...[
+                    const SizedBox(height: 12),
+                    _ApiKeyField(
+                      controller: _elevenLabsKeyController,
+                      label: 'ElevenLabs API Key',
+                      hint: 'Your ElevenLabs API key',
+                    ),
+                    const SizedBox(height: 12),
+                    _TextField(
+                      controller: _elevenLabsVoiceIdController,
+                      label: 'Voice ID',
+                      hint: '21m00Tcm4TlvDq8ikWAM',
+                    ),
+                    const SizedBox(height: 12),
+                    _TextField(
+                      controller: _elevenLabsModelIdController,
+                      label: 'Model ID',
+                      hint: 'eleven_multilingual_v2',
+                    ),
+                  ],
+                  if (_draft.ttsProvider == TtsProvider.openai) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Uses your OpenAI API key above',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface
+                            .withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Voice', style: theme.textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: _draft.openaiTtsVoice,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'alloy', child: Text('Alloy')),
+                        DropdownMenuItem(
+                            value: 'echo', child: Text('Echo')),
+                        DropdownMenuItem(
+                            value: 'fable', child: Text('Fable')),
+                        DropdownMenuItem(
+                            value: 'onyx', child: Text('Onyx')),
+                        DropdownMenuItem(
+                            value: 'nova', child: Text('Nova')),
+                        DropdownMenuItem(
+                            value: 'shimmer', child: Text('Shimmer')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) {
+                          setState(() =>
+                              _draft = _draft.copyWith(openaiTtsVoice: v));
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Model', style: theme.textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: _draft.openaiTtsModel,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'tts-1', child: Text('tts-1')),
+                        DropdownMenuItem(
+                            value: 'tts-1-hd', child: Text('tts-1-hd')),
+                      ],
+                      onChanged: (v) {
+                        if (v != null) {
+                          setState(() =>
+                              _draft = _draft.copyWith(openaiTtsModel: v));
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
+
+          // Voice settings (on-device rate/pitch only)
+          if (_draft.ttsProvider == TtsProvider.onDevice) ...[
+            const SizedBox(height: 12),
+            const _SectionHeader(title: 'Voice'),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Speech Rate',
+                            style: theme.textTheme.bodyMedium),
+                        Text('${(_draft.ttsRate * 100).round()}%',
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                    Slider(
+                      value: _draft.ttsRate,
+                      min: 0.1,
+                      max: 1.0,
+                      divisions: 18,
+                      onChanged: (v) =>
+                          setState(() => _draft = _draft.copyWith(ttsRate: v)),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Pitch', style: theme.textTheme.bodyMedium),
+                        Text('${(_draft.ttsPitch * 100).round()}%',
+                            style: theme.textTheme.bodySmall),
+                      ],
+                    ),
+                    Slider(
+                      value: _draft.ttsPitch,
+                      min: 0.5,
+                      max: 2.0,
+                      divisions: 30,
+                      onChanged: (v) => setState(
+                          () => _draft = _draft.copyWith(ttsPitch: v)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 24),
           FilledButton(

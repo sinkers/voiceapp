@@ -15,6 +15,12 @@ class SettingsService {
   static const _keyOpenclawInstances = 'openclaw_instances';
   static const _keySelectedInstanceId = 'selected_instance_id';
   static const _keySelectedAgentId = 'selected_agent_id';
+  static const _keyTtsProvider = 'tts_provider';
+  static const _keyElevenLabsApiKey = 'elevenlabs_api_key';
+  static const _keyElevenLabsVoiceId = 'elevenlabs_voice_id';
+  static const _keyElevenLabsModelId = 'elevenlabs_model_id';
+  static const _keyOpenaiTtsVoice = 'openai_tts_voice';
+  static const _keyOpenaiTtsModel = 'openai_tts_model';
 
   Future<Settings> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -27,6 +33,8 @@ class SettingsService {
             .map(OpenClawInstance.fromJson)
             .toList()
         : <OpenClawInstance>[];
+
+    final ttsProviderIndex = prefs.getInt(_keyTtsProvider) ?? 0;
 
     return Settings(
       claudeApiKey: prefs.getString(_keyClaudeApiKey),
@@ -46,6 +54,14 @@ class SettingsService {
       openclawInstances: openclawInstances,
       selectedInstanceId: prefs.getString(_keySelectedInstanceId),
       selectedAgentId: prefs.getString(_keySelectedAgentId),
+      ttsProvider: TtsProvider.values[ttsProviderIndex],
+      elevenLabsApiKey: prefs.getString(_keyElevenLabsApiKey),
+      elevenLabsVoiceId:
+          prefs.getString(_keyElevenLabsVoiceId) ?? '21m00Tcm4TlvDq8ikWAM',
+      elevenLabsModelId:
+          prefs.getString(_keyElevenLabsModelId) ?? 'eleven_multilingual_v2',
+      openaiTtsVoice: prefs.getString(_keyOpenaiTtsVoice) ?? 'alloy',
+      openaiTtsModel: prefs.getString(_keyOpenaiTtsModel) ?? 'tts-1',
     );
   }
 
@@ -83,5 +99,15 @@ class SettingsService {
     } else {
       await prefs.remove(_keySelectedAgentId);
     }
+    await prefs.setInt(_keyTtsProvider, settings.ttsProvider.index);
+    if (settings.elevenLabsApiKey != null) {
+      await prefs.setString(_keyElevenLabsApiKey, settings.elevenLabsApiKey!);
+    } else {
+      await prefs.remove(_keyElevenLabsApiKey);
+    }
+    await prefs.setString(_keyElevenLabsVoiceId, settings.elevenLabsVoiceId);
+    await prefs.setString(_keyElevenLabsModelId, settings.elevenLabsModelId);
+    await prefs.setString(_keyOpenaiTtsVoice, settings.openaiTtsVoice);
+    await prefs.setString(_keyOpenaiTtsModel, settings.openaiTtsModel);
   }
 }
