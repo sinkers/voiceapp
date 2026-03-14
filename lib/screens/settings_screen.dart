@@ -401,13 +401,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     if (_draft.selectedInstanceId != null) ...[
                       const SizedBox(height: 12),
-                      Text('Agent', style: theme.textTheme.labelMedium),
+                      Row(
+                        children: [
+                          Text('Agent', style: theme.textTheme.labelMedium),
+                          const Spacer(),
+                          if (_loadingAgents)
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          else
+                            IconButton(
+                              icon: const Icon(Icons.refresh, size: 18),
+                              tooltip: 'Refresh agent list',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () {
+                                final instance = _draft.openclawInstances
+                                    .where((i) =>
+                                        i.id == _draft.selectedInstanceId)
+                                    .firstOrNull;
+                                if (instance != null) {
+                                  _fetchAgentsForInstance(instance);
+                                }
+                              },
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: 8),
-                      if (_loadingAgents)
-                        const LinearProgressIndicator()
-                      else if (_agents.isNotEmpty)
+                      if (_agents.isNotEmpty)
                         DropdownButtonFormField<String>(
-                          initialValue: _agents.contains(_draft.selectedAgentId)
+                          key: ValueKey(_agents.join(',')),
+                          value: _agents.contains(_draft.selectedAgentId)
                               ? _draft.selectedAgentId
                               : _agents.first,
                           decoration: const InputDecoration(
@@ -431,6 +456,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             }
                           },
                         ),
+                      const SizedBox(height: 8),
+                      _AddAgentField(
+                        agents: _agents,
+                        onAdd: (agentId) {
+                          setState(() {
+                            if (!_agents.contains(agentId)) {
+                              _agents = [..._agents, agentId];
+                            }
+                            _draft = _draft.copyWith(selectedAgentId: agentId);
+                          });
+                        },
+                      ),
                     ],
                   ],
                 ),
@@ -706,6 +743,58 @@ class _TextField extends StatelessWidget {
         hintText: hint,
         border: const OutlineInputBorder(),
       ),
+    );
+  }
+}
+
+class _AddAgentField extends StatefulWidget {
+  final List<String> agents;
+  final void Function(String agentId) onAdd;
+
+  const _AddAgentField({required this.agents, required this.onAdd});
+
+  @override
+  State<_AddAgentField> createState() => _AddAgentFieldState();
+}
+
+class _AddAgentFieldState extends State<_AddAgentField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _controller.text.trim();
+    if (value.isEmpty) return;
+    widget.onAdd(value);
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _controller,
+            decoration: InputDecoration(
+              labelText: 'Add agent ID manually',
+              hintText: 'e.g. main, alex',
+              border: const OutlineInputBorder(),
+              isDense: true,
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: 'Add agent',
+                onPressed: _submit,
+              ),
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+        ),
+      ],
     );
   }
 }
