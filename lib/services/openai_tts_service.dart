@@ -132,7 +132,7 @@ class OpenAITtsService implements TtsService {
     _currentPlayer = AudioPlayer();
     final stateCompleter = Completer<void>();
     StreamSubscription<PlayerState>? sub;
-    sub = _currentPlayer!.onPlayerStateChange.listen((state) {
+    sub = _currentPlayer!.onPlayerStateChanged.listen((state) {
       if ((state == PlayerState.completed || state == PlayerState.stopped) &&
           !stateCompleter.isCompleted) {
         sub?.cancel();
