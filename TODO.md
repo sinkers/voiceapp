@@ -6,7 +6,7 @@
 
 ### 🐛 Bugs
 
-#### B1. Double `openclaw:` prefix on model string
+#### ~~B1. Double `openclaw:` prefix on model string~~ ✅ Fixed in 43a1d2c
 **File:** `lib/providers/conversation_provider.dart`
 
 `fetchAgents()` returns IDs that already include the prefix (e.g. `openclaw:myagent`). But `_rebuildLlmService()` prepends it again:
@@ -79,7 +79,7 @@ const SnackBar(
 
 ### ⚠️ Design Issues
 
-#### D1. No URL validation in `_InstanceFormDialog`
+#### ~~D1. No URL validation in `_InstanceFormDialog`~~ ✅ Fixed in 43a1d2c (inline Form validators)
 **File:** `lib/screens/settings_screen.dart`
 
 Only `name.isEmpty || url.isEmpty` is checked. An invalid URL silently passes through — `fetchAgents()` will throw and fall back to `['main']` with no user feedback.
