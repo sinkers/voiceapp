@@ -4,7 +4,6 @@ import 'providers/conversation_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/settings_service.dart';
 import 'services/speech_service.dart';
-import 'services/tts_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +19,6 @@ class VoiceApp extends StatelessWidget {
       create: (_) {
         final provider = ConversationProvider(
           speechService: SpeechService(),
-          ttsService: TtsService(),
           settingsService: SettingsService(),
         );
         provider.initialize();

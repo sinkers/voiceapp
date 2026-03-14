@@ -4,19 +4,22 @@ import '../models/conversation_state.dart';
 import '../models/message.dart';
 import '../models/settings.dart';
 import '../services/claude_service.dart';
+import '../services/elevenlabs_tts_service.dart';
 import '../services/llm_service.dart';
+import '../services/on_device_tts_service.dart';
 import '../services/openai_service.dart';
+import '../services/openai_tts_service.dart';
 import '../services/settings_service.dart';
 import '../services/speech_service.dart';
 import '../services/tts_service.dart';
 
 class ConversationProvider extends ChangeNotifier {
   final SpeechService _speechService;
-  final TtsService _ttsService;
   final SettingsService _settingsService;
   final _uuid = const Uuid();
 
   LLMService? _llmService;
+  TtsService _ttsService = OnDeviceTtsService();
   Settings _settings = const Settings();
 
   ConversationState _state = ConversationState.idle;
@@ -29,10 +32,8 @@ class ConversationProvider extends ChangeNotifier {
 
   ConversationProvider({
     required SpeechService speechService,
-    required TtsService ttsService,
     required SettingsService settingsService,
   })  : _speechService = speechService,
-        _ttsService = ttsService,
         _settingsService = settingsService {
     _speechService.onFinalResult = _onSpeechFinal;
     _speechService.onPartialResult = _onSpeechPartial;
@@ -55,10 +56,7 @@ class ConversationProvider extends ChangeNotifier {
       _errorMessage =
           'Speech recognition unavailable. Please enable microphone permission in Settings.';
     }
-    await _ttsService.initialize(
-      rate: _settings.ttsRate,
-      pitch: _settings.ttsPitch,
-    );
+    await _rebuildTtsService();
     _rebuildLlmService();
     _initialized = true;
     notifyListeners();
@@ -87,7 +85,7 @@ class ConversationProvider extends ChangeNotifier {
   Future<void> updateSettings(Settings newSettings) async {
     _settings = newSettings;
     await _settingsService.save(newSettings);
-    _ttsService.updateSettings(newSettings.ttsRate, newSettings.ttsPitch);
+    await _rebuildTtsService();
     _rebuildLlmService();
     notifyListeners();
   }
@@ -173,9 +171,13 @@ class ConversationProvider extends ChangeNotifier {
 
     try {
       final historyForLLM = _messages.sublist(0, _messages.length - 1);
+      // When routing through an OpenClaw agent, suppress the app system prompt
+      // so OpenClaw applies the agent's own persona (SOUL.md, IDENTITY.md, etc.)
+      final effectiveSystemPrompt =
+          _settings.selectedInstance != null ? '' : _settings.systemPrompt;
       final stream = _llmService!.streamResponse(
         historyForLLM,
-        _settings.systemPrompt,
+        effectiveSystemPrompt,
       );
 
       bool firstChunk = true;
@@ -272,6 +274,33 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _rebuildTtsService() async {
+    _ttsService.dispose();
+    switch (_settings.ttsProvider) {
+      case TtsProvider.onDevice:
+        final svc = OnDeviceTtsService();
+        await svc.initialize(
+            rate: _settings.ttsRate, pitch: _settings.ttsPitch);
+        _ttsService = svc;
+      case TtsProvider.elevenlabs:
+        final svc = ElevenLabsTtsService(
+          apiKey: _settings.elevenLabsApiKey ?? '',
+          voiceId: _settings.elevenLabsVoiceId,
+          modelId: _settings.elevenLabsModelId,
+        );
+        await svc.initialize();
+        _ttsService = svc;
+      case TtsProvider.openai:
+        final svc = OpenAITtsService(
+          apiKey: _settings.openaiApiKey ?? '',
+          voice: _settings.openaiTtsVoice,
+          model: _settings.openaiTtsModel,
+        );
+        await svc.initialize();
+        _ttsService = svc;
+    }
+  }
+
   void _rebuildLlmService() {
     _llmService?.dispose();
     _llmService = null;
@@ -285,13 +314,22 @@ class ConversationProvider extends ChangeNotifier {
         );
       }
     } else {
-      final key = _settings.openaiApiKey;
-      if (key != null && key.isNotEmpty) {
+      final instance = _settings.selectedInstance;
+      if (instance != null) {
         _llmService = OpenAIService(
-          apiKey: key,
-          baseUrl: _settings.openaiBaseUrl,
-          model: _settings.openaiModelName,
+          apiKey: instance.token,
+          baseUrl: instance.baseUrl,
+          model: _settings.selectedAgentId ?? 'openclaw:main',
         );
+      } else {
+        final key = _settings.openaiApiKey;
+        if (key != null && key.isNotEmpty) {
+          _llmService = OpenAIService(
+            apiKey: key,
+            baseUrl: _settings.openaiBaseUrl,
+            model: _settings.openaiModelName,
+          );
+        }
       }
     }
   }

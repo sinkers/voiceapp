@@ -58,6 +58,45 @@ final stream = client.createChatCompletionStream(request: CreateChatCompletionRe
 client.endSession();
 ```
 
+## OpenClaw Integration
+
+The app connects to an OpenClaw gateway via the OpenAI-compatible API.
+
+- **Base URL**: must include `/v1` — e.g. `http://10.3.0.41:18789/v1` (the `openai_dart` client appends `/chat/completions`, not `/v1/chat/completions`)
+- **Model field**: `openclaw:<agentId>` — e.g. `openclaw:main`
+- **System prompt**: suppressed when an OpenClaw instance is selected — the agent's own `SOUL.md`/`IDENTITY.md` takes over instead
+- **Endpoint**: must be explicitly enabled in the gateway config: `gateway.http.endpoints.chatCompletions.enabled: true`
+- **Network access**: gateway defaults to loopback — set `gateway.bind: "lan"` for LAN access from the phone
+
+## Deploying to Physical Device (iOS)
+
+Flutter's normal `flutter run -d <udid>` doesn't work reliably with newer Xcode/CoreDevice. Use this two-step flow instead:
+
+```bash
+# Build (use --profile to avoid debug dylib issues on iOS betas)
+PATH="/tmp/sysctl_shim:$PATH" flutter build ios --profile
+
+# Install via devicectl (get CoreDevice UUID from: xcrun devicectl list devices)
+xcrun devicectl device install app --device <coredevice-uuid> build/ios/iphoneos/Runner.app
+```
+
+**sysctl shim** (needed in restricted shell environments where `sysctl` is missing):
+```bash
+mkdir -p /tmp/sysctl_shim && cat > /tmp/sysctl_shim/sysctl << 'EOF'
+#!/bin/bash
+if [[ "$*" == *"hw.optional.arm64"* ]]; then echo "1"; else /usr/sbin/sysctl "$@" 2>/dev/null || true; fi
+EOF
+chmod +x /tmp/sysctl_shim/sysctl
+```
+
+**Flutter channel**: repo uses `main` channel (upgraded from `stable` 3.41.4 to fix iOS 26 compatibility). Engine pre-cached with `flutter precache --ios`.
+
+## Known Issues / iOS 26 Beta
+
+- **VSyncClient crash on launch** (`EXC_BAD_ACCESS` in `createTouchRateCorrectionVSyncClientIfNeeded`): caused by `CADisableMinimumFrameDurationOnPhone=true` in `Info.plist` enabling ProMotion (120Hz), which triggers a broken `CADisplayLink` code path in the Flutter engine on iOS 26 beta. **Fixed** by setting it to `false` (locks to 60fps — fine for a voice app).
+- **`flutter run` wireless**: phone appears in `flutter devices` but `xcodebuild` can't target it by old-style UDID on newer Xcode + CoreDevice. Use `devicectl` install flow above instead.
+- **`audioplayers` 6.x**: `onPlayerStateChange` renamed to `onPlayerStateChanged`.
+
 ## Code Style
 
 - Zero `flutter analyze` issues before committing
