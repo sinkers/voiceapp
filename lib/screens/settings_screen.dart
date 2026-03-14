@@ -380,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text('Active Instance', style: theme.textTheme.labelMedium),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String?>(
-                      value: _draft.selectedInstanceId,
+                      initialValue: _draft.selectedInstanceId,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         isDense: true,
@@ -407,7 +407,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const LinearProgressIndicator()
                       else if (_agents.isNotEmpty)
                         DropdownButtonFormField<String>(
-                          value: _agents.contains(_draft.selectedAgentId)
+                          initialValue: _agents.contains(_draft.selectedAgentId)
                               ? _draft.selectedAgentId
                               : _agents.first,
                           decoration: const InputDecoration(
