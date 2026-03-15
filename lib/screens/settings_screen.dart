@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import '../models/elevenlabs_voice.dart';
 import '../models/settings.dart';
 import '../providers/conversation_provider.dart';
 import '../services/openclaw_service.dart';
@@ -195,7 +196,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           : '21m00Tcm4TlvDq8ikWAM',
       elevenLabsModelId: _elevenLabsModelIdController.text.trim().isNotEmpty
           ? _elevenLabsModelIdController.text.trim()
-          : 'eleven_multilingual_v2',
+          : 'eleven_turbo_v2_5',
       selectedInstanceId: _draft.selectedInstanceId,
       selectedAgentId: _draft.selectedAgentId,
     );
@@ -598,25 +599,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text('Voice', style: theme.textTheme.labelMedium),
                     const SizedBox(height: 8),
                     SegmentedButton<ElevenLabsVoice>(
-                      segments: ElevenLabsVoice.values
-                          .map(
-                            (v) => ButtonSegment(
-                              value: v,
-                              label: Text(v.label),
-                            ),
-                          )
-                          .toList(),
+                      segments: const [
+                        ButtonSegment(
+                          value: ElevenLabsVoice.rachel,
+                          label: Text('Rachel'),
+                        ),
+                        ButtonSegment(
+                          value: ElevenLabsVoice.liam,
+                          label: Text('Liam'),
+                        ),
+                      ],
                       selected: {
-                        _draft.elevenLabsVoice ?? ElevenLabsVoice.rachel
+                        ElevenLabsVoice.fromVoiceId(_draft.elevenLabsVoiceId) ??
+                            ElevenLabsVoice.rachel
                       },
-                      onSelectionChanged: (s) => setState(() =>
-                          _draft = _draft.copyWith(elevenLabsVoice: s.first)),
+                      onSelectionChanged: (s) {
+                        final voiceId = s.first.voiceId;
+                        setState(() {
+                          _draft =
+                              _draft.copyWith(elevenLabsVoiceId: voiceId);
+                          _elevenLabsVoiceIdController.text = voiceId;
+                        });
+                      },
                     ),
                     const SizedBox(height: 12),
                     _TextField(
                       controller: _elevenLabsVoiceIdController,
-                      label: 'Custom Voice ID (optional)',
-                      hint: 'Leave empty to use selected voice',
+                      label: 'Custom Voice ID',
+                      hint: '21m00Tcm4TlvDq8ikWAM',
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Use the buttons above or enter a custom voice ID',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _TextField(
