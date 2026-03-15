@@ -326,7 +326,7 @@ class _ErrorBanner extends StatelessWidget {
             icon: const Icon(Icons.close, color: Colors.white, size: 18),
             onPressed: onDismiss,
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
             tooltip: 'Dismiss',
           ),
         ],
