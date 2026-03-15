@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 import 'tts_service.dart';
 
 abstract class NetworkTtsServiceBase implements TtsService {
@@ -12,7 +13,7 @@ abstract class NetworkTtsServiceBase implements TtsService {
 
   Future<void> playBytes(Uint8List bytes) async {
     final tempFile = File(
-      '${Directory.systemTemp.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3',
+      '${Directory.systemTemp.path}/tts_${const Uuid().v4()}.mp3',
     );
     await tempFile.writeAsBytes(bytes);
     _currentPlayer = AudioPlayer();

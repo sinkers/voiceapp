@@ -372,7 +372,8 @@ class _InstanceSwitcherSheet extends StatelessWidget {
                     color: isSelected ? theme.colorScheme.primary : null,
                   ),
                   title: Text(instance.name),
-                  subtitle: Text('Agent: ${isSelected ? selectedAgentId ?? 'main' : 'main'}'),
+                  subtitle: Text(
+                      'Agent: ${isSelected ? selectedAgentId ?? 'main' : 'main'}'),
                   trailing: isSelected ? const Icon(Icons.check) : null,
                   selected: isSelected,
                   onTap: () {

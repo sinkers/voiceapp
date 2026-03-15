@@ -294,9 +294,13 @@ class ConversationProvider extends ChangeNotifier {
             rate: _settings.ttsRate, pitch: _settings.ttsPitch);
         _ttsService = svc;
       case TtsProvider.elevenlabs:
+        final voiceId =
+            (_settings.elevenLabsVoiceId.isNotEmpty)
+                ? _settings.elevenLabsVoiceId
+                : _settings.elevenLabsVoice?.voiceId ?? '21m00Tcm4TlvDq8ikWAM';
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
-          voiceId: _settings.elevenLabsVoice?.voiceId ?? _settings.elevenLabsVoiceId,
+          voiceId: voiceId,
           modelId: _settings.elevenLabsModelId,
         );
         await svc.initialize();

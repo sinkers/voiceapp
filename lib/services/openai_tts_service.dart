@@ -130,7 +130,8 @@ class OpenAITtsService extends NetworkTtsServiceBase {
       }
       await playBytes(response.bodyBytes);
     } catch (e) {
-      debugPrint('OpenAI TTS network error: $e. Falling back to on-device TTS.');
+      debugPrint(
+          'OpenAI TTS network error: $e. Falling back to on-device TTS.');
       if (!_isSpeaking) return;
       _fallbackTts.enqueue(text);
       await _fallbackTts.waitUntilDone();

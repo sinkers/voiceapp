@@ -360,10 +360,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          'Session: ${instance.sessionId.substring(0, 8)}',
+                          'Session: ${instance.sessionId.length > 8 ? instance.sessionId.substring(0, 8) : instance.sessionId}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color:
-                                theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -606,9 +606,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           )
                           .toList(),
-                      selected: {_draft.elevenLabsVoice ?? ElevenLabsVoice.rachel},
-                      onSelectionChanged: (s) => setState(
-                          () => _draft = _draft.copyWith(elevenLabsVoice: s.first)),
+                      selected: {
+                        _draft.elevenLabsVoice ?? ElevenLabsVoice.rachel
+                      },
+                      onSelectionChanged: (s) => setState(() =>
+                          _draft = _draft.copyWith(elevenLabsVoice: s.first)),
                     ),
                     const SizedBox(height: 12),
                     _TextField(
@@ -755,6 +757,7 @@ class _InstanceFormDialog extends StatefulWidget {
 }
 
 class _InstanceFormDialogState extends State<_InstanceFormDialog> {
+  static const _uuid = Uuid();
   late final TextEditingController _nameController;
   late final TextEditingController _urlController;
   late final TextEditingController _tokenController;
@@ -861,11 +864,11 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
             Navigator.pop(
               context,
               OpenClawInstance(
-                id: widget.instance?.id ?? const Uuid().v4(),
+                id: widget.instance?.id ?? _uuid.v4(),
                 name: name,
                 baseUrl: url,
                 token: _tokenController.text.trim(),
-                sessionId: widget.instance?.sessionId ?? const Uuid().v4(),
+                sessionId: widget.instance?.sessionId ?? _uuid.v4(),
               ),
             );
           },

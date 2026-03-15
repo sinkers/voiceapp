@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:uuid/uuid.dart';
 
+const _uuid = Uuid();
+
 class OpenClawInstance {
   final String id;
   final String name;
@@ -31,7 +33,7 @@ class OpenClawInstance {
         name: json['name'] as String,
         baseUrl: json['baseUrl'] as String,
         token: (json['token'] as String?) ?? '',
-        sessionId: json['sessionId'] as String? ?? const Uuid().v4(),
+        sessionId: json['sessionId'] as String? ?? _uuid.v4(),
       );
 
   OpenClawInstance copyWith({

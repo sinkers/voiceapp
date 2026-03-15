@@ -140,7 +140,8 @@ class ElevenLabsTtsService extends NetworkTtsServiceBase {
       if (!_isSpeaking) return;
       await playBytes(bytes);
     } catch (e) {
-      debugPrint('ElevenLabs TTS network error: $e. Falling back to on-device TTS.');
+      debugPrint(
+          'ElevenLabs TTS network error: $e. Falling back to on-device TTS.');
       if (!_isSpeaking) return;
       _fallbackTts.enqueue(text);
       await _fallbackTts.waitUntilDone();

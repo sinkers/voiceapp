@@ -120,7 +120,8 @@ void main() {
       expect(find.text('Test Instance · main'), findsOneWidget);
     });
 
-    testWidgets('tapping OpenClaw chip shows instance switcher with multiple instances',
+    testWidgets(
+        'tapping OpenClaw chip shows instance switcher with multiple instances',
         (tester) async {
       const instance1 = OpenClawInstance(
         id: 'id-1',
@@ -152,7 +153,6 @@ void main() {
       expect(find.text('Instance 1'), findsOneWidget);
       expect(find.text('Instance 2'), findsOneWidget);
     });
-
 
     testWidgets('shows clear button when messages exist', (tester) async {
       final now = DateTime(2024);

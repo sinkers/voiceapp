@@ -229,7 +229,8 @@ void main() {
       expect(instance.token, '');
     });
 
-    test('fromJson generates sessionId if missing (backward compatibility)', () {
+    test('fromJson generates sessionId if missing (backward compatibility)',
+        () {
       final json = {
         'id': 'test-id',
         'name': 'Test Instance',
@@ -243,7 +244,8 @@ void main() {
       expect(instance.sessionId.length, 36); // UUID v4 format
     });
 
-    test('two instances created from JSON without sessionId have different IDs', () {
+    test('two instances created from JSON without sessionId have different IDs',
+        () {
       final json = {
         'id': 'test-id',
         'name': 'Test Instance',
