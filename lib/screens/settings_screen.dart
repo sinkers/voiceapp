@@ -253,8 +253,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                     selected: {_draft.backend},
-                    onSelectionChanged: (s) =>
-                        setState(() => _draft = _draft.copyWith(backend: s.first)),
+                    onSelectionChanged: (s) => setState(
+                        () => _draft = _draft.copyWith(backend: s.first)),
                   ),
                 ],
               ),
@@ -313,7 +313,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'For vLLM: http://localhost:8000/v1\n'
                         'For OpenClaw: http://localhost:3000/v1',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -343,7 +344,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       'No instances configured',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                     ),
                   ),
@@ -368,7 +370,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () => _editInstance(instance),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              size: 20),
                           tooltip: 'Delete',
                           onPressed: () => _deleteInstance(instance),
                         ),
@@ -377,7 +380,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                   child: TextButton.icon(
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add instance'),
@@ -490,7 +494,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'No agents found. Add one below.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -564,7 +570,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                     onChanged: (v) {
                       if (v != null) {
-                        setState(() => _draft = _draft.copyWith(ttsProvider: v));
+                        setState(
+                            () => _draft = _draft.copyWith(ttsProvider: v));
                       }
                     },
                   ),
@@ -593,8 +600,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'Uses your OpenAI API key above',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.6),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -607,16 +614,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         isDense: true,
                       ),
                       items: const [
-                        DropdownMenuItem(
-                            value: 'alloy', child: Text('Alloy')),
-                        DropdownMenuItem(
-                            value: 'echo', child: Text('Echo')),
-                        DropdownMenuItem(
-                            value: 'fable', child: Text('Fable')),
-                        DropdownMenuItem(
-                            value: 'onyx', child: Text('Onyx')),
-                        DropdownMenuItem(
-                            value: 'nova', child: Text('Nova')),
+                        DropdownMenuItem(value: 'alloy', child: Text('Alloy')),
+                        DropdownMenuItem(value: 'echo', child: Text('Echo')),
+                        DropdownMenuItem(value: 'fable', child: Text('Fable')),
+                        DropdownMenuItem(value: 'onyx', child: Text('Onyx')),
+                        DropdownMenuItem(value: 'nova', child: Text('Nova')),
                         DropdownMenuItem(
                             value: 'shimmer', child: Text('Shimmer')),
                       ],
@@ -637,8 +639,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         isDense: true,
                       ),
                       items: const [
-                        DropdownMenuItem(
-                            value: 'tts-1', child: Text('tts-1')),
+                        DropdownMenuItem(value: 'tts-1', child: Text('tts-1')),
                         DropdownMenuItem(
                             value: 'tts-1-hd', child: Text('tts-1-hd')),
                       ],
@@ -668,8 +669,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Speech Rate',
-                            style: theme.textTheme.bodyMedium),
+                        Text('Speech Rate', style: theme.textTheme.bodyMedium),
                         Text('${(_draft.ttsRate * 100).round()}%',
                             style: theme.textTheme.bodySmall),
                       ],
@@ -696,8 +696,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       min: 0.5,
                       max: 2.0,
                       divisions: 30,
-                      onChanged: (v) => setState(
-                          () => _draft = _draft.copyWith(ttsPitch: v)),
+                      onChanged: (v) =>
+                          setState(() => _draft = _draft.copyWith(ttsPitch: v)),
                     ),
                   ],
                 ),
@@ -736,8 +736,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.instance?.name ?? '');
+    _nameController = TextEditingController(text: widget.instance?.name ?? '');
     _urlController =
         TextEditingController(text: widget.instance?.baseUrl ?? '');
     _tokenController =

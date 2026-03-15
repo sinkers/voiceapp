@@ -105,8 +105,7 @@ class ElevenLabsTtsService implements TtsService {
 
   Future<void> _fetchAndPlay(String text) async {
     final response = await http.post(
-      Uri.parse(
-          'https://api.elevenlabs.io/v1/text-to-speech/$voiceId/stream'),
+      Uri.parse('https://api.elevenlabs.io/v1/text-to-speech/$voiceId/stream'),
       headers: {
         'xi-api-key': apiKey,
         'Content-Type': 'application/json',

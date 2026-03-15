@@ -155,8 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child:
-                Text('Clear', style: TextStyle(color: Colors.red.shade400)),
+            child: Text('Clear', style: TextStyle(color: Colors.red.shade400)),
           ),
         ],
       ),

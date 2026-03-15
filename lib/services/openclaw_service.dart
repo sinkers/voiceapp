@@ -20,10 +20,9 @@ class OpenClawService {
       if (response.statusCode != 200) return ['openclaw:main'];
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final models = (data['data'] as List?)
-              ?.whereType<Map<String, dynamic>>()
-              .toList() ??
-          [];
+      final models =
+          (data['data'] as List?)?.whereType<Map<String, dynamic>>().toList() ??
+              [];
 
       final agents = models
           .map((m) => m['id'] as String? ?? '')

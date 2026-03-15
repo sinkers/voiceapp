@@ -76,8 +76,8 @@ class Settings {
     this.openaiModelName = 'gpt-4o',
     this.systemPrompt =
         'You are a helpful voice assistant. Keep your responses concise and conversational, '
-        'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
-        'Speak naturally as if in a conversation.',
+            'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
+            'Speak naturally as if in a conversation.',
     this.ttsRate = 0.5,
     this.ttsPitch = 1.0,
     this.openclawInstances = const [],
