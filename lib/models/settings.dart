@@ -1,3 +1,4 @@
+import 'agent_config.dart';
 import 'elevenlabs_voice.dart';
 import 'package:collection/collection.dart';
 import 'package:uuid/uuid.dart';
@@ -122,6 +123,28 @@ class Settings {
 
   OpenClawInstance? get selectedInstance =>
       openclawInstances.firstWhereOrNull((i) => i.id == selectedInstanceId);
+
+  /// Flat list of all agents: one per OpenClaw instance + direct model agents.
+  List<AgentConfig> get allAgents {
+    return [
+      ...openclawInstances.map(
+        (instance) => OpenClawAgentConfig(
+          instance: instance,
+          agentId: instance.id == selectedInstanceId
+              ? (selectedAgentId ?? 'main')
+              : 'main',
+        ),
+      ),
+      DirectModelAgentConfig(
+        backend: LLMBackend.claude,
+        modelName: claudeModelName,
+      ),
+      DirectModelAgentConfig(
+        backend: LLMBackend.openaiCompatible,
+        modelName: openaiModelName,
+      ),
+    ];
+  }
 
   Settings copyWith({
     String? claudeApiKey,

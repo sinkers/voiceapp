@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'providers/conversation_provider.dart';
+import 'providers/agent_switcher_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/settings_service.dart';
-import 'services/speech_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +16,7 @@ class VoiceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) {
-        final provider = ConversationProvider(
-          speechService: SpeechService(),
+        final provider = AgentSwitcherProvider(
           settingsService: SettingsService(),
         );
         provider.initialize();

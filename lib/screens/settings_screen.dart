@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/elevenlabs_voice.dart';
 import '../models/settings.dart';
-import '../providers/conversation_provider.dart';
+import '../providers/agent_switcher_provider.dart';
 import '../services/openclaw_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    final settings = context.read<ConversationProvider>().settings;
+    final settings = context.read<AgentSwitcherProvider>().settings;
     _draft = settings;
     _claudeKeyController.text = settings.claudeApiKey ?? '';
     _openaiKeyController.text = settings.openaiApiKey ?? '';
@@ -201,7 +201,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       selectedAgentId: _draft.selectedAgentId,
     );
 
-    await context.read<ConversationProvider>().updateSettings(newSettings);
+    await context.read<AgentSwitcherProvider>().updateSettings(newSettings);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

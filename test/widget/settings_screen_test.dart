@@ -4,17 +4,17 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:voiceapp/models/settings.dart';
-import 'package:voiceapp/providers/conversation_provider.dart';
+import 'package:voiceapp/providers/agent_switcher_provider.dart';
 import 'package:voiceapp/screens/settings_screen.dart';
 
-@GenerateMocks([ConversationProvider])
+@GenerateMocks([AgentSwitcherProvider])
 import 'settings_screen_test.mocks.dart';
 
 void main() {
-  late MockConversationProvider mockProvider;
+  late MockAgentSwitcherProvider mockProvider;
 
   setUp(() {
-    mockProvider = MockConversationProvider();
+    mockProvider = MockAgentSwitcherProvider();
 
     // Default mock behavior
     when(mockProvider.settings).thenReturn(const Settings());
@@ -22,7 +22,7 @@ void main() {
   });
 
   Widget createSettingsScreen() {
-    return ChangeNotifierProvider<ConversationProvider>.value(
+    return ChangeNotifierProvider<AgentSwitcherProvider>.value(
       value: mockProvider,
       child: const MaterialApp(
         home: SettingsScreen(),
