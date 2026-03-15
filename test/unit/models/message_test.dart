@@ -4,7 +4,7 @@ import 'package:voiceapp/models/message.dart';
 void main() {
   group('Message Model', () {
     test('creates message with required fields', () {
-      final timestamp = DateTime.now();
+      final timestamp = DateTime(2024);
       final message = Message(
         id: 'test-id',
         role: MessageRole.user,
@@ -20,7 +20,7 @@ void main() {
     });
 
     test('creates message with isComplete flag', () {
-      final timestamp = DateTime.now();
+      final timestamp = DateTime(2024);
       final message = Message(
         id: 'test-id',
         role: MessageRole.assistant,
@@ -33,7 +33,7 @@ void main() {
     });
 
     test('copyWith updates content', () {
-      final timestamp = DateTime.now();
+      final timestamp = DateTime(2024);
       final original = Message(
         id: 'test-id',
         role: MessageRole.user,
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('copyWith updates isComplete', () {
-      final timestamp = DateTime.now();
+      final timestamp = DateTime(2024);
       final original = Message(
         id: 'test-id',
         role: MessageRole.assistant,
@@ -67,7 +67,7 @@ void main() {
     });
 
     test('copyWith updates both content and isComplete', () {
-      final timestamp = DateTime.now();
+      final timestamp = DateTime(2024);
       final original = Message(
         id: 'test-id',
         role: MessageRole.assistant,
@@ -86,7 +86,7 @@ void main() {
     });
 
     test('copyWith preserves unchanged fields', () {
-      final timestamp = DateTime.now();
+      final timestamp = DateTime(2024);
       final original = Message(
         id: 'test-id',
         role: MessageRole.user,

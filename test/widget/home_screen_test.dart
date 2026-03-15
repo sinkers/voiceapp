@@ -58,7 +58,7 @@ void main() {
     });
 
     testWidgets('shows messages when conversation has content', (tester) async {
-      final now = DateTime.now();
+      final now = DateTime(2024);
       when(mockProvider.messages).thenReturn([
         Message(
           id: '1',
@@ -120,7 +120,7 @@ void main() {
     });
 
     testWidgets('shows clear button when messages exist', (tester) async {
-      final now = DateTime.now();
+      final now = DateTime(2024);
       when(mockProvider.messages).thenReturn([
         Message(
           id: '1',
@@ -249,7 +249,7 @@ void main() {
 
     testWidgets('shows confirmation dialog when clear button tapped',
         (tester) async {
-      final now = DateTime.now();
+      final now = DateTime(2024);
       when(mockProvider.messages).thenReturn([
         Message(
           id: '1',
@@ -272,7 +272,7 @@ void main() {
     });
 
     testWidgets('calls clearMessages when confirmed', (tester) async {
-      final now = DateTime.now();
+      final now = DateTime(2024);
       when(mockProvider.messages).thenReturn([
         Message(
           id: '1',
@@ -295,7 +295,7 @@ void main() {
     });
 
     testWidgets('does not clear messages when cancelled', (tester) async {
-      final now = DateTime.now();
+      final now = DateTime(2024);
       when(mockProvider.messages).thenReturn([
         Message(
           id: '1',

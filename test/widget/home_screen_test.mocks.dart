@@ -96,6 +96,15 @@ class MockConversationProvider extends _i1.Mock
       ) as bool);
 
   @override
+  void forceStateForTesting(_i4.ConversationState? state) => super.noSuchMethod(
+        Invocation.method(
+          #forceStateForTesting,
+          [state],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i7.Future<void> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,

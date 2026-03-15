@@ -17,15 +17,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('VoiceApp Integration Tests', () {
-    testWidgets('app launches successfully', (tester) async {
-      await tester.pumpWidget(const VoiceApp());
-      await tester.pumpAndSettle();
-
-      // Verify the app title is displayed
-      expect(find.text('Voice Chat'), findsOneWidget);
-    });
-
-    testWidgets('app bar is displayed with title', (tester) async {
+    testWidgets('app launches and displays main screen with app bar',
+        (tester) async {
       await tester.pumpWidget(const VoiceApp());
       await tester.pumpAndSettle();
 

@@ -9,6 +9,7 @@ import 'package:mockito/mockito.dart' as _i1;
 import 'package:voiceapp/models/settings.dart' as _i2;
 import 'package:voiceapp/services/settings_service.dart' as _i5;
 import 'package:voiceapp/services/speech_service.dart' as _i3;
+import 'package:voiceapp/services/tts_service.dart' as _i6;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -163,4 +164,112 @@ class MockSettingsService extends _i1.Mock implements _i5.SettingsService {
         returnValue: _i4.Future<void>.value(),
         returnValueForMissingStub: _i4.Future<void>.value(),
       ) as _i4.Future<void>);
+}
+
+/// A class which mocks [TtsService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockTtsService extends _i1.Mock implements _i6.TtsService {
+  MockTtsService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  set onDone(dynamic Function()? value) => super.noSuchMethod(
+        Invocation.setter(
+          #onDone,
+          value,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i4.Future<void> initialize({
+    double? rate = 0.5,
+    double? pitch = 1.0,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #initialize,
+          [],
+          {
+            #rate: rate,
+            #pitch: pitch,
+          },
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  void updateSettings(
+    double? rate,
+    double? pitch,
+  ) =>
+      super.noSuchMethod(
+        Invocation.method(
+          #updateSettings,
+          [
+            rate,
+            pitch,
+          ],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void enqueue(String? text) => super.noSuchMethod(
+        Invocation.method(
+          #enqueue,
+          [text],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void markFinished() => super.noSuchMethod(
+        Invocation.method(
+          #markFinished,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i4.Future<void> waitUntilDone() => (super.noSuchMethod(
+        Invocation.method(
+          #waitUntilDone,
+          [],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> stop() => (super.noSuchMethod(
+        Invocation.method(
+          #stop,
+          [],
+        ),
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
+
+  @override
+  void reset() => super.noSuchMethod(
+        Invocation.method(
+          #reset,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

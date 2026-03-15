@@ -1,3 +1,4 @@
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -8,8 +9,9 @@ import 'package:voiceapp/models/settings.dart';
 import 'package:voiceapp/providers/conversation_provider.dart';
 import 'package:voiceapp/services/settings_service.dart';
 import 'package:voiceapp/services/speech_service.dart';
+import 'package:voiceapp/services/tts_service.dart';
 
-@GenerateMocks([SpeechService, SettingsService])
+@GenerateMocks([SpeechService, SettingsService, TtsService])
 import 'conversation_provider_test.mocks.dart';
 
 void main() {
@@ -87,10 +89,12 @@ void main() {
       final onFinalCallback =
           verify(mockSpeechService.onFinalResult = captureAny).captured.last
               as Function(String);
-      onFinalCallback('test message');
 
-      // Wait for processing
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Use fakeAsync to flush microtasks instead of real-time delays
+      fakeAsync((fake) {
+        onFinalCallback('test message');
+        fake.flushMicrotasks();
+      });
 
       expect(provider.errorMessage, isNotNull);
 
@@ -107,10 +111,11 @@ void main() {
       final onFinalCallback =
           verify(mockSpeechService.onFinalResult = captureAny).captured.last
               as Function(String);
-      onFinalCallback('test message');
 
-      // Wait for processing
-      await Future.delayed(const Duration(milliseconds: 100));
+      fakeAsync((fake) {
+        onFinalCallback('test message');
+        fake.flushMicrotasks();
+      });
 
       expect(provider.messages.isNotEmpty, true);
 
@@ -121,11 +126,28 @@ void main() {
 
     test('interrupts when toggleConversation called during speaking state',
         () async {
-      await provider.initialize();
+      final mockTts = MockTtsService();
+      when(mockTts.stop()).thenAnswer((_) async {});
+      when(mockTts.dispose()).thenReturn(null);
 
-      // We can't easily get to speaking state without mocking LLM,
-      // but we can verify the interrupt behavior is wired correctly
-      expect(provider.state, ConversationState.idle);
+      // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
+      // Injecting ttsService in the constructor is enough for this unit test.
+      final speakingProvider = ConversationProvider(
+        speechService: mockSpeechService,
+        settingsService: mockSettingsService,
+        ttsService: mockTts,
+      );
+
+      // Force into speaking state via the @visibleForTesting helper
+      speakingProvider.forceStateForTesting(ConversationState.speaking);
+      expect(speakingProvider.state, ConversationState.speaking);
+
+      // toggleConversation in speaking state should call _interrupt → idle
+      speakingProvider.toggleConversation();
+
+      expect(speakingProvider.state, ConversationState.idle);
+      verify(mockTts.stop()).called(1);
+      verify(mockSpeechService.cancelListening()).called(1);
     });
 
     test('partial STT text is updated during listening', () async {
@@ -182,10 +204,10 @@ void main() {
       final onFinalCallback =
           verify(mockSpeechService.onFinalResult = captureAny).captured.last
               as Function(String);
-      onFinalCallback('test');
-
-      // Wait a bit for state to update
-      await Future.delayed(const Duration(milliseconds: 50));
+      fakeAsync((fake) {
+        onFinalCallback('test');
+        fake.flushMicrotasks();
+      });
 
       // State will move to idle quickly because there's no API key
       // But the key is that if we were in processing, toggle would do nothing
@@ -201,10 +223,10 @@ void main() {
       final onFinalCallback =
           verify(mockSpeechService.onFinalResult = captureAny).captured.last
               as Function(String);
-      onFinalCallback('test message');
-
-      // Wait for message to be added
-      await Future.delayed(const Duration(milliseconds: 50));
+      fakeAsync((fake) {
+        onFinalCallback('test message');
+        fake.flushMicrotasks();
+      });
 
       expect(provider.messages.length, greaterThanOrEqualTo(1));
       expect(provider.messages.first.role, MessageRole.user);
@@ -219,9 +241,10 @@ void main() {
       final onFinalCallback =
           verify(mockSpeechService.onFinalResult = captureAny).captured.last
               as Function(String);
-      onFinalCallback('   '); // Empty/whitespace only
-
-      await Future.delayed(const Duration(milliseconds: 50));
+      fakeAsync((fake) {
+        onFinalCallback('   '); // Empty/whitespace only
+        fake.flushMicrotasks();
+      });
 
       expect(provider.messages, isEmpty);
       expect(provider.state, ConversationState.idle);
