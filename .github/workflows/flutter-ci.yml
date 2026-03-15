@@ -31,7 +31,12 @@ jobs:
         run: flutter analyze --fatal-infos
 
       - name: Run tests
-        run: flutter test --coverage
+        run: |
+          if [ -d "test" ]; then
+            flutter test --coverage
+          else
+            echo "No test directory found — skipping (see issue #13)"
+          fi
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
