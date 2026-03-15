@@ -151,6 +151,7 @@ void main() {
         id: 'test-id',
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'test-session',
       );
       when(mockProvider.settings).thenReturn(const Settings(
         openclawInstances: [instance],
@@ -167,6 +168,7 @@ void main() {
         id: 'test-id',
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'test-session',
       );
       when(mockProvider.settings).thenReturn(const Settings(
         openclawInstances: [instance],
@@ -269,7 +271,7 @@ void main() {
 
       // Change to ElevenLabs (it might already be selected based on mock)
       expect(find.text('ElevenLabs API Key'), findsOneWidget);
-      expect(find.text('Voice ID'), findsOneWidget);
+      expect(find.text('Custom Voice ID (optional)'), findsOneWidget);
       expect(find.text('Model ID'), findsOneWidget);
     });
 

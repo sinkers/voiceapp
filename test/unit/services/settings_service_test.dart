@@ -136,6 +136,7 @@ void main() {
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
         token: 'test-token',
+        sessionId: 'test-session',
       );
       const settings = Settings(
         openclawInstances: [instance],
@@ -152,6 +153,7 @@ void main() {
       expect(
           loaded.openclawInstances.first.baseUrl, 'http://localhost:3000/v1');
       expect(loaded.openclawInstances.first.token, 'test-token');
+      expect(loaded.openclawInstances.first.sessionId, 'test-session');
       expect(loaded.selectedInstanceId, 'test-id');
       expect(loaded.selectedAgentId, 'main');
     });
@@ -175,12 +177,14 @@ void main() {
         id: 'id-1',
         name: 'Instance 1',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'session-1',
       );
       const instance2 = OpenClawInstance(
         id: 'id-2',
         name: 'Instance 2',
         baseUrl: 'http://10.0.0.1:8000/v1',
         token: 'token-2',
+        sessionId: 'session-2',
       );
       const settings = Settings(
         openclawInstances: [instance1, instance2],

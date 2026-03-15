@@ -1,16 +1,21 @@
 import 'package:collection/collection.dart';
+import 'package:uuid/uuid.dart';
+
+const _uuid = Uuid();
 
 class OpenClawInstance {
   final String id;
   final String name;
   final String baseUrl;
   final String token;
+  final String sessionId;
 
   const OpenClawInstance({
     required this.id,
     required this.name,
     required this.baseUrl,
     this.token = '',
+    required this.sessionId,
   });
 
   // TODO(security): token should be moved to flutter_secure_storage and excluded from serialization
@@ -19,6 +24,7 @@ class OpenClawInstance {
         'name': name,
         'baseUrl': baseUrl,
         'token': token,
+        'sessionId': sessionId,
       };
 
   factory OpenClawInstance.fromJson(Map<String, dynamic> json) =>
@@ -27,6 +33,7 @@ class OpenClawInstance {
         name: json['name'] as String,
         baseUrl: json['baseUrl'] as String,
         token: (json['token'] as String?) ?? '',
+        sessionId: json['sessionId'] as String? ?? _uuid.v4(),
       );
 
   OpenClawInstance copyWith({
@@ -34,18 +41,29 @@ class OpenClawInstance {
     String? name,
     String? baseUrl,
     String? token,
+    String? sessionId,
   }) =>
       OpenClawInstance(
         id: id ?? this.id,
         name: name ?? this.name,
         baseUrl: baseUrl ?? this.baseUrl,
         token: token ?? this.token,
+        sessionId: sessionId ?? this.sessionId,
       );
 }
 
 enum LLMBackend { claude, openaiCompatible }
 
 enum TtsProvider { onDevice, elevenlabs, openai }
+
+enum ElevenLabsVoice {
+  rachel("Rachel (Female)", "21m00Tcm4TlvDq8ikWAM"),
+  liam("Liam (Male)", "TX3LPaxmHKxFdv7VOQHJ");
+
+  const ElevenLabsVoice(this.label, this.voiceId);
+  final String label;
+  final String voiceId;
+}
 
 class Settings {
   final String? claudeApiKey;
@@ -62,6 +80,7 @@ class Settings {
   final String? selectedAgentId;
   final TtsProvider ttsProvider;
   final String? elevenLabsApiKey;
+  final ElevenLabsVoice? elevenLabsVoice;
   final String elevenLabsVoiceId;
   final String elevenLabsModelId;
   final String openaiTtsVoice;
@@ -85,8 +104,9 @@ class Settings {
     this.selectedAgentId,
     this.ttsProvider = TtsProvider.onDevice,
     this.elevenLabsApiKey,
+    this.elevenLabsVoice = ElevenLabsVoice.rachel,
     this.elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM',
-    this.elevenLabsModelId = 'eleven_multilingual_v2',
+    this.elevenLabsModelId = 'eleven_turbo_v2_5',
     this.openaiTtsVoice = 'alloy',
     this.openaiTtsModel = 'tts-1',
   });
@@ -112,6 +132,7 @@ class Settings {
     String? selectedAgentId,
     TtsProvider? ttsProvider,
     String? elevenLabsApiKey,
+    ElevenLabsVoice? elevenLabsVoice,
     String? elevenLabsVoiceId,
     String? elevenLabsModelId,
     String? openaiTtsVoice,
@@ -145,6 +166,7 @@ class Settings {
       elevenLabsApiKey: clearElevenLabsApiKey
           ? null
           : (elevenLabsApiKey ?? this.elevenLabsApiKey),
+      elevenLabsVoice: elevenLabsVoice ?? this.elevenLabsVoice,
       elevenLabsVoiceId: elevenLabsVoiceId ?? this.elevenLabsVoiceId,
       elevenLabsModelId: elevenLabsModelId ?? this.elevenLabsModelId,
       openaiTtsVoice: openaiTtsVoice ?? this.openaiTtsVoice,

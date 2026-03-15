@@ -107,6 +107,7 @@ void main() {
         id: 'test-id',
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'test-session',
       );
       when(mockProvider.settings).thenReturn(const Settings(
         openclawInstances: [instance],
@@ -117,6 +118,40 @@ void main() {
       await tester.pumpWidget(createHomeScreen());
 
       expect(find.text('Test Instance · main'), findsOneWidget);
+    });
+
+    testWidgets(
+        'tapping OpenClaw chip shows instance switcher with multiple instances',
+        (tester) async {
+      const instance1 = OpenClawInstance(
+        id: 'id-1',
+        name: 'Instance 1',
+        baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'session-1',
+      );
+      const instance2 = OpenClawInstance(
+        id: 'id-2',
+        name: 'Instance 2',
+        baseUrl: 'http://localhost:8000/v1',
+        sessionId: 'session-2',
+      );
+      when(mockProvider.settings).thenReturn(const Settings(
+        openclawInstances: [instance1, instance2],
+        selectedInstanceId: 'id-1',
+        selectedAgentId: 'main',
+      ));
+
+      await tester.pumpWidget(createHomeScreen());
+
+      // Tap the OpenClaw chip
+      await tester.tap(find.text('Instance 1 · main'));
+      await tester.pump(); // Start bottom sheet animation
+      await tester.pump(const Duration(milliseconds: 300)); // Finish animation
+
+      // Verify the bottom sheet appears with both instances
+      expect(find.text('Switch OpenClaw Instance'), findsOneWidget);
+      expect(find.text('Instance 1'), findsOneWidget);
+      expect(find.text('Instance 2'), findsOneWidget);
     });
 
     testWidgets('shows clear button when messages exist', (tester) async {

@@ -6,12 +6,14 @@ class OpenAIService implements LLMService {
   final String apiKey;
   final String baseUrl;
   final String model;
+  final Map<String, String>? customHeaders;
   late final OpenAIClient _client;
 
   OpenAIService({
     required this.apiKey,
     required this.baseUrl,
     required this.model,
+    this.customHeaders,
   }) {
     final cleanUrl = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
@@ -19,6 +21,7 @@ class OpenAIService implements LLMService {
     _client = OpenAIClient(
       apiKey: apiKey,
       baseUrl: cleanUrl,
+      headers: customHeaders,
     );
   }
 

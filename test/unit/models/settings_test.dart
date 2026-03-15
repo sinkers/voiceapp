@@ -101,11 +101,13 @@ void main() {
         id: 'id-1',
         name: 'Instance 1',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'session-1',
       );
       const instance2 = OpenClawInstance(
         id: 'id-2',
         name: 'Instance 2',
         baseUrl: 'http://localhost:8000/v1',
+        sessionId: 'session-2',
       );
 
       const settings = Settings(
@@ -122,6 +124,7 @@ void main() {
         id: 'id-1',
         name: 'Instance 1',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'session-1',
       );
 
       const settings = Settings(
@@ -137,6 +140,7 @@ void main() {
         id: 'id-1',
         name: 'Instance 1',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'session-1',
       );
 
       const settings = Settings(
@@ -154,12 +158,14 @@ void main() {
         id: 'test-id',
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'test-session',
       );
 
       expect(instance.id, 'test-id');
       expect(instance.name, 'Test Instance');
       expect(instance.baseUrl, 'http://localhost:3000/v1');
       expect(instance.token, '');
+      expect(instance.sessionId, 'test-session');
     });
 
     test('creates instance with token', () {
@@ -168,6 +174,7 @@ void main() {
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
         token: 'test-token',
+        sessionId: 'test-session',
       );
 
       expect(instance.token, 'test-token');
@@ -179,6 +186,7 @@ void main() {
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
         token: 'test-token',
+        sessionId: 'test-session',
       );
 
       final json = instance.toJson();
@@ -187,9 +195,42 @@ void main() {
       expect(json['name'], 'Test Instance');
       expect(json['baseUrl'], 'http://localhost:3000/v1');
       expect(json['token'], 'test-token');
+      expect(json['sessionId'], 'test-session');
     });
 
     test('fromJson deserialises correctly', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Instance',
+        'baseUrl': 'http://localhost:3000/v1',
+        'token': 'test-token',
+        'sessionId': 'test-session',
+      };
+
+      final instance = OpenClawInstance.fromJson(json);
+
+      expect(instance.id, 'test-id');
+      expect(instance.name, 'Test Instance');
+      expect(instance.baseUrl, 'http://localhost:3000/v1');
+      expect(instance.token, 'test-token');
+      expect(instance.sessionId, 'test-session');
+    });
+
+    test('fromJson handles missing token', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Instance',
+        'baseUrl': 'http://localhost:3000/v1',
+        'sessionId': 'test-session',
+      };
+
+      final instance = OpenClawInstance.fromJson(json);
+
+      expect(instance.token, '');
+    });
+
+    test('fromJson generates sessionId if missing (backward compatibility)',
+        () {
       final json = {
         'id': 'test-id',
         'name': 'Test Instance',
@@ -199,22 +240,22 @@ void main() {
 
       final instance = OpenClawInstance.fromJson(json);
 
-      expect(instance.id, 'test-id');
-      expect(instance.name, 'Test Instance');
-      expect(instance.baseUrl, 'http://localhost:3000/v1');
-      expect(instance.token, 'test-token');
+      expect(instance.sessionId, isNotEmpty);
+      expect(instance.sessionId.length, 36); // UUID v4 format
     });
 
-    test('fromJson handles missing token', () {
+    test('two instances created from JSON without sessionId have different IDs',
+        () {
       final json = {
         'id': 'test-id',
         'name': 'Test Instance',
         'baseUrl': 'http://localhost:3000/v1',
       };
 
-      final instance = OpenClawInstance.fromJson(json);
+      final instance1 = OpenClawInstance.fromJson(json);
+      final instance2 = OpenClawInstance.fromJson(json);
 
-      expect(instance.token, '');
+      expect(instance1.sessionId, isNot(equals(instance2.sessionId)));
     });
 
     test('round-trip serialisation preserves data', () {
@@ -223,6 +264,7 @@ void main() {
         name: 'Test Instance',
         baseUrl: 'http://localhost:3000/v1',
         token: 'test-token',
+        sessionId: 'test-session',
       );
 
       final json = original.toJson();
@@ -232,6 +274,7 @@ void main() {
       expect(deserialized.name, original.name);
       expect(deserialized.baseUrl, original.baseUrl);
       expect(deserialized.token, original.token);
+      expect(deserialized.sessionId, original.sessionId);
     });
 
     test('copyWith creates copy with updated fields', () {
@@ -240,6 +283,7 @@ void main() {
         name: 'Original',
         baseUrl: 'http://old:3000/v1',
         token: 'old-token',
+        sessionId: 'session-1',
       );
 
       final updated = original.copyWith(
@@ -251,6 +295,22 @@ void main() {
       expect(updated.name, 'Updated');
       expect(updated.baseUrl, 'http://new:3000/v1');
       expect(updated.token, 'old-token');
+      expect(updated.sessionId, 'session-1');
+    });
+
+    test('copyWith can update sessionId', () {
+      const original = OpenClawInstance(
+        id: 'id-1',
+        name: 'Instance',
+        baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'old-session',
+      );
+
+      final updated = original.copyWith(sessionId: 'new-session');
+
+      expect(updated.sessionId, 'new-session');
+      expect(updated.id, original.id);
+      expect(updated.name, original.name);
     });
   });
 
