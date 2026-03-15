@@ -52,7 +52,7 @@ class _StateIndicatorState extends State<StateIndicator>
                 height: 10,
                 decoration: BoxDecoration(
                   color:
-                      Colors.red.shade500.withOpacity(_animation.value),
+                      Colors.red.shade500.withValues(alpha: _animation.value),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -101,7 +101,7 @@ class _StateIndicatorState extends State<StateIndicator>
                 Icons.volume_up_rounded,
                 size: 16,
                 color: Colors.orange.shade600
-                    .withOpacity(0.5 + _animation.value * 0.5),
+                    .withValues(alpha: 0.5 + _animation.value * 0.5),
               ),
               const SizedBox(width: 8),
               Text(

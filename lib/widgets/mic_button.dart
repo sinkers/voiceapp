@@ -57,7 +57,7 @@ class _MicButtonState extends State<MicButton>
       tooltip = 'Stop listening';
     } else if (isProcessing) {
       buttonColor = theme.colorScheme.surfaceContainerHighest;
-      iconColor = theme.colorScheme.onSurfaceVariant.withOpacity(0.4);
+      iconColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4);
       icon = Icons.mic_rounded;
       tooltip = 'Processing...';
     } else if (isSpeaking) {
