@@ -3,17 +3,17 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i8;
-import 'dart:ui' as _i9;
+import 'dart:async' as _i6;
+import 'dart:ui' as _i7;
 
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i7;
-import 'package:voiceapp/models/agent_config.dart' as _i3;
-import 'package:voiceapp/models/conversation_state.dart' as _i5;
-import 'package:voiceapp/models/message.dart' as _i6;
+import 'package:mockito/src/dummies.dart' as _i10;
+import 'package:voiceapp/models/agent_config.dart' as _i5;
+import 'package:voiceapp/models/conversation_state.dart' as _i8;
+import 'package:voiceapp/models/message.dart' as _i9;
 import 'package:voiceapp/models/settings.dart' as _i2;
 import 'package:voiceapp/providers/agent_switcher_provider.dart' as _i4;
-import 'package:voiceapp/providers/conversation_provider.dart' as _i10;
+import 'package:voiceapp/providers/conversation_provider.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -41,7 +41,7 @@ class _FakeSettings_0 extends _i1.SmartFake implements _i2.Settings {
 }
 
 class _FakeConversationProvider_1 extends _i1.SmartFake
-    implements _i10.ConversationProvider {
+    implements _i3.ConversationProvider {
   _FakeConversationProvider_1(
     Object parent,
     Invocation parentInvocation,
@@ -52,6 +52,8 @@ class _FakeConversationProvider_1 extends _i1.SmartFake
 }
 
 /// A class which mocks [AgentSwitcherProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
 class MockAgentSwitcherProvider extends _i1.Mock
     implements _i4.AgentSwitcherProvider {
   MockAgentSwitcherProvider() {
@@ -59,10 +61,10 @@ class MockAgentSwitcherProvider extends _i1.Mock
   }
 
   @override
-  List<_i3.AgentConfig> get agents => (super.noSuchMethod(
+  List<_i5.AgentConfig> get agents => (super.noSuchMethod(
         Invocation.getter(#agents),
-        returnValue: <_i3.AgentConfig>[],
-      ) as List<_i3.AgentConfig>);
+        returnValue: <_i5.AgentConfig>[],
+      ) as List<_i5.AgentConfig>);
 
   @override
   int get currentIndex => (super.noSuchMethod(
@@ -92,7 +94,7 @@ class MockAgentSwitcherProvider extends _i1.Mock
       ) as bool);
 
   @override
-  _i10.ConversationProvider providerFor(_i3.AgentConfig? agent) =>
+  _i3.ConversationProvider providerFor(_i5.AgentConfig? agent) =>
       (super.noSuchMethod(
         Invocation.method(
           #providerFor,
@@ -100,40 +102,43 @@ class MockAgentSwitcherProvider extends _i1.Mock
         ),
         returnValue: _FakeConversationProvider_1(
           this,
-          Invocation.method(#providerFor, [agent]),
+          Invocation.method(
+            #providerFor,
+            [agent],
+          ),
         ),
-      ) as _i10.ConversationProvider);
+      ) as _i3.ConversationProvider);
 
   @override
-  _i8.Future<void> initialize() => (super.noSuchMethod(
+  _i6.Future<void> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,
           [],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i8.Future<void> updateSettings(_i2.Settings? newSettings) =>
+  _i6.Future<void> updateSettings(_i2.Settings? newSettings) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateSettings,
           [newSettings],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i8.Future<void> setCurrentIndex(int? index) => (super.noSuchMethod(
+  _i6.Future<void> setCurrentIndex(int? index) => (super.noSuchMethod(
         Invocation.method(
           #setCurrentIndex,
           [index],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
@@ -145,7 +150,7 @@ class MockAgentSwitcherProvider extends _i1.Mock
       );
 
   @override
-  void addListener(_i9.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #addListener,
           [listener],
@@ -154,7 +159,7 @@ class MockAgentSwitcherProvider extends _i1.Mock
       );
 
   @override
-  void removeListener(_i9.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #removeListener,
           [listener],
@@ -173,28 +178,30 @@ class MockAgentSwitcherProvider extends _i1.Mock
 }
 
 /// A class which mocks [ConversationProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
 class MockConversationProvider extends _i1.Mock
-    implements _i10.ConversationProvider {
+    implements _i3.ConversationProvider {
   MockConversationProvider() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.ConversationState get state => (super.noSuchMethod(
+  _i8.ConversationState get state => (super.noSuchMethod(
         Invocation.getter(#state),
-        returnValue: _i5.ConversationState.idle,
-      ) as _i5.ConversationState);
+        returnValue: _i8.ConversationState.idle,
+      ) as _i8.ConversationState);
 
   @override
-  List<_i6.Message> get messages => (super.noSuchMethod(
+  List<_i9.Message> get messages => (super.noSuchMethod(
         Invocation.getter(#messages),
-        returnValue: <_i6.Message>[],
-      ) as List<_i6.Message>);
+        returnValue: <_i9.Message>[],
+      ) as List<_i9.Message>);
 
   @override
   String get partialSttText => (super.noSuchMethod(
         Invocation.getter(#partialSttText),
-        returnValue: _i7.dummyValue<String>(
+        returnValue: _i10.dummyValue<String>(
           this,
           Invocation.getter(#partialSttText),
         ),
@@ -228,8 +235,7 @@ class MockConversationProvider extends _i1.Mock
       ) as bool);
 
   @override
-  void forceStateForTesting(_i5.ConversationState? state) =>
-      super.noSuchMethod(
+  void forceStateForTesting(_i8.ConversationState? state) => super.noSuchMethod(
         Invocation.method(
           #forceStateForTesting,
           [state],
@@ -238,14 +244,25 @@ class MockConversationProvider extends _i1.Mock
       );
 
   @override
-  _i8.Future<void> initialize() => (super.noSuchMethod(
+  _i6.Future<void> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,
           [],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
+
+  @override
+  _i6.Future<void> initializeForAgent(_i2.Settings? agentSettings) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #initializeForAgent,
+          [agentSettings],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
   void toggleConversation() => super.noSuchMethod(
@@ -275,29 +292,15 @@ class MockConversationProvider extends _i1.Mock
       );
 
   @override
-  _i8.Future<void> updateSettings(_i2.Settings? newSettings) =>
+  _i6.Future<void> updateSettings(_i2.Settings? newSettings) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateSettings,
           [newSettings],
         ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
-
-  @override
-  _i8.Future<void> applyAgentConfig(
-    _i3.AgentConfig? config,
-    _i2.Settings? baseSettings,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #applyAgentConfig,
-          [config, baseSettings],
-        ),
-        returnValue: _i8.Future<void>.value(),
-        returnValueForMissingStub: _i8.Future<void>.value(),
-      ) as _i8.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
@@ -309,7 +312,7 @@ class MockConversationProvider extends _i1.Mock
       );
 
   @override
-  void addListener(_i9.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #addListener,
           [listener],
@@ -318,7 +321,7 @@ class MockConversationProvider extends _i1.Mock
       );
 
   @override
-  void removeListener(_i9.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #removeListener,
           [listener],

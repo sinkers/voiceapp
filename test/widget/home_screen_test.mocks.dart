@@ -8,7 +8,6 @@ import 'dart:ui' as _i8;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
-import 'package:voiceapp/models/agent_config.dart' as _i9;
 import 'package:voiceapp/models/conversation_state.dart' as _i4;
 import 'package:voiceapp/models/message.dart' as _i5;
 import 'package:voiceapp/models/settings.dart' as _i2;
@@ -116,6 +115,17 @@ class MockConversationProvider extends _i1.Mock
       ) as _i7.Future<void>);
 
   @override
+  _i7.Future<void> initializeForAgent(_i2.Settings? agentSettings) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #initializeForAgent,
+          [agentSettings],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
+
+  @override
   void toggleConversation() => super.noSuchMethod(
         Invocation.method(
           #toggleConversation,
@@ -148,20 +158,6 @@ class MockConversationProvider extends _i1.Mock
         Invocation.method(
           #updateSettings,
           [newSettings],
-        ),
-        returnValue: _i7.Future<void>.value(),
-        returnValueForMissingStub: _i7.Future<void>.value(),
-      ) as _i7.Future<void>);
-
-  @override
-  _i7.Future<void> applyAgentConfig(
-    _i9.AgentConfig? config,
-    _i2.Settings? baseSettings,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #applyAgentConfig,
-          [config, baseSettings],
         ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),

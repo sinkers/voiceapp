@@ -12,6 +12,7 @@ const _keyLastActiveAgentId = 'last_active_agent_id';
 /// index, per-agent [ConversationProvider] instances, and settings persistence.
 class AgentSwitcherProvider extends ChangeNotifier {
   final SettingsService _settingsService;
+  final SpeechService _speechService;
 
   /// Optional factory for creating [ConversationProvider] instances.
   /// Primarily useful for testing; defaults to the real implementation.
@@ -24,8 +25,10 @@ class AgentSwitcherProvider extends ChangeNotifier {
 
   AgentSwitcherProvider({
     required SettingsService settingsService,
+    required SpeechService speechService,
     ConversationProvider Function()? providerFactory,
   })  : _settingsService = settingsService,
+        _speechService = speechService,
         _providerFactory = providerFactory;
 
   List<AgentConfig> get agents => _settings.allAgents;
@@ -35,24 +38,36 @@ class AgentSwitcherProvider extends ChangeNotifier {
 
   /// Returns the [ConversationProvider] for [agent], creating it lazily.
   ConversationProvider providerFor(AgentConfig agent) {
-    if (!_providers.containsKey(agent.id)) {
+    return _providers.putIfAbsent(agent.id, () {
       final provider = _providerFactory != null
           ? _providerFactory!()
           : ConversationProvider(
-              speechService: SpeechService(),
+              speechService: _speechService,
               settingsService: _settingsService,
             );
-      _providers[agent.id] = provider;
       _initProviderForAgent(provider, agent);
-    }
-    return _providers[agent.id]!;
+      return provider;
+    });
   }
 
   void _initProviderForAgent(ConversationProvider provider, AgentConfig agent) {
-    provider.initialize().then((_) {
-      if (!_providers.containsKey(agent.id)) return; // provider was disposed
-      provider.applyAgentConfig(agent, _settings);
-    });
+    // Build agent-specific settings by applying agent config to base settings
+    Settings agentSettings;
+    switch (agent) {
+      case OpenClawAgentConfig(:final instance, :final agentId):
+        agentSettings = _settings.copyWith(
+          backend: LLMBackend.openaiCompatible,
+          selectedInstanceId: instance.id,
+          selectedAgentId: agentId,
+        );
+      case DirectModelAgentConfig(:final backend):
+        agentSettings = _settings.copyWith(
+          backend: backend,
+          clearSelectedInstanceId: true,
+          clearSelectedAgentId: true,
+        );
+    }
+    provider.initializeForAgent(agentSettings);
   }
 
   Future<void> initialize() async {
@@ -71,11 +86,26 @@ class AgentSwitcherProvider extends ChangeNotifier {
   Future<void> updateSettings(Settings newSettings) async {
     _settings = newSettings;
     await _settingsService.save(newSettings);
-    // Rebuild providers that are already live
+    // Rebuild providers that are already live with updated agent-specific settings
     for (final entry in _providers.entries) {
       final agent = agents.firstWhereOrNull((a) => a.id == entry.key);
       if (agent != null) {
-        await entry.value.applyAgentConfig(agent, _settings);
+        Settings agentSettings;
+        switch (agent) {
+          case OpenClawAgentConfig(:final instance, :final agentId):
+            agentSettings = _settings.copyWith(
+              backend: LLMBackend.openaiCompatible,
+              selectedInstanceId: instance.id,
+              selectedAgentId: agentId,
+            );
+          case DirectModelAgentConfig(:final backend):
+            agentSettings = _settings.copyWith(
+              backend: backend,
+              clearSelectedInstanceId: true,
+              clearSelectedAgentId: true,
+            );
+        }
+        await entry.value.updateSettings(agentSettings);
       }
     }
     notifyListeners();

@@ -4,13 +4,13 @@ import 'package:mockito/mockito.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voiceapp/models/agent_config.dart';
 import 'package:voiceapp/models/conversation_state.dart';
-import 'package:voiceapp/models/message.dart';
 import 'package:voiceapp/models/settings.dart';
 import 'package:voiceapp/providers/agent_switcher_provider.dart';
 import 'package:voiceapp/providers/conversation_provider.dart';
 import 'package:voiceapp/services/settings_service.dart';
+import 'package:voiceapp/services/speech_service.dart';
 
-@GenerateMocks([ConversationProvider])
+@GenerateMocks([ConversationProvider, SpeechService])
 import 'agent_switcher_provider_test.mocks.dart';
 
 // Minimal fake SettingsService that returns a preset Settings object.
@@ -51,8 +51,8 @@ void main() {
 
   MockConversationProvider _makeMockProvider() {
     final mock = MockConversationProvider();
-    when(mock.initialize()).thenAnswer((_) async {});
-    when(mock.applyAgentConfig(any, any)).thenAnswer((_) async {});
+    when(mock.initializeForAgent(any)).thenAnswer((_) async {});
+    when(mock.updateSettings(any)).thenAnswer((_) async {});
     when(mock.state).thenReturn(ConversationState.idle);
     when(mock.messages).thenReturn([]);
     when(mock.partialSttText).thenReturn('');
@@ -68,6 +68,7 @@ void main() {
     test('initializes with currentIndex 0', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -78,6 +79,7 @@ void main() {
     test('agents list is built from settings', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(_twoInstances),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -94,6 +96,7 @@ void main() {
         () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(_twoInstances),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -112,6 +115,7 @@ void main() {
     test('setCurrentIndex ignores out-of-range values', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -124,6 +128,7 @@ void main() {
         () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(_twoInstances),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -141,6 +146,7 @@ void main() {
     test('providerFor returns a ConversationProvider for an agent', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -154,6 +160,7 @@ void main() {
     test('providerFor returns the same instance on repeated calls', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -168,6 +175,7 @@ void main() {
     test('different agents get different ConversationProviders', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(_twoInstances),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();
@@ -188,6 +196,7 @@ void main() {
 
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(_twoInstances),
+        speechService: MockSpeechService(),
         providerFactory: _makeMockProvider,
       );
       await switcher.initialize();

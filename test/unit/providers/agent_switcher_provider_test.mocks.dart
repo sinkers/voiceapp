@@ -8,11 +8,11 @@ import 'dart:ui' as _i8;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
-import 'package:voiceapp/models/agent_config.dart' as _i9;
 import 'package:voiceapp/models/conversation_state.dart' as _i4;
 import 'package:voiceapp/models/message.dart' as _i5;
 import 'package:voiceapp/models/settings.dart' as _i2;
 import 'package:voiceapp/providers/conversation_provider.dart' as _i3;
+import 'package:voiceapp/services/speech_service.dart' as _i9;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -40,6 +40,8 @@ class _FakeSettings_0 extends _i1.SmartFake implements _i2.Settings {
 }
 
 /// A class which mocks [ConversationProvider].
+///
+/// See the documentation for Mockito's code generation for more information.
 class MockConversationProvider extends _i1.Mock
     implements _i3.ConversationProvider {
   MockConversationProvider() {
@@ -95,8 +97,7 @@ class MockConversationProvider extends _i1.Mock
       ) as bool);
 
   @override
-  void forceStateForTesting(_i4.ConversationState? state) =>
-      super.noSuchMethod(
+  void forceStateForTesting(_i4.ConversationState? state) => super.noSuchMethod(
         Invocation.method(
           #forceStateForTesting,
           [state],
@@ -109,6 +110,17 @@ class MockConversationProvider extends _i1.Mock
         Invocation.method(
           #initialize,
           [],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> initializeForAgent(_i2.Settings? agentSettings) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #initializeForAgent,
+          [agentSettings],
         ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
@@ -153,20 +165,6 @@ class MockConversationProvider extends _i1.Mock
       ) as _i7.Future<void>);
 
   @override
-  _i7.Future<void> applyAgentConfig(
-    _i9.AgentConfig? config,
-    _i2.Settings? baseSettings,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #applyAgentConfig,
-          [config, baseSettings],
-        ),
-        returnValue: _i7.Future<void>.value(),
-        returnValueForMissingStub: _i7.Future<void>.value(),
-      ) as _i7.Future<void>);
-
-  @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
           #dispose,
@@ -197,6 +195,102 @@ class MockConversationProvider extends _i1.Mock
   void notifyListeners() => super.noSuchMethod(
         Invocation.method(
           #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
+}
+
+/// A class which mocks [SpeechService].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockSpeechService extends _i1.Mock implements _i9.SpeechService {
+  MockSpeechService() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  bool get isAvailable => (super.noSuchMethod(
+        Invocation.getter(#isAvailable),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  bool get isListening => (super.noSuchMethod(
+        Invocation.getter(#isListening),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  set onFinalResult(dynamic Function(String)? value) => super.noSuchMethod(
+        Invocation.setter(
+          #onFinalResult,
+          value,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  set onPartialResult(dynamic Function(String)? value) => super.noSuchMethod(
+        Invocation.setter(
+          #onPartialResult,
+          value,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  set onStopped(dynamic Function()? value) => super.noSuchMethod(
+        Invocation.setter(
+          #onStopped,
+          value,
+        ),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  _i7.Future<bool> initialize() => (super.noSuchMethod(
+        Invocation.method(
+          #initialize,
+          [],
+        ),
+        returnValue: _i7.Future<bool>.value(false),
+      ) as _i7.Future<bool>);
+
+  @override
+  _i7.Future<void> startListening() => (super.noSuchMethod(
+        Invocation.method(
+          #startListening,
+          [],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> stopListening() => (super.noSuchMethod(
+        Invocation.method(
+          #stopListening,
+          [],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> cancelListening() => (super.noSuchMethod(
+        Invocation.method(
+          #cancelListening,
+          [],
+        ),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
+
+  @override
+  void dispose() => super.noSuchMethod(
+        Invocation.method(
+          #dispose,
           [],
         ),
         returnValueForMissingStub: null,

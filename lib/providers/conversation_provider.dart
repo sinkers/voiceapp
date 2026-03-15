@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
-import '../models/agent_config.dart';
 import '../models/conversation_state.dart';
 import '../models/message.dart';
 import '../models/settings.dart';
@@ -71,6 +70,21 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Initialize with agent-specific settings WITHOUT persisting to SharedPreferences.
+  /// Used by [AgentSwitcherProvider] to configure per-agent providers.
+  Future<void> initializeForAgent(Settings agentSettings) async {
+    _settings = agentSettings;
+    final sttAvailable = await _speechService.initialize();
+    if (!sttAvailable) {
+      _errorMessage =
+          'Speech recognition unavailable. Please enable microphone permission in Settings.';
+    }
+    await _rebuildTtsService();
+    _rebuildLlmService();
+    _initialized = true;
+    notifyListeners();
+  }
+
   /// Main entry point: tap mic button to start/stop/interrupt.
   void toggleConversation() {
     switch (_state) {
@@ -104,27 +118,6 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Apply agent-specific configuration without persisting to SharedPreferences.
-  /// Called by [AgentSwitcherProvider] after the base settings are loaded.
-  Future<void> applyAgentConfig(AgentConfig config, Settings baseSettings) async {
-    switch (config) {
-      case OpenClawAgentConfig(:final instance, :final agentId):
-        _settings = baseSettings.copyWith(
-          backend: LLMBackend.openaiCompatible,
-          selectedInstanceId: instance.id,
-          selectedAgentId: agentId,
-        );
-      case DirectModelAgentConfig(:final backend):
-        _settings = baseSettings.copyWith(
-          backend: backend,
-          clearSelectedInstanceId: true,
-          clearSelectedAgentId: true,
-        );
-    }
-    await _rebuildTtsService();
-    _rebuildLlmService();
-    notifyListeners();
-  }
 
   void _startListening() {
     _errorMessage = null;
