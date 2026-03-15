@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (provider.errorMessage != null)
                 _ErrorBanner(
                   message: provider.errorMessage!,
-                  onDismiss: () {},
+                  onDismiss: provider.clearError,
                 ),
 
               // Setup prompt if no API key
@@ -155,8 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child:
-                Text('Clear', style: TextStyle(color: Colors.red.shade400)),
+            child: Text('Clear', style: TextStyle(color: Colors.red.shade400)),
           ),
         ],
       ),
@@ -321,6 +320,13 @@ class _ErrorBanner extends StatelessWidget {
               message,
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white, size: 18),
+            onPressed: onDismiss,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            tooltip: 'Dismiss',
           ),
         ],
       ),

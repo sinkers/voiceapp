@@ -148,7 +148,8 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             shape: BoxShape.circle,
           ),
         ),
