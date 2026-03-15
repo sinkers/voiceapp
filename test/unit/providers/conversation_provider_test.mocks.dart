@@ -266,11 +266,12 @@ class MockTtsService extends _i1.Mock implements _i6.TtsService {
       ) as _i4.Future<void>);
 
   @override
-  void dispose() => super.noSuchMethod(
+  _i4.Future<void> dispose() => (super.noSuchMethod(
         Invocation.method(
           #dispose,
           [],
         ),
-        returnValueForMissingStub: null,
-      );
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
 }

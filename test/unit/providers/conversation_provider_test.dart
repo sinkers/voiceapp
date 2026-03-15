@@ -128,7 +128,7 @@ void main() {
         () async {
       final mockTts = MockTtsService();
       when(mockTts.stop()).thenAnswer((_) async {});
-      when(mockTts.dispose()).thenReturn(null);
+      when(mockTts.dispose()).thenAnswer((_) async {});
 
       // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
       // Injecting ttsService in the constructor is enough for this unit test.

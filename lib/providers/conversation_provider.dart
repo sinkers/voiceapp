@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/conversation_state.dart';
@@ -286,7 +288,7 @@ class ConversationProvider extends ChangeNotifier {
   }
 
   Future<void> _rebuildTtsService() async {
-    _ttsService.dispose();
+    await _ttsService.dispose();
     switch (_settings.ttsProvider) {
       case TtsProvider.onDevice:
         final svc = OnDeviceTtsService();
@@ -368,7 +370,7 @@ class ConversationProvider extends ChangeNotifier {
   @override
   void dispose() {
     _speechService.dispose();
-    _ttsService.dispose();
+    unawaited(_ttsService.dispose());
     _llmService?.dispose();
     super.dispose();
   }

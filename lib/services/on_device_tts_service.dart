@@ -99,7 +99,7 @@ class OnDeviceTtsService implements TtsService {
   }
 
   @override
-  void dispose() {
-    _tts.stop();
+  Future<void> dispose() async {
+    await _tts.stop();
   }
 }

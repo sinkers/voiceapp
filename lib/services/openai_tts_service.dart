@@ -4,143 +4,36 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'network_tts_service_base.dart';
-import 'on_device_tts_service.dart';
 
 class OpenAITtsService extends NetworkTtsServiceBase {
   final String apiKey;
   final String voice;
   final String model;
 
-  final List<String> _queue = [];
-  bool _isSpeaking = false;
-  bool _finished = false;
-  Completer<void>? _doneCompleter;
-  late final OnDeviceTtsService _fallbackTts;
-
-  @override
-  Function()? onDone;
-
   OpenAITtsService({
     required this.apiKey,
     required this.voice,
     required this.model,
-  }) {
-    _fallbackTts = OnDeviceTtsService();
-  }
+  });
 
   @override
-  Future<void> initialize({double rate = 0.5, double pitch = 1.0}) async {
-    await _fallbackTts.initialize(rate: rate, pitch: pitch);
-  }
-
-  @override
-  void updateSettings(double rate, double pitch) {}
-
-  @override
-  void enqueue(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return;
-    _queue.add(trimmed);
-    _playNext();
-  }
-
-  @override
-  void markFinished() {
-    _finished = true;
-    if (!_isSpeaking && _queue.isEmpty) {
-      _doneCompleter?.complete();
-      onDone?.call();
+  Future<Uint8List> fetchAudio(String text, http.Client client) async {
+    final response = await client.post(
+      Uri.parse('https://api.openai.com/v1/audio/speech'),
+      headers: {
+        'Authorization': 'Bearer $apiKey',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'model': model,
+        'input': text,
+        'voice': voice,
+      }),
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+          'OpenAI TTS error: ${response.statusCode} ${response.body}');
     }
-  }
-
-  @override
-  Future<void> waitUntilDone() {
-    if (!_isSpeaking && _queue.isEmpty && _finished) {
-      return Future.value();
-    }
-    _doneCompleter = Completer<void>();
-    return _doneCompleter!.future;
-  }
-
-  @override
-  Future<void> stop() async {
-    _queue.clear();
-    _isSpeaking = false;
-    _finished = false;
-    if (!(_doneCompleter?.isCompleted ?? true)) {
-      _doneCompleter?.complete();
-    }
-    _doneCompleter = null;
-    await currentPlayer?.stop();
-    await currentPlayer?.dispose();
-    disposePlayer();
-  }
-
-  @override
-  Future<void> reset() async {
-    await currentPlayer?.stop();
-    await currentPlayer?.dispose();
-    disposePlayer();
-    _queue.clear();
-    _isSpeaking = false;
-    _finished = false;
-    _doneCompleter = null;
-  }
-
-  void _playNext() {
-    if (_isSpeaking || _queue.isEmpty) {
-      if (!_isSpeaking && _queue.isEmpty && _finished) {
-        if (!(_doneCompleter?.isCompleted ?? true)) {
-          _doneCompleter?.complete();
-        }
-        onDone?.call();
-      }
-      return;
-    }
-    final text = _queue.removeAt(0);
-    _isSpeaking = true;
-    _fetchAndPlay(text).then((_) {
-      _isSpeaking = false;
-      _playNext();
-    }).catchError((Object e) {
-      debugPrint('OpenAI TTS error: $e');
-      _isSpeaking = false;
-      _playNext();
-    });
-  }
-
-  Future<void> _fetchAndPlay(String text) async {
-    try {
-      final response = await http.post(
-        Uri.parse('https://api.openai.com/v1/audio/speech'),
-        headers: {
-          'Authorization': 'Bearer $apiKey',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'model': model,
-          'input': text,
-          'voice': voice,
-        }),
-      );
-      if (!_isSpeaking) return;
-      if (response.statusCode != 200) {
-        throw Exception(
-            'OpenAI TTS error: ${response.statusCode} ${response.body}');
-      }
-      await playBytes(response.bodyBytes);
-    } catch (e) {
-      debugPrint(
-          'OpenAI TTS network error: $e. Falling back to on-device TTS.');
-      if (!_isSpeaking) return;
-      _fallbackTts.enqueue(text);
-      await _fallbackTts.waitUntilDone();
-    }
-  }
-
-  @override
-  void dispose() {
-    _fallbackTts.dispose();
-    disposePlayer();
+    return response.bodyBytes;
   }
 }

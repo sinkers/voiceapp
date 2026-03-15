@@ -8,5 +8,5 @@ abstract class TtsService {
   Future<void> waitUntilDone();
   Future<void> stop();
   Future<void> reset();
-  void dispose();
+  Future<void> dispose();
 }

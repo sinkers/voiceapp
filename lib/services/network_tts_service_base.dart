@@ -1,21 +1,133 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
+import 'package:http/http.dart' as http;
+import 'on_device_tts_service.dart';
 import 'tts_service.dart';
 
 abstract class NetworkTtsServiceBase implements TtsService {
+  final List<String> _queue = [];
+  bool _isSpeaking = false;
+  bool _finished = false;
+  Completer<void>? _doneCompleter;
   AudioPlayer? _currentPlayer;
+  OnDeviceTtsService? _fallbackTts;
+  final Map<String, Future<Uint8List>> _prefetchCache = {};
+  final http.Client _httpClient = http.Client();
 
-  AudioPlayer? get currentPlayer => _currentPlayer;
+  @override
+  Function()? onDone;
 
-  Future<void> playBytes(Uint8List bytes) async {
-    final tempFile = File(
-      '${Directory.systemTemp.path}/tts_${const Uuid().v4()}.mp3',
-    );
-    await tempFile.writeAsBytes(bytes);
+  Future<Uint8List> fetchAudio(String text, http.Client client);
+
+  @override
+  Future<void> initialize({double rate = 0.5, double pitch = 1.0}) async {
+    _fallbackTts = OnDeviceTtsService();
+    await _fallbackTts!.initialize(rate: rate, pitch: pitch);
+  }
+
+  @override
+  void updateSettings(double rate, double pitch) {
+    _fallbackTts?.updateSettings(rate, pitch);
+  }
+
+  @override
+  void enqueue(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    _prefetchCache[trimmed] = fetchAudio(trimmed, _httpClient);
+    _queue.add(trimmed);
+    _playNext();
+  }
+
+  @override
+  void markFinished() {
+    _finished = true;
+    if (!_isSpeaking && _queue.isEmpty) {
+      _doneCompleter?.complete();
+      onDone?.call();
+    }
+  }
+
+  @override
+  Future<void> waitUntilDone() {
+    if (!_isSpeaking && _queue.isEmpty && _finished) {
+      return Future.value();
+    }
+    _doneCompleter = Completer<void>();
+    return _doneCompleter!.future;
+  }
+
+  @override
+  Future<void> stop() async {
+    _queue.clear();
+    _prefetchCache.clear();
+    _isSpeaking = false;
+    _finished = false;
+    if (!(_doneCompleter?.isCompleted ?? true)) {
+      _doneCompleter?.complete();
+    }
+    _doneCompleter = null;
+    await _currentPlayer?.stop();
+    await _currentPlayer?.dispose();
+    _currentPlayer = null;
+  }
+
+  @override
+  Future<void> reset() async {
+    _queue.clear();
+    _prefetchCache.clear();
+    _isSpeaking = false;
+    _finished = false;
+    _doneCompleter = null;
+    await _currentPlayer?.stop();
+    await _currentPlayer?.dispose();
+    _currentPlayer = null;
+  }
+
+  void _playNext() {
+    if (_isSpeaking || _queue.isEmpty) {
+      if (!_isSpeaking && _queue.isEmpty && _finished) {
+        if (!(_doneCompleter?.isCompleted ?? true)) {
+          _doneCompleter?.complete();
+        }
+        onDone?.call();
+      }
+      return;
+    }
+    final text = _queue.removeAt(0);
+    _isSpeaking = true;
+    _fetchAndPlay(text).then((_) {
+      _isSpeaking = false;
+      _playNext();
+    }).catchError((Object e) {
+      debugPrint('Network TTS error: $e. Falling back to on-device TTS.');
+      _fallbackToOnDevice(text);
+    });
+  }
+
+  Future<void> _fetchAndPlay(String text) async {
+    final bytes =
+        await (_prefetchCache.remove(text) ?? fetchAudio(text, _httpClient));
+    if (!_isSpeaking) return;
+    await _playBytes(bytes);
+  }
+
+  void _fallbackToOnDevice(String text) {
+    if (_fallbackTts != null) {
+      _fallbackTts!.enqueue(text);
+      _fallbackTts!.markFinished();
+      _fallbackTts!.waitUntilDone().then((_) {
+        _isSpeaking = false;
+        _playNext();
+      });
+    } else {
+      _isSpeaking = false;
+      _playNext();
+    }
+  }
+
+  Future<void> _playBytes(Uint8List bytes) async {
     _currentPlayer = AudioPlayer();
     final stateCompleter = Completer<void>();
     StreamSubscription<PlayerState>? sub;
@@ -27,21 +139,21 @@ abstract class NetworkTtsServiceBase implements TtsService {
       }
     });
     try {
-      await _currentPlayer!.play(DeviceFileSource(tempFile.path));
+      await _currentPlayer!.play(BytesSource(bytes));
       await stateCompleter.future;
     } finally {
       sub.cancel();
       await _currentPlayer?.dispose();
       _currentPlayer = null;
-      try {
-        await tempFile.delete();
-      } catch (_) {}
     }
   }
 
-  void disposePlayer() {
-    _currentPlayer?.stop();
-    _currentPlayer?.dispose();
+  @override
+  Future<void> dispose() async {
+    await _currentPlayer?.stop();
+    await _currentPlayer?.dispose();
     _currentPlayer = null;
+    await _fallbackTts?.dispose();
+    _httpClient.close();
   }
 }
