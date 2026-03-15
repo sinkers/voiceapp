@@ -794,8 +794,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
         TextEditingController(text: widget.instance?.baseUrl ?? '');
     _tokenController =
         TextEditingController(text: widget.instance?.token ?? '');
-    _selectedVoice =
-        widget.instance?.elevenLabsVoice ?? ElevenLabsVoice.rachel;
+    _selectedVoice = widget.instance?.elevenLabsVoice ?? ElevenLabsVoice.rachel;
     _speed = widget.instance?.elevenLabsSpeed ?? 1.1;
   }
 
@@ -872,7 +871,8 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                   border: OutlineInputBorder(),
                 ),
                 items: ElevenLabsVoice.values
-                    .map((v) => DropdownMenuItem(value: v, child: Text(v.label)))
+                    .map(
+                        (v) => DropdownMenuItem(value: v, child: Text(v.label)))
                     .toList(),
                 onChanged: (v) => setState(() => _selectedVoice = v!),
               ),

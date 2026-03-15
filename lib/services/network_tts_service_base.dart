@@ -20,7 +20,8 @@ abstract class NetworkTtsServiceBase implements TtsService {
 
   Future<Uint8List> fetchAudio(String text, http.Client client);
 
-  String _sanitiseForTts(String text) {
+  @visibleForTesting
+  String sanitiseForTts(String text) {
     return text
         .replaceAll(RegExp(r'\.{2,}'), '')
         .replaceAll('…', '')
@@ -42,7 +43,7 @@ abstract class NetworkTtsServiceBase implements TtsService {
 
   @override
   void enqueue(String text) {
-    final sanitised = _sanitiseForTts(text);
+    final sanitised = sanitiseForTts(text);
     if (sanitised.isEmpty) return;
     _prefetchCache[sanitised] = fetchAudio(sanitised, _httpClient);
     _queue.add(sanitised);
