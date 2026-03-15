@@ -93,7 +93,8 @@ void main() {
       expect(() => service.markFinished(), returnsNormally);
     });
 
-    test('waitUntilDone completes immediately if already finished and empty', () async {
+    test('waitUntilDone completes immediately if already finished and empty',
+        () async {
       await service.initialize();
 
       service.markFinished();

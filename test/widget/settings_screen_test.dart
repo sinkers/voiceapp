@@ -63,7 +63,8 @@ void main() {
       expect(find.text('OpenAI / vLLM'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows Claude settings when Claude backend is selected', (tester) async {
+    testWidgets('shows Claude settings when Claude backend is selected',
+        (tester) async {
       when(mockProvider.settings).thenReturn(const Settings(
         backend: LLMBackend.claude,
       ));
@@ -74,7 +75,8 @@ void main() {
       expect(find.text('Model'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows OpenAI settings when OpenAI backend is selected', (tester) async {
+    testWidgets('shows OpenAI settings when OpenAI backend is selected',
+        (tester) async {
       when(mockProvider.settings).thenReturn(const Settings(
         backend: LLMBackend.openaiCompatible,
       ));
@@ -133,7 +135,8 @@ void main() {
       expect(find.text('Add instance'), findsOneWidget);
     });
 
-    testWidgets('shows no instances message when none configured', (tester) async {
+    testWidgets('shows no instances message when none configured',
+        (tester) async {
       when(mockProvider.settings).thenReturn(const Settings(
         openclawInstances: [],
       ));
@@ -177,7 +180,8 @@ void main() {
       expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
     });
 
-    testWidgets('shows add instance dialog when add button tapped', (tester) async {
+    testWidgets('shows add instance dialog when add button tapped',
+        (tester) async {
       await pumpSettings(tester);
 
       await tester.tap(find.text('Add instance'));
@@ -206,7 +210,8 @@ void main() {
       expect(find.text('Name and Base URL are required.'), findsOneWidget);
     });
 
-    testWidgets('calls updateSettings when Save button is tapped', (tester) async {
+    testWidgets('calls updateSettings when Save button is tapped',
+        (tester) async {
       await pumpSettings(tester);
 
       // Tap the save button
@@ -218,7 +223,8 @@ void main() {
       verify(mockProvider.updateSettings(any)).called(1);
     });
 
-    testWidgets('bottom Save Settings button calls updateSettings', (tester) async {
+    testWidgets('bottom Save Settings button calls updateSettings',
+        (tester) async {
       await pumpSettings(tester);
 
       // pumpSettings uses a tall viewport so the bottom FilledButton is built
@@ -253,7 +259,8 @@ void main() {
       expect(find.text('Custom test prompt'), findsOneWidget);
     });
 
-    testWidgets('shows ElevenLabs settings when provider is selected', (tester) async {
+    testWidgets('shows ElevenLabs settings when provider is selected',
+        (tester) async {
       when(mockProvider.settings).thenReturn(const Settings(
         ttsProvider: TtsProvider.elevenlabs,
       ));
@@ -266,7 +273,8 @@ void main() {
       expect(find.text('Model ID'), findsOneWidget);
     });
 
-    testWidgets('shows OpenAI TTS settings when provider is selected', (tester) async {
+    testWidgets('shows OpenAI TTS settings when provider is selected',
+        (tester) async {
       when(mockProvider.settings).thenReturn(const Settings(
         ttsProvider: TtsProvider.openai,
       ));
@@ -286,8 +294,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Enter invalid URL
-      await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Test');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Base URL'), 'not-a-url');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Name'), 'Test');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Base URL'), 'not-a-url');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -306,8 +316,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       // Enter valid data
-      await tester.enterText(find.widgetWithText(TextFormField, 'Name'), 'Test Instance');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Base URL'), 'http://localhost:3000/v1');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Name'), 'Test Instance');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Base URL'),
+          'http://localhost:3000/v1');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
 

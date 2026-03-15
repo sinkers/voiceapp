@@ -101,7 +101,8 @@ void main() {
       expect(find.text('Testing speech...'), findsNothing);
     });
 
-    testWidgets('shows OpenClaw chip when instance is selected', (tester) async {
+    testWidgets('shows OpenClaw chip when instance is selected',
+        (tester) async {
       const instance = OpenClawInstance(
         id: 'test-id',
         name: 'Test Instance',
@@ -246,7 +247,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300)); // finish open
     }
 
-    testWidgets('shows confirmation dialog when clear button tapped', (tester) async {
+    testWidgets('shows confirmation dialog when clear button tapped',
+        (tester) async {
       final now = DateTime.now();
       when(mockProvider.messages).thenReturn([
         Message(
@@ -263,7 +265,10 @@ void main() {
       await pumpDialog(tester);
 
       expect(find.text('Clear conversation?'), findsOneWidget);
-      expect(find.text('This will delete all messages in the current conversation.'), findsOneWidget);
+      expect(
+          find.text(
+              'This will delete all messages in the current conversation.'),
+          findsOneWidget);
     });
 
     testWidgets('calls clearMessages when confirmed', (tester) async {

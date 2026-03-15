@@ -47,7 +47,8 @@ void main() {
       expect(provider.state, ConversationState.idle);
     });
 
-    test('transitions from idle to listening when starting conversation', () async {
+    test('transitions from idle to listening when starting conversation',
+        () async {
       await provider.initialize();
 
       provider.toggleConversation();
@@ -56,7 +57,9 @@ void main() {
       verify(mockSpeechService.startListening()).called(1);
     });
 
-    test('transitions from listening to idle when speech is stopped with empty text', () async {
+    test(
+        'transitions from listening to idle when speech is stopped with empty text',
+        () async {
       await provider.initialize();
 
       // Start listening
@@ -67,7 +70,9 @@ void main() {
       provider.toggleConversation(); // Stop listening
 
       // Call the onStopped callback with empty partial text
-      final onStoppedCallback = verify(mockSpeechService.onStopped = captureAny).captured.last as Function;
+      final onStoppedCallback = verify(mockSpeechService.onStopped = captureAny)
+          .captured
+          .last as Function;
       onStoppedCallback();
 
       expect(provider.state, ConversationState.idle);
@@ -79,7 +84,9 @@ void main() {
 
       // Force an error by calling processWithLLM without API key
       provider.toggleConversation();
-      final onFinalCallback = verify(mockSpeechService.onFinalResult = captureAny).captured.last as Function(String);
+      final onFinalCallback =
+          verify(mockSpeechService.onFinalResult = captureAny).captured.last
+              as Function(String);
       onFinalCallback('test message');
 
       // Wait for processing
@@ -97,7 +104,9 @@ void main() {
 
       // Add a message by simulating speech
       provider.toggleConversation();
-      final onFinalCallback = verify(mockSpeechService.onFinalResult = captureAny).captured.last as Function(String);
+      final onFinalCallback =
+          verify(mockSpeechService.onFinalResult = captureAny).captured.last
+              as Function(String);
       onFinalCallback('test message');
 
       // Wait for processing
@@ -110,7 +119,8 @@ void main() {
       expect(provider.messages, isEmpty);
     });
 
-    test('interrupts when toggleConversation called during speaking state', () async {
+    test('interrupts when toggleConversation called during speaking state',
+        () async {
       await provider.initialize();
 
       // We can't easily get to speaking state without mocking LLM,
@@ -125,7 +135,9 @@ void main() {
       expect(provider.state, ConversationState.listening);
 
       // Simulate partial result
-      final onPartialCallback = verify(mockSpeechService.onPartialResult = captureAny).captured.last as Function(String);
+      final onPartialCallback =
+          verify(mockSpeechService.onPartialResult = captureAny).captured.last
+              as Function(String);
       onPartialCallback('hello world');
 
       expect(provider.partialSttText, 'hello world');
@@ -167,7 +179,9 @@ void main() {
       expect(provider.state, ConversationState.listening);
 
       // Trigger final result to move to processing
-      final onFinalCallback = verify(mockSpeechService.onFinalResult = captureAny).captured.last as Function(String);
+      final onFinalCallback =
+          verify(mockSpeechService.onFinalResult = captureAny).captured.last
+              as Function(String);
       onFinalCallback('test');
 
       // Wait a bit for state to update
@@ -184,7 +198,9 @@ void main() {
       await provider.initialize();
 
       provider.toggleConversation();
-      final onFinalCallback = verify(mockSpeechService.onFinalResult = captureAny).captured.last as Function(String);
+      final onFinalCallback =
+          verify(mockSpeechService.onFinalResult = captureAny).captured.last
+              as Function(String);
       onFinalCallback('test message');
 
       // Wait for message to be added
@@ -200,7 +216,9 @@ void main() {
       await provider.initialize();
 
       provider.toggleConversation();
-      final onFinalCallback = verify(mockSpeechService.onFinalResult = captureAny).captured.last as Function(String);
+      final onFinalCallback =
+          verify(mockSpeechService.onFinalResult = captureAny).captured.last
+              as Function(String);
       onFinalCallback('   '); // Empty/whitespace only
 
       await Future.delayed(const Duration(milliseconds: 50));
