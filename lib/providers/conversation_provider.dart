@@ -296,7 +296,7 @@ class ConversationProvider extends ChangeNotifier {
       case TtsProvider.elevenlabs:
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
-          voiceId: _settings.elevenLabsVoiceId,
+          voiceId: _settings.elevenLabsVoice?.voiceId ?? _settings.elevenLabsVoiceId,
           modelId: _settings.elevenLabsModelId,
         );
         await svc.initialize();
@@ -331,6 +331,7 @@ class ConversationProvider extends ChangeNotifier {
           apiKey: instance.token,
           baseUrl: instance.baseUrl,
           model: _settings.selectedAgentId ?? 'openclaw:main',
+          customHeaders: {'x-openclaw-session-key': instance.sessionId},
         );
       } else {
         final key = _settings.openaiApiKey;

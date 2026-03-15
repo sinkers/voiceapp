@@ -352,9 +352,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ..._draft.openclawInstances.map(
                   (instance) => ListTile(
                     title: Text(instance.name),
-                    subtitle: Text(
-                      instance.baseUrl,
-                      overflow: TextOverflow.ellipsis,
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          instance.baseUrl,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Session: ${instance.sessionId.substring(0, 8)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color:
+                                theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -583,16 +595,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       hint: 'Your ElevenLabs API key',
                     ),
                     const SizedBox(height: 12),
+                    Text('Voice', style: theme.textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    SegmentedButton<ElevenLabsVoice>(
+                      segments: ElevenLabsVoice.values
+                          .map(
+                            (v) => ButtonSegment(
+                              value: v,
+                              label: Text(v.label),
+                            ),
+                          )
+                          .toList(),
+                      selected: {_draft.elevenLabsVoice ?? ElevenLabsVoice.rachel},
+                      onSelectionChanged: (s) => setState(
+                          () => _draft = _draft.copyWith(elevenLabsVoice: s.first)),
+                    ),
+                    const SizedBox(height: 12),
                     _TextField(
                       controller: _elevenLabsVoiceIdController,
-                      label: 'Voice ID',
-                      hint: '21m00Tcm4TlvDq8ikWAM',
+                      label: 'Custom Voice ID (optional)',
+                      hint: 'Leave empty to use selected voice',
                     ),
                     const SizedBox(height: 12),
                     _TextField(
                       controller: _elevenLabsModelIdController,
                       label: 'Model ID',
-                      hint: 'eleven_multilingual_v2',
+                      hint: 'eleven_turbo_v2_5',
                     ),
                   ],
                   if (_draft.ttsProvider == TtsProvider.openai) ...[
@@ -837,6 +865,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 name: name,
                 baseUrl: url,
                 token: _tokenController.text.trim(),
+                sessionId: widget.instance?.sessionId ?? const Uuid().v4(),
               ),
             );
           },

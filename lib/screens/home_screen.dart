@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/conversation_state.dart';
+import '../models/settings.dart';
 import '../providers/conversation_provider.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/mic_button.dart';
@@ -275,6 +276,32 @@ class _OpenClawChip extends StatelessWidget {
 
   const _OpenClawChip({required this.instanceName, required this.agentId});
 
+  void _showInstanceSwitcher(BuildContext context) {
+    final provider = context.read<ConversationProvider>();
+    final instances = provider.settings.openclawInstances;
+    final selectedInstanceId = provider.settings.selectedInstanceId;
+    final selectedAgentId = provider.settings.selectedAgentId;
+
+    if (instances.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No instances configured. Add one in Settings.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => _InstanceSwitcherSheet(
+        instances: instances,
+        selectedInstanceId: selectedInstanceId,
+        selectedAgentId: selectedAgentId,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -282,7 +309,7 @@ class _OpenClawChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       child: Align(
         alignment: Alignment.centerLeft,
-        child: Chip(
+        child: ActionChip(
           avatar: Icon(
             Icons.hub_rounded,
             size: 14,
@@ -295,7 +322,76 @@ class _OpenClawChip extends StatelessWidget {
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           padding: const EdgeInsets.symmetric(horizontal: 4),
           visualDensity: VisualDensity.compact,
+          onPressed: () => _showInstanceSwitcher(context),
         ),
+      ),
+    );
+  }
+}
+
+class _InstanceSwitcherSheet extends StatelessWidget {
+  final List<OpenClawInstance> instances;
+  final String? selectedInstanceId;
+  final String? selectedAgentId;
+
+  const _InstanceSwitcherSheet({
+    required this.instances,
+    required this.selectedInstanceId,
+    required this.selectedAgentId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'Switch OpenClaw Instance',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const Divider(height: 1),
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: instances.length,
+              itemBuilder: (context, index) {
+                final instance = instances[index];
+                final isSelected = instance.id == selectedInstanceId;
+                return ListTile(
+                  leading: Icon(
+                    Icons.hub_rounded,
+                    color: isSelected ? theme.colorScheme.primary : null,
+                  ),
+                  title: Text(instance.name),
+                  subtitle: Text('Agent: ${isSelected ? selectedAgentId ?? 'main' : 'main'}'),
+                  trailing: isSelected ? const Icon(Icons.check) : null,
+                  selected: isSelected,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.read<ConversationProvider>().updateSettings(
+                          context
+                              .read<ConversationProvider>()
+                              .settings
+                              .copyWith(
+                                selectedInstanceId: instance.id,
+                                selectedAgentId: selectedAgentId ?? 'main',
+                              ),
+                        );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

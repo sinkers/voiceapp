@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'tts_service.dart';
+import 'network_tts_service_base.dart';
+import 'on_device_tts_service.dart';
 
-class ElevenLabsTtsService implements TtsService {
+class ElevenLabsTtsService extends NetworkTtsServiceBase {
   final String apiKey;
   final String voiceId;
   final String modelId;
@@ -16,7 +15,9 @@ class ElevenLabsTtsService implements TtsService {
   bool _isSpeaking = false;
   bool _finished = false;
   Completer<void>? _doneCompleter;
-  AudioPlayer? _currentPlayer;
+  final Map<String, Future<Uint8List>> _prefetchCache = {};
+  final http.Client _httpClient = http.Client();
+  late final OnDeviceTtsService _fallbackTts;
 
   @override
   Function()? onDone;
@@ -25,10 +26,14 @@ class ElevenLabsTtsService implements TtsService {
     required this.apiKey,
     required this.voiceId,
     required this.modelId,
-  });
+  }) {
+    _fallbackTts = OnDeviceTtsService();
+  }
 
   @override
-  Future<void> initialize({double rate = 0.5, double pitch = 1.0}) async {}
+  Future<void> initialize({double rate = 0.5, double pitch = 1.0}) async {
+    await _fallbackTts.initialize(rate: rate, pitch: pitch);
+  }
 
   @override
   void updateSettings(double rate, double pitch) {}
@@ -37,6 +42,7 @@ class ElevenLabsTtsService implements TtsService {
   void enqueue(String text) {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return;
+    _prefetchCache[trimmed] = _fetchAudio(trimmed);
     _queue.add(trimmed);
     _playNext();
   }
@@ -68,9 +74,10 @@ class ElevenLabsTtsService implements TtsService {
       _doneCompleter?.complete();
     }
     _doneCompleter = null;
-    await _currentPlayer?.stop();
-    await _currentPlayer?.dispose();
-    _currentPlayer = null;
+    _prefetchCache.clear();
+    await currentPlayer?.stop();
+    await currentPlayer?.dispose();
+    disposePlayer();
   }
 
   @override
@@ -79,6 +86,10 @@ class ElevenLabsTtsService implements TtsService {
     _isSpeaking = false;
     _finished = false;
     _doneCompleter = null;
+    _prefetchCache.clear();
+    currentPlayer?.stop();
+    currentPlayer?.dispose();
+    disposePlayer();
   }
 
   void _playNext() {
@@ -103,55 +114,43 @@ class ElevenLabsTtsService implements TtsService {
     });
   }
 
-  Future<void> _fetchAndPlay(String text) async {
-    final response = await http.post(
+  Future<Uint8List> _fetchAudio(String text) async {
+    final response = await _httpClient.post(
       Uri.parse('https://api.elevenlabs.io/v1/text-to-speech/$voiceId/stream'),
       headers: {
         'xi-api-key': apiKey,
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'text': text, 'model_id': modelId}),
+      body: jsonEncode({
+        'text': text,
+        'model_id': modelId,
+        'optimize_streaming_latency': 3,
+      }),
     );
-    if (!_isSpeaking) return;
     if (response.statusCode != 200) {
       throw Exception(
           'ElevenLabs API error: ${response.statusCode} ${response.body}');
     }
-    await _playBytes(response.bodyBytes);
+    return response.bodyBytes;
   }
 
-  Future<void> _playBytes(Uint8List bytes) async {
-    final tempFile = File(
-      '${Directory.systemTemp.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3',
-    );
-    await tempFile.writeAsBytes(bytes);
-    _currentPlayer = AudioPlayer();
-    final stateCompleter = Completer<void>();
-    StreamSubscription<PlayerState>? sub;
-    sub = _currentPlayer!.onPlayerStateChanged.listen((state) {
-      if ((state == PlayerState.completed || state == PlayerState.stopped) &&
-          !stateCompleter.isCompleted) {
-        sub?.cancel();
-        stateCompleter.complete();
-      }
-    });
+  Future<void> _fetchAndPlay(String text) async {
     try {
-      await _currentPlayer!.play(DeviceFileSource(tempFile.path));
-      await stateCompleter.future;
-    } finally {
-      sub.cancel();
-      await _currentPlayer?.dispose();
-      _currentPlayer = null;
-      try {
-        await tempFile.delete();
-      } catch (_) {}
+      final bytes = await (_prefetchCache.remove(text) ?? _fetchAudio(text));
+      if (!_isSpeaking) return;
+      await playBytes(bytes);
+    } catch (e) {
+      debugPrint('ElevenLabs TTS network error: $e. Falling back to on-device TTS.');
+      if (!_isSpeaking) return;
+      _fallbackTts.enqueue(text);
+      await _fallbackTts.waitUntilDone();
     }
   }
 
   @override
   void dispose() {
-    _currentPlayer?.stop();
-    _currentPlayer?.dispose();
-    _currentPlayer = null;
+    _httpClient.close();
+    _fallbackTts.dispose();
+    disposePlayer();
   }
 }
