@@ -19,7 +19,7 @@ class ConversationProvider extends ChangeNotifier {
   final _uuid = const Uuid();
 
   LLMService? _llmService;
-  TtsService _ttsService = OnDeviceTtsService();
+  TtsService _ttsService;
   Settings _settings = const Settings();
 
   ConversationState _state = ConversationState.idle;
@@ -33,12 +33,18 @@ class ConversationProvider extends ChangeNotifier {
   ConversationProvider({
     required SpeechService speechService,
     required SettingsService settingsService,
+    TtsService? ttsService,
   })  : _speechService = speechService,
-        _settingsService = settingsService {
+        _settingsService = settingsService,
+        _ttsService = ttsService ?? OnDeviceTtsService() {
     _speechService.onFinalResult = _onSpeechFinal;
     _speechService.onPartialResult = _onSpeechPartial;
     _speechService.onStopped = _onSpeechStopped;
   }
+
+  /// Forces the conversation state — for testing only.
+  @visibleForTesting
+  void forceStateForTesting(ConversationState state) => _setState(state);
 
   // Getters
   ConversationState get state => _state;
