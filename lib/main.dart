@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/agent_switcher_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/settings_service.dart';
+import 'services/speech_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,14 +15,21 @@ class VoiceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) {
-        final provider = AgentSwitcherProvider(
-          settingsService: SettingsService(),
-        );
-        provider.initialize();
-        return provider;
-      },
+    return MultiProvider(
+      providers: [
+        Provider(create: (_) => SpeechService()),
+        Provider(create: (_) => SettingsService()),
+        ChangeNotifierProvider(
+          create: (context) {
+            final provider = AgentSwitcherProvider(
+              settingsService: context.read<SettingsService>(),
+              speechService: context.read<SpeechService>(),
+            );
+            provider.initialize();
+            return provider;
+          },
+        ),
+      ],
       child: MaterialApp(
         title: 'Voice Chat',
         debugShowCheckedModeBanner: false,

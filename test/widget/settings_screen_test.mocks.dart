@@ -3,14 +3,14 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
-import 'dart:ui' as _i6;
+import 'dart:async' as _i6;
+import 'dart:ui' as _i7;
 
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:voiceapp/models/agent_config.dart' as _i3;
+import 'package:voiceapp/models/agent_config.dart' as _i5;
 import 'package:voiceapp/models/settings.dart' as _i2;
 import 'package:voiceapp/providers/agent_switcher_provider.dart' as _i4;
-import 'package:voiceapp/providers/conversation_provider.dart' as _i7;
+import 'package:voiceapp/providers/conversation_provider.dart' as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -38,7 +38,7 @@ class _FakeSettings_0 extends _i1.SmartFake implements _i2.Settings {
 }
 
 class _FakeConversationProvider_1 extends _i1.SmartFake
-    implements _i7.ConversationProvider {
+    implements _i3.ConversationProvider {
   _FakeConversationProvider_1(
     Object parent,
     Invocation parentInvocation,
@@ -58,10 +58,10 @@ class MockAgentSwitcherProvider extends _i1.Mock
   }
 
   @override
-  List<_i3.AgentConfig> get agents => (super.noSuchMethod(
+  List<_i5.AgentConfig> get agents => (super.noSuchMethod(
         Invocation.getter(#agents),
-        returnValue: <_i3.AgentConfig>[],
-      ) as List<_i3.AgentConfig>);
+        returnValue: <_i5.AgentConfig>[],
+      ) as List<_i5.AgentConfig>);
 
   @override
   int get currentIndex => (super.noSuchMethod(
@@ -91,7 +91,7 @@ class MockAgentSwitcherProvider extends _i1.Mock
       ) as bool);
 
   @override
-  _i7.ConversationProvider providerFor(_i3.AgentConfig? agent) =>
+  _i3.ConversationProvider providerFor(_i5.AgentConfig? agent) =>
       (super.noSuchMethod(
         Invocation.method(
           #providerFor,
@@ -99,40 +99,43 @@ class MockAgentSwitcherProvider extends _i1.Mock
         ),
         returnValue: _FakeConversationProvider_1(
           this,
-          Invocation.method(#providerFor, [agent]),
+          Invocation.method(
+            #providerFor,
+            [agent],
+          ),
         ),
-      ) as _i7.ConversationProvider);
+      ) as _i3.ConversationProvider);
 
   @override
-  _i5.Future<void> initialize() => (super.noSuchMethod(
+  _i6.Future<void> initialize() => (super.noSuchMethod(
         Invocation.method(
           #initialize,
           [],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i5.Future<void> updateSettings(_i2.Settings? newSettings) =>
+  _i6.Future<void> updateSettings(_i2.Settings? newSettings) =>
       (super.noSuchMethod(
         Invocation.method(
           #updateSettings,
           [newSettings],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i5.Future<void> setCurrentIndex(int? index) => (super.noSuchMethod(
+  _i6.Future<void> setCurrentIndex(int? index) => (super.noSuchMethod(
         Invocation.method(
           #setCurrentIndex,
           [index],
         ),
-        returnValue: _i5.Future<void>.value(),
-        returnValueForMissingStub: _i5.Future<void>.value(),
-      ) as _i5.Future<void>);
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
@@ -144,7 +147,7 @@ class MockAgentSwitcherProvider extends _i1.Mock
       );
 
   @override
-  void addListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+  void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #addListener,
           [listener],
@@ -153,7 +156,7 @@ class MockAgentSwitcherProvider extends _i1.Mock
       );
 
   @override
-  void removeListener(_i6.VoidCallback? listener) => super.noSuchMethod(
+  void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
         Invocation.method(
           #removeListener,
           [listener],
