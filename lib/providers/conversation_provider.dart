@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import '../models/agent_config.dart';
 import '../models/conversation_state.dart';
 import '../models/message.dart';
 import '../models/settings.dart';
@@ -98,6 +99,28 @@ class ConversationProvider extends ChangeNotifier {
   Future<void> updateSettings(Settings newSettings) async {
     _settings = newSettings;
     await _settingsService.save(newSettings);
+    await _rebuildTtsService();
+    _rebuildLlmService();
+    notifyListeners();
+  }
+
+  /// Apply agent-specific configuration without persisting to SharedPreferences.
+  /// Called by [AgentSwitcherProvider] after the base settings are loaded.
+  Future<void> applyAgentConfig(AgentConfig config, Settings baseSettings) async {
+    switch (config) {
+      case OpenClawAgentConfig(:final instance, :final agentId):
+        _settings = baseSettings.copyWith(
+          backend: LLMBackend.openaiCompatible,
+          selectedInstanceId: instance.id,
+          selectedAgentId: agentId,
+        );
+      case DirectModelAgentConfig(:final backend):
+        _settings = baseSettings.copyWith(
+          backend: backend,
+          clearSelectedInstanceId: true,
+          clearSelectedAgentId: true,
+        );
+    }
     await _rebuildTtsService();
     _rebuildLlmService();
     notifyListeners();

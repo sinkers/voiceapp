@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/agent_config.dart';
 import '../models/conversation_state.dart';
-import '../models/settings.dart';
+import '../providers/agent_switcher_provider.dart';
 import '../providers/conversation_provider.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/mic_button.dart';
 import '../widgets/state_indicator.dart';
 import 'settings_screen.dart';
 
+/// Root screen: a [PageView] with one [AgentConversationPage] per agent.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -16,6 +18,119 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    final switcher = context.read<AgentSwitcherProvider>();
+    _pageController = PageController(initialPage: switcher.currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AgentSwitcherProvider>(
+      builder: (context, switcher, _) {
+        final agents = switcher.agents;
+        if (agents.isEmpty) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        // Sync PageController when restored index differs (e.g. after init).
+        if (_pageController.hasClients &&
+            _pageController.page?.round() != switcher.currentIndex) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_pageController.hasClients) {
+              _pageController.jumpToPage(switcher.currentIndex);
+            }
+          });
+        }
+        return Scaffold(
+          body: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: agents.length,
+                onPageChanged: (index) => switcher.setCurrentIndex(index),
+                itemBuilder: (context, index) {
+                  final agent = agents[index];
+                  return ChangeNotifierProvider.value(
+                    value: switcher.providerFor(agent),
+                    child: AgentConversationPage(agent: agent),
+                  );
+                },
+              ),
+              if (agents.length > 1)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _PageDots(
+                    count: agents.length,
+                    currentIndex: switcher.currentIndex,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Page indicator dots.
+class _PageDots extends StatelessWidget {
+  final int count;
+  final int currentIndex;
+
+  const _PageDots({required this.count, required this.currentIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(count, (i) {
+          final active = i == currentIndex;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: active ? 10 : 6,
+            height: active ? 10 : 6,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: active
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.2),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+/// Single agent conversation page. Reads [ConversationProvider] from context
+/// (injected by [HomeScreen] per page).
+class AgentConversationPage extends StatefulWidget {
+  final AgentConfig agent;
+
+  const AgentConversationPage({super.key, required this.agent});
+
+  @override
+  State<AgentConversationPage> createState() => _AgentConversationPageState();
+}
+
+class _AgentConversationPageState extends State<AgentConversationPage> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -40,17 +155,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<ConversationProvider>(
       builder: (context, provider, _) {
-        // Auto-scroll when new content arrives
-        if (provider.messages.isNotEmpty) {
-          _scrollToBottom();
-        }
+        if (provider.messages.isNotEmpty) _scrollToBottom();
 
         return Scaffold(
           backgroundColor: Theme.of(context).colorScheme.surface,
           appBar: AppBar(
-            title: const Text(
-              'Voice Chat',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.agent.displayName,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                _ProviderBadge(label: widget.agent.providerLabel),
+              ],
             ),
             centerTitle: true,
             actions: [
@@ -74,14 +192,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           body: Column(
             children: [
-              // Error banner
               if (provider.errorMessage != null)
                 _ErrorBanner(
                   message: provider.errorMessage!,
                   onDismiss: provider.clearError,
                 ),
-
-              // Setup prompt if no API key
               if (!provider.hasApiKey && provider.initialized)
                 _SetupPrompt(
                   onSetup: () => Navigator.push(
@@ -91,15 +206,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
-              // OpenClaw active instance indicator
-              if (provider.settings.selectedInstance != null)
-                _OpenClawChip(
-                  instanceName: provider.settings.selectedInstance!.name,
-                  agentId: provider.settings.selectedAgentId ?? 'main',
-                ),
-
-              // Message list
               Expanded(
                 child: provider.messages.isEmpty
                     ? _EmptyState(state: provider.state)
@@ -114,21 +220,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
               ),
-
-              // Partial STT text preview
               if (provider.state == ConversationState.listening &&
                   provider.partialSttText.isNotEmpty)
                 _PartialSttPreview(text: provider.partialSttText),
-
-              // State indicator
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: StateIndicator(state: provider.state),
               ),
-
-              // Mic button
               Padding(
-                padding: const EdgeInsets.only(bottom: 40, top: 8),
+                padding: const EdgeInsets.only(bottom: 48, top: 8),
                 child: MicButton(
                   state: provider.state,
                   onTap: provider.toggleConversation,
@@ -164,6 +264,22 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirmed == true) {
       provider.clearMessages();
     }
+  }
+}
+
+class _ProviderBadge extends StatelessWidget {
+  final String label;
+  const _ProviderBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Text(
+      label,
+      style: theme.textTheme.labelSmall?.copyWith(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+      ),
+    );
   }
 }
 
@@ -263,134 +379,6 @@ class _SetupPrompt extends StatelessWidget {
           TextButton(
             onPressed: onSetup,
             child: const Text('Setup'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OpenClawChip extends StatelessWidget {
-  final String instanceName;
-  final String agentId;
-
-  const _OpenClawChip({required this.instanceName, required this.agentId});
-
-  void _showInstanceSwitcher(BuildContext context) {
-    final provider = context.read<ConversationProvider>();
-    final instances = provider.settings.openclawInstances;
-    final selectedInstanceId = provider.settings.selectedInstanceId;
-    final selectedAgentId = provider.settings.selectedAgentId;
-
-    if (instances.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No instances configured. Add one in Settings.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => _InstanceSwitcherSheet(
-        instances: instances,
-        selectedInstanceId: selectedInstanceId,
-        selectedAgentId: selectedAgentId,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: ActionChip(
-          avatar: Icon(
-            Icons.hub_rounded,
-            size: 14,
-            color: theme.colorScheme.primary,
-          ),
-          label: Text(
-            '$instanceName · $agentId',
-            style: theme.textTheme.labelSmall,
-          ),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          visualDensity: VisualDensity.compact,
-          onPressed: () => _showInstanceSwitcher(context),
-        ),
-      ),
-    );
-  }
-}
-
-class _InstanceSwitcherSheet extends StatelessWidget {
-  final List<OpenClawInstance> instances;
-  final String? selectedInstanceId;
-  final String? selectedAgentId;
-
-  const _InstanceSwitcherSheet({
-    required this.instances,
-    required this.selectedInstanceId,
-    required this.selectedAgentId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'Switch OpenClaw Instance',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const Divider(height: 1),
-          Flexible(
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: instances.length,
-              itemBuilder: (context, index) {
-                final instance = instances[index];
-                final isSelected = instance.id == selectedInstanceId;
-                return ListTile(
-                  leading: Icon(
-                    Icons.hub_rounded,
-                    color: isSelected ? theme.colorScheme.primary : null,
-                  ),
-                  title: Text(instance.name),
-                  subtitle: Text(
-                      'Agent: ${isSelected ? selectedAgentId ?? 'main' : 'main'}'),
-                  trailing: isSelected ? const Icon(Icons.check) : null,
-                  selected: isSelected,
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.read<ConversationProvider>().updateSettings(
-                          context
-                              .read<ConversationProvider>()
-                              .settings
-                              .copyWith(
-                                selectedInstanceId: instance.id,
-                                selectedAgentId: selectedAgentId ?? 'main',
-                              ),
-                        );
-                  },
-                );
-              },
-            ),
           ),
         ],
       ),
