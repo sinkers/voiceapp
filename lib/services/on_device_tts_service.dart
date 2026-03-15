@@ -75,7 +75,8 @@ class OnDeviceTtsService implements TtsService {
   }
 
   @override
-  void reset() {
+  Future<void> reset() async {
+    await _tts.stop();
     _queue.clear();
     _isSpeaking = false;
     _finished = false;

@@ -67,7 +67,7 @@ void main() {
       service.enqueue('Test sentence');
       service.markFinished();
 
-      service.reset();
+      await service.reset();
 
       // After reset, the service should be ready for new content
       expect(() => service.enqueue('New sentence'), returnsNormally);
@@ -141,7 +141,7 @@ void main() {
       service.markFinished();
       await service.stop();
 
-      service.reset();
+      await service.reset();
 
       // Should be in clean state
       service.enqueue('New content');
@@ -160,6 +160,31 @@ void main() {
       await service.stop();
 
       expect(waitFuture, completes);
+    });
+
+    test('reset stops active audio before clearing queue', () async {
+      await service.initialize();
+
+      // Track whether stop was called
+      bool stopCalled = false;
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+        const MethodChannel('flutter_tts'),
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'stop') {
+            stopCalled = true;
+          }
+          return null;
+        },
+      );
+
+      service.enqueue('Test sentence');
+
+      await service.reset();
+
+      // Verify that stop() was called during reset
+      expect(stopCalled, isTrue);
     });
   });
 
@@ -200,9 +225,9 @@ void main() {
     test('calling reset multiple times does not crash', () async {
       await service.initialize();
 
-      service.reset();
-      service.reset();
-      service.reset();
+      await service.reset();
+      await service.reset();
+      await service.reset();
 
       expect(true, true); // No crash
     });

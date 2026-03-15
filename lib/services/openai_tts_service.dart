@@ -77,14 +77,14 @@ class OpenAITtsService extends NetworkTtsServiceBase {
   }
 
   @override
-  void reset() {
+  Future<void> reset() async {
+    await currentPlayer?.stop();
+    await currentPlayer?.dispose();
+    disposePlayer();
     _queue.clear();
     _isSpeaking = false;
     _finished = false;
     _doneCompleter = null;
-    currentPlayer?.stop();
-    currentPlayer?.dispose();
-    disposePlayer();
   }
 
   void _playNext() {

@@ -177,7 +177,7 @@ class ConversationProvider extends ChangeNotifier {
     ];
     _streamingText = '';
     _textBuffer = '';
-    _ttsService.reset();
+    await _ttsService.reset();
     notifyListeners();
 
     try {
