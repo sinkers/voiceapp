@@ -181,13 +181,13 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.mic_none_rounded,
             size: 72,
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+            color: theme.colorScheme.primary.withOpacity(0.3),
           ),
           const SizedBox(height: 16),
           Text(
             'Tap the mic to start talking',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+              color: theme.colorScheme.onSurface.withOpacity(0.4),
             ),
           ),
         ],
@@ -210,7 +210,7 @@ class _PartialSttPreview extends StatelessWidget {
         color: theme.colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.red.shade300.withValues(alpha: 0.4),
+          color: Colors.red.shade300.withOpacity(0.4),
           width: 1,
         ),
       ),
@@ -222,7 +222,7 @@ class _PartialSttPreview extends StatelessWidget {
             child: Text(
               text,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
                 fontStyle: FontStyle.italic,
               ),
               maxLines: 3,
@@ -246,7 +246,7 @@ class _SetupPrompt extends StatelessWidget {
       margin: const EdgeInsets.all(12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+        color: theme.colorScheme.primaryContainer.withOpacity(0.6),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -406,7 +406,7 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.red.shade800.withValues(alpha: 0.9),
+      color: Colors.red.shade800.withOpacity(0.9),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [

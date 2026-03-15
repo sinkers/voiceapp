@@ -315,7 +315,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'For OpenClaw: http://localhost:3000/v1',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                              .withOpacity(0.5),
                         ),
                       ),
                     ),
@@ -346,7 +346,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'No instances configured',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            theme.colorScheme.onSurface.withOpacity(0.5),
                       ),
                     ),
                   ),
@@ -634,7 +634,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'Use the buttons above or enter a custom voice ID',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                              .withOpacity(0.5),
                         ),
                       ),
                     ),
@@ -651,7 +651,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Uses your OpenAI API key above',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            theme.colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 12),
