@@ -10,6 +10,8 @@ class OpenClawInstance {
   final String baseUrl;
   final String token;
   final String sessionId;
+  final ElevenLabsVoice elevenLabsVoice;
+  final double elevenLabsSpeed;
 
   const OpenClawInstance({
     required this.id,
@@ -17,6 +19,8 @@ class OpenClawInstance {
     required this.baseUrl,
     this.token = '',
     required this.sessionId,
+    this.elevenLabsVoice = ElevenLabsVoice.rachel,
+    this.elevenLabsSpeed = 1.1,
   });
 
   // TODO(security): token should be moved to flutter_secure_storage and excluded from serialization
@@ -26,6 +30,8 @@ class OpenClawInstance {
         'baseUrl': baseUrl,
         'token': token,
         'sessionId': sessionId,
+        'elevenLabsVoiceId': elevenLabsVoice.voiceId,
+        'elevenLabsSpeed': elevenLabsSpeed,
       };
 
   factory OpenClawInstance.fromJson(Map<String, dynamic> json) =>
@@ -35,6 +41,10 @@ class OpenClawInstance {
         baseUrl: json['baseUrl'] as String,
         token: (json['token'] as String?) ?? '',
         sessionId: json['sessionId'] as String? ?? _uuid.v4(),
+        elevenLabsVoice: ElevenLabsVoice.fromVoiceId(
+                json['elevenLabsVoiceId'] as String? ?? '') ??
+            ElevenLabsVoice.rachel,
+        elevenLabsSpeed: (json['elevenLabsSpeed'] as num?)?.toDouble() ?? 1.1,
       );
 
   OpenClawInstance copyWith({
@@ -43,6 +53,8 @@ class OpenClawInstance {
     String? baseUrl,
     String? token,
     String? sessionId,
+    ElevenLabsVoice? elevenLabsVoice,
+    double? elevenLabsSpeed,
   }) =>
       OpenClawInstance(
         id: id ?? this.id,
@@ -50,6 +62,8 @@ class OpenClawInstance {
         baseUrl: baseUrl ?? this.baseUrl,
         token: token ?? this.token,
         sessionId: sessionId ?? this.sessionId,
+        elevenLabsVoice: elevenLabsVoice ?? this.elevenLabsVoice,
+        elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
       );
 }
 

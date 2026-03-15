@@ -2,7 +2,9 @@ import 'package:collection/collection.dart';
 
 enum ElevenLabsVoice {
   rachel("Rachel (Female)", "21m00Tcm4TlvDq8ikWAM"),
-  liam("Liam (Male)", "TX3LPaxmHKxFdv7VOQHJ");
+  charlotte("Charlotte (Female)", "XB0fDUnXU5powFXDhCwa"),
+  liam("Liam (Male)", "TX3LPaxmHKxFdv7VOQHJ"),
+  charlie("Charlie (Male)", "IKne3meq5aSn9XLyUdCD");
 
   const ElevenLabsVoice(this.label, this.voiceId);
   final String label;

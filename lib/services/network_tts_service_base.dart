@@ -20,6 +20,15 @@ abstract class NetworkTtsServiceBase implements TtsService {
 
   Future<Uint8List> fetchAudio(String text, http.Client client);
 
+  String _sanitiseForTts(String text) {
+    return text
+        .replaceAll(RegExp(r'\.{2,}'), '')
+        .replaceAll('…', '')
+        .replaceAll('—', ', ')
+        .replaceAll('–', ', ')
+        .trim();
+  }
+
   @override
   Future<void> initialize({double rate = 0.5, double pitch = 1.0}) async {
     _fallbackTts = OnDeviceTtsService();
@@ -33,10 +42,10 @@ abstract class NetworkTtsServiceBase implements TtsService {
 
   @override
   void enqueue(String text) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return;
-    _prefetchCache[trimmed] = fetchAudio(trimmed, _httpClient);
-    _queue.add(trimmed);
+    final sanitised = _sanitiseForTts(text);
+    if (sanitised.isEmpty) return;
+    _prefetchCache[sanitised] = fetchAudio(sanitised, _httpClient);
+    _queue.add(sanitised);
     _playNext();
   }
 

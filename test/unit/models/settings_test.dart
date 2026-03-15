@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:voiceapp/models/elevenlabs_voice.dart';
 import 'package:voiceapp/models/settings.dart';
 
 void main() {
@@ -196,6 +197,8 @@ void main() {
       expect(json['baseUrl'], 'http://localhost:3000/v1');
       expect(json['token'], 'test-token');
       expect(json['sessionId'], 'test-session');
+      expect(json['elevenLabsVoiceId'], ElevenLabsVoice.rachel.voiceId);
+      expect(json['elevenLabsSpeed'], 1.1);
     });
 
     test('fromJson deserialises correctly', () {
@@ -205,6 +208,8 @@ void main() {
         'baseUrl': 'http://localhost:3000/v1',
         'token': 'test-token',
         'sessionId': 'test-session',
+        'elevenLabsVoiceId': ElevenLabsVoice.liam.voiceId,
+        'elevenLabsSpeed': 1.0,
       };
 
       final instance = OpenClawInstance.fromJson(json);
@@ -214,6 +219,8 @@ void main() {
       expect(instance.baseUrl, 'http://localhost:3000/v1');
       expect(instance.token, 'test-token');
       expect(instance.sessionId, 'test-session');
+      expect(instance.elevenLabsVoice, ElevenLabsVoice.liam);
+      expect(instance.elevenLabsSpeed, 1.0);
     });
 
     test('fromJson handles missing token', () {
@@ -227,6 +234,8 @@ void main() {
       final instance = OpenClawInstance.fromJson(json);
 
       expect(instance.token, '');
+      expect(instance.elevenLabsVoice, ElevenLabsVoice.rachel);
+      expect(instance.elevenLabsSpeed, 1.1);
     });
 
     test('fromJson generates sessionId if missing (backward compatibility)',
@@ -275,6 +284,8 @@ void main() {
       expect(deserialized.baseUrl, original.baseUrl);
       expect(deserialized.token, original.token);
       expect(deserialized.sessionId, original.sessionId);
+      expect(deserialized.elevenLabsVoice, original.elevenLabsVoice);
+      expect(deserialized.elevenLabsSpeed, original.elevenLabsSpeed);
     });
 
     test('copyWith creates copy with updated fields', () {
@@ -296,6 +307,8 @@ void main() {
       expect(updated.baseUrl, 'http://new:3000/v1');
       expect(updated.token, 'old-token');
       expect(updated.sessionId, 'session-1');
+      expect(updated.elevenLabsVoice, original.elevenLabsVoice);
+      expect(updated.elevenLabsSpeed, original.elevenLabsSpeed);
     });
 
     test('copyWith can update sessionId', () {

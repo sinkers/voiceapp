@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/conversation_state.dart';
+import '../models/elevenlabs_voice.dart';
 import '../models/message.dart';
 import '../models/settings.dart';
 import '../services/claude_service.dart';
@@ -296,13 +297,21 @@ class ConversationProvider extends ChangeNotifier {
             rate: _settings.ttsRate, pitch: _settings.ttsPitch);
         _ttsService = svc;
       case TtsProvider.elevenlabs:
-        final voiceId = (_settings.elevenLabsVoiceId.isNotEmpty)
-            ? _settings.elevenLabsVoiceId
-            : _settings.elevenLabsVoice?.voiceId ?? '21m00Tcm4TlvDq8ikWAM';
+        final String voiceId;
+        if (_settings.selectedInstance != null) {
+          voiceId = _settings.selectedInstance!.elevenLabsVoice.voiceId;
+        } else {
+          voiceId = _settings.elevenLabsVoiceId.isNotEmpty
+              ? _settings.elevenLabsVoiceId
+              : ElevenLabsVoice.rachel.voiceId;
+        }
+        final double speed =
+            _settings.selectedInstance?.elevenLabsSpeed ?? 1.1;
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
           voiceId: voiceId,
           modelId: _settings.elevenLabsModelId,
+          speed: speed,
         );
         await svc.initialize();
         _ttsService = svc;

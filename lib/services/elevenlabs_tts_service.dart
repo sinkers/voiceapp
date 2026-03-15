@@ -9,11 +9,13 @@ class ElevenLabsTtsService extends NetworkTtsServiceBase {
   final String apiKey;
   final String voiceId;
   final String modelId;
+  final double speed;
 
   ElevenLabsTtsService({
     required this.apiKey,
     required this.voiceId,
     required this.modelId,
+    this.speed = 1.1,
   });
 
   @override
@@ -28,6 +30,9 @@ class ElevenLabsTtsService extends NetworkTtsServiceBase {
         'text': text,
         'model_id': modelId,
         'optimize_streaming_latency': 3,
+        'voice_settings': {
+          'speed': speed,
+        },
       }),
     );
     if (response.statusCode != 200) {
