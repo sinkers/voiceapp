@@ -286,7 +286,7 @@ class ConversationProvider extends ChangeNotifier {
   }
 
   Future<void> _rebuildTtsService() async {
-    _ttsService.dispose();
+    await _ttsService.dispose();
     switch (_settings.ttsProvider) {
       case TtsProvider.onDevice:
         final svc = OnDeviceTtsService();
@@ -368,7 +368,7 @@ class ConversationProvider extends ChangeNotifier {
   @override
   void dispose() {
     _speechService.dispose();
-    _ttsService.dispose();
+    _ttsService.dispose().ignore();
     _llmService?.dispose();
     super.dispose();
   }

@@ -26,7 +26,7 @@ void main() {
   });
 
   group('ElevenLabsTtsService', () {
-    test('can be instantiated with required parameters', () {
+    test('can be instantiated with required parameters', () async {
       final service = ElevenLabsTtsService(
         apiKey: 'test-key',
         voiceId: 'test-voice',
@@ -37,7 +37,7 @@ void main() {
       expect(service.apiKey, equals('test-key'));
       expect(service.voiceId, equals('test-voice'));
       expect(service.modelId, equals('eleven_turbo_v2_5'));
-      service.dispose();
+      await service.dispose();
     });
 
     test('initialize method completes', () async {
@@ -48,34 +48,34 @@ void main() {
       );
 
       await expectLater(service.initialize(), completes);
-      service.dispose();
+      await service.dispose();
     });
 
-    test('dispose can be called without crashing', () {
+    test('dispose can be called without crashing', () async {
       final service = ElevenLabsTtsService(
         apiKey: 'test-key',
         voiceId: 'test-voice',
         modelId: 'test-model',
       );
 
-      service.dispose();
+      await service.dispose();
       expect(true, true);
     });
 
-    test('dispose can be called multiple times', () {
+    test('dispose can be called multiple times', () async {
       final service = ElevenLabsTtsService(
         apiKey: 'test-key',
         voiceId: 'test-voice',
         modelId: 'test-model',
       );
 
-      service.dispose();
-      service.dispose();
-      service.dispose();
+      await service.dispose();
+      await service.dispose();
+      await service.dispose();
       expect(true, true);
     });
 
-    test('onDone callback can be set', () {
+    test('onDone callback can be set', () async {
       final service = ElevenLabsTtsService(
         apiKey: 'test-key',
         voiceId: 'test-voice',
@@ -84,12 +84,12 @@ void main() {
 
       service.onDone = () {};
       expect(service.onDone, isNotNull);
-      service.dispose();
+      await service.dispose();
     });
   });
 
   group('OpenAITtsService', () {
-    test('can be instantiated with required parameters', () {
+    test('can be instantiated with required parameters', () async {
       final service = OpenAITtsService(
         apiKey: 'test-key',
         voice: 'alloy',
@@ -100,7 +100,7 @@ void main() {
       expect(service.apiKey, equals('test-key'));
       expect(service.voice, equals('alloy'));
       expect(service.model, equals('tts-1'));
-      service.dispose();
+      await service.dispose();
     });
 
     test('initialize method completes', () async {
@@ -111,34 +111,34 @@ void main() {
       );
 
       await expectLater(service.initialize(), completes);
-      service.dispose();
+      await service.dispose();
     });
 
-    test('dispose can be called without crashing', () {
+    test('dispose can be called without crashing', () async {
       final service = OpenAITtsService(
         apiKey: 'test-key',
         voice: 'alloy',
         model: 'tts-1',
       );
 
-      service.dispose();
+      await service.dispose();
       expect(true, true);
     });
 
-    test('dispose can be called multiple times', () {
+    test('dispose can be called multiple times', () async {
       final service = OpenAITtsService(
         apiKey: 'test-key',
         voice: 'alloy',
         model: 'tts-1',
       );
 
-      service.dispose();
-      service.dispose();
-      service.dispose();
+      await service.dispose();
+      await service.dispose();
+      await service.dispose();
       expect(true, true);
     });
 
-    test('onDone callback can be set', () {
+    test('onDone callback can be set', () async {
       final service = OpenAITtsService(
         apiKey: 'test-key',
         voice: 'alloy',
@@ -147,7 +147,7 @@ void main() {
 
       service.onDone = () {};
       expect(service.onDone, isNotNull);
-      service.dispose();
+      await service.dispose();
     });
   });
 }

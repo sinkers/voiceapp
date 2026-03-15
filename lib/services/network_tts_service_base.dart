@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -75,14 +74,14 @@ abstract class NetworkTtsServiceBase implements TtsService {
   }
 
   @override
-  void reset() {
+  Future<void> reset() async {
     _queue.clear();
     _prefetchCache.clear();
     _isSpeaking = false;
     _finished = false;
     _doneCompleter = null;
-    _currentPlayer?.stop();
-    _currentPlayer?.dispose();
+    await _currentPlayer?.stop();
+    await _currentPlayer?.dispose();
     _currentPlayer = null;
   }
 
@@ -108,7 +107,8 @@ abstract class NetworkTtsServiceBase implements TtsService {
   }
 
   Future<void> _fetchAndPlay(String text) async {
-    final bytes = await (_prefetchCache.remove(text) ?? fetchAudio(text, _httpClient));
+    final bytes =
+        await (_prefetchCache.remove(text) ?? fetchAudio(text, _httpClient));
     if (!_isSpeaking) return;
     await _playBytes(bytes);
   }
@@ -128,10 +128,6 @@ abstract class NetworkTtsServiceBase implements TtsService {
   }
 
   Future<void> _playBytes(Uint8List bytes) async {
-    final tempFile = File(
-      '${Directory.systemTemp.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3',
-    );
-    await tempFile.writeAsBytes(bytes);
     _currentPlayer = AudioPlayer();
     final stateCompleter = Completer<void>();
     StreamSubscription<PlayerState>? sub;
@@ -143,24 +139,21 @@ abstract class NetworkTtsServiceBase implements TtsService {
       }
     });
     try {
-      await _currentPlayer!.play(DeviceFileSource(tempFile.path));
+      await _currentPlayer!.play(BytesSource(bytes));
       await stateCompleter.future;
     } finally {
       sub.cancel();
       await _currentPlayer?.dispose();
       _currentPlayer = null;
-      try {
-        await tempFile.delete();
-      } catch (_) {}
     }
   }
 
   @override
-  void dispose() {
-    _currentPlayer?.stop();
-    _currentPlayer?.dispose();
+  Future<void> dispose() async {
+    await _currentPlayer?.stop();
+    await _currentPlayer?.dispose();
     _currentPlayer = null;
-    _fallbackTts?.dispose();
+    await _fallbackTts?.dispose();
     _httpClient.close();
   }
 }
