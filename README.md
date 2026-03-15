@@ -74,6 +74,32 @@ OpenClaw doesn't need to be publicly exposed. Options:
 
 **Requirements:** Mac with Xcode, Apple Developer account (free tier works), iPhone/iPad on iOS 14+
 
+#### Option A: Build and install via Flutter CLI (recommended)
+
+1. **Connect your phone** via USB and trust this computer if prompted.
+
+2. **Build a development IPA** — use `--export-method development` (not the default App Store method, which requires a distribution certificate):
+   ```bash
+   flutter build ipa --release --export-method development
+   ```
+   Output: `build/ios/ipa/voiceapp.ipa`
+
+3. **Install to device:**
+   ```bash
+   flutter install --device-id <your-device-id>
+   ```
+   To find your device ID: `flutter devices`
+
+4. **Trust the cert on device** — Settings → General → VPN & Device Management → your Apple ID → Trust.
+
+5. **Permissions** — mic and speech recognition prompts appear on first launch. Both are already configured in `Info.plist`.
+
+> **Note:** Free developer accounts allow 3 installed apps max, and the cert expires after 7 days — just re-run the above commands to renew.
+
+> **Why `--export-method development`?** The default `flutter build ipa` targets App Store distribution and requires an "iOS Distribution" certificate. For local device installs, `development` uses your standard dev cert which Xcode manages automatically.
+
+#### Option B: Build and run directly via Xcode
+
 1. **Open in Xcode** — always use the workspace, not the project file:
    ```bash
    open ios/Runner.xcworkspace
@@ -84,12 +110,6 @@ OpenClaw doesn't need to be publicly exposed. Options:
 3. **Bundle ID** — currently `com.voiceapp.voiceapp`. If that conflicts with another app on your account, change it to something unique (e.g. `com.yourname.voiceapp`).
 
 4. **Connect your phone**, select it as the run target, hit ⌘R.
-
-5. **Trust the cert on device** — Settings → General → VPN & Device Management → your Apple ID → Trust.
-
-6. **Permissions** — mic and speech recognition prompts appear on first launch. Both are already configured in `Info.plist`.
-
-> **Note:** Free developer accounts allow 3 installed apps max, and the cert expires after 7 days — just re-run from Xcode to renew.
 
 ---
 
