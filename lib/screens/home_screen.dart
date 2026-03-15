@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
               if (provider.errorMessage != null)
                 _ErrorBanner(
                   message: provider.errorMessage!,
-                  onDismiss: () {},
+                  onDismiss: provider.clearError,
                 ),
 
               // Setup prompt if no API key
@@ -321,6 +321,13 @@ class _ErrorBanner extends StatelessWidget {
               message,
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.white, size: 18),
+            onPressed: onDismiss,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            tooltip: 'Dismiss',
           ),
         ],
       ),

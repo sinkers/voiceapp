@@ -82,6 +82,11 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
   Future<void> updateSettings(Settings newSettings) async {
     _settings = newSettings;
     await _settingsService.save(newSettings);
