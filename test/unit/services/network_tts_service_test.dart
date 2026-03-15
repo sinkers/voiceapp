@@ -9,16 +9,6 @@ class TestableNetworkTtsService extends NetworkTtsServiceBase {
   @override
   Future<Uint8List> fetchAudio(String text, http.Client client) async =>
       Uint8List(0);
-
-  // Expose the private method for testing - must match _sanitiseForTts exactly
-  String testSanitiseForTts(String text) {
-    return text
-        .replaceAll(RegExp(r'\.{2,}'), '')
-        .replaceAll('…', '')
-        .replaceAll('—', ', ')
-        .replaceAll('–', ', ')
-        .trim();
-  }
 }
 
 void main() {
@@ -181,22 +171,22 @@ void main() {
     });
 
     test('removes ellipses', () {
-      expect(svc.testSanitiseForTts('Hello... world'), equals('Hello world'));
+      expect(svc.sanitiseForTts('Hello... world'), equals('Hello world'));
     });
     test('removes unicode ellipsis', () {
-      expect(svc.testSanitiseForTts('Hello… world'), equals('Hello world'));
+      expect(svc.sanitiseForTts('Hello… world'), equals('Hello world'));
     });
     test('replaces em-dash with comma+space', () {
-      expect(svc.testSanitiseForTts('Hello—world'), equals('Hello, world'));
+      expect(svc.sanitiseForTts('Hello—world'), equals('Hello, world'));
     });
     test('replaces en-dash with comma+space', () {
-      expect(svc.testSanitiseForTts('Hello–world'), equals('Hello, world'));
+      expect(svc.sanitiseForTts('Hello–world'), equals('Hello, world'));
     });
     test('leaves plain text unchanged', () {
-      expect(svc.testSanitiseForTts('Hello world'), equals('Hello world'));
+      expect(svc.sanitiseForTts('Hello world'), equals('Hello world'));
     });
     test('trims whitespace', () {
-      expect(svc.testSanitiseForTts('  hello  '), equals('hello'));
+      expect(svc.sanitiseForTts('  hello  '), equals('hello'));
     });
   });
 }
