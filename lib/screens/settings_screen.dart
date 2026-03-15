@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
-import '../models/elevenlabs_voice.dart';
 import '../models/settings.dart';
 import '../providers/conversation_provider.dart';
 import '../services/openclaw_service.dart';

@@ -1,3 +1,4 @@
+import 'elevenlabs_voice.dart';
 import 'package:collection/collection.dart';
 import 'package:uuid/uuid.dart';
 
@@ -55,15 +56,6 @@ class OpenClawInstance {
 enum LLMBackend { claude, openaiCompatible }
 
 enum TtsProvider { onDevice, elevenlabs, openai }
-
-enum ElevenLabsVoice {
-  rachel("Rachel (Female)", "21m00Tcm4TlvDq8ikWAM"),
-  liam("Liam (Male)", "TX3LPaxmHKxFdv7VOQHJ");
-
-  const ElevenLabsVoice(this.label, this.voiceId);
-  final String label;
-  final String voiceId;
-}
 
 class Settings {
   final String? claudeApiKey;
