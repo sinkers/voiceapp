@@ -56,8 +56,7 @@ class OpenClawInstance {
                 ?.map((e) => e as String)
                 .toList() ??
             const ['main'],
-        allowBadCertificate:
-            (json['allowBadCertificate'] as bool?) ?? false,
+        allowBadCertificate: (json['allowBadCertificate'] as bool?) ?? false,
       );
 
   OpenClawInstance copyWith({

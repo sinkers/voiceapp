@@ -277,7 +277,10 @@ void main() {
       expect(find.text('Rachel'), findsOneWidget);
       expect(find.text('Liam'), findsOneWidget);
       expect(find.text('Custom Voice ID'), findsOneWidget);
-      expect(find.text('Note: Per-agent voices can also be configured in OpenClaw instances above'), findsOneWidget);
+      expect(
+          find.text(
+              'Note: Per-agent voices can also be configured in OpenClaw instances above'),
+          findsOneWidget);
     });
 
     testWidgets('shows OpenAI TTS settings when provider is selected',

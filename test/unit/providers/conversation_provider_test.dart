@@ -262,7 +262,8 @@ void main() {
   });
 
   group('ConversationProvider OpenClaw Model ID', () {
-    test('initializeForAgent with bare agentId sets up OpenAI service', () async {
+    test('initializeForAgent with bare agentId sets up OpenAI service',
+        () async {
       const openclawSettings = Settings(
         backend: LLMBackend.openaiCompatible,
         openclawInstances: [
@@ -308,7 +309,8 @@ void main() {
       expect(provider.hasApiKey, true);
     });
 
-    test('initializeForAgent without instance falls back to OpenAI key', () async {
+    test('initializeForAgent without instance falls back to OpenAI key',
+        () async {
       const directOpenAISettings = Settings(
         backend: LLMBackend.openaiCompatible,
         openaiApiKey: 'test-openai-key',
