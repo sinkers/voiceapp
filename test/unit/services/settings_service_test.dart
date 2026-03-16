@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voiceapp/models/settings.dart';
 import 'package:voiceapp/services/settings_service.dart';
@@ -12,6 +13,7 @@ void main() {
     setUp(() {
       service = SettingsService();
       SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
     });
 
     test('loads default settings when no data is stored', () async {
@@ -237,6 +239,145 @@ void main() {
       expect(loaded.elevenLabsModelId, original.elevenLabsModelId);
       expect(loaded.openaiTtsVoice, original.openaiTtsVoice);
       expect(loaded.openaiTtsModel, original.openaiTtsModel);
+    });
+  });
+
+  group('SettingsService Secure Storage (Issue #6)', () {
+    late SettingsService service;
+
+    setUp(() {
+      service = SettingsService();
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+    });
+
+    test('API keys are NOT stored in SharedPreferences', () async {
+      const settings = Settings(
+        claudeApiKey: 'sk-ant-secret-key',
+        openaiApiKey: 'sk-openai-secret-key',
+        elevenLabsApiKey: 'elevenlabs-secret-key',
+      );
+
+      await service.save(settings);
+      final prefs = await SharedPreferences.getInstance();
+
+      // Verify API keys are NOT in SharedPreferences
+      expect(prefs.getString('claude_api_key'), isNull);
+      expect(prefs.getString('openai_api_key'), isNull);
+      expect(prefs.getString('elevenlabs_api_key'), isNull);
+    });
+
+    test('API keys are stored in secure storage', () async {
+      const settings = Settings(
+        claudeApiKey: 'sk-ant-secret-key',
+        openaiApiKey: 'sk-openai-secret-key',
+        elevenLabsApiKey: 'elevenlabs-secret-key',
+      );
+
+      await service.save(settings);
+      final loaded = await service.load();
+
+      // Verify API keys are loaded correctly from secure storage
+      expect(loaded.claudeApiKey, 'sk-ant-secret-key');
+      expect(loaded.openaiApiKey, 'sk-openai-secret-key');
+      expect(loaded.elevenLabsApiKey, 'elevenlabs-secret-key');
+    });
+
+    test('OpenClaw instance tokens are NOT stored in SharedPreferences',
+        () async {
+      const instance = OpenClawInstance(
+        id: 'test-id',
+        name: 'Test Instance',
+        baseUrl: 'http://localhost:3000/v1',
+        token: 'secret-bearer-token',
+        sessionId: 'test-session',
+      );
+      const settings = Settings(openclawInstances: [instance]);
+
+      await service.save(settings);
+      final prefs = await SharedPreferences.getInstance();
+      final instancesJson = prefs.getString('openclaw_instances');
+
+      // Verify token is NOT in the JSON stored in SharedPreferences
+      expect(instancesJson, isNotNull);
+      expect(instancesJson!.contains('secret-bearer-token'), isFalse);
+    });
+
+    test('OpenClaw instance tokens are stored in secure storage', () async {
+      const instance = OpenClawInstance(
+        id: 'test-id',
+        name: 'Test Instance',
+        baseUrl: 'http://localhost:3000/v1',
+        token: 'secret-bearer-token',
+        sessionId: 'test-session',
+      );
+      const settings = Settings(openclawInstances: [instance]);
+
+      await service.save(settings);
+      final loaded = await service.load();
+
+      // Verify token is loaded correctly from secure storage
+      expect(loaded.openclawInstances.length, 1);
+      expect(loaded.openclawInstances.first.token, 'secret-bearer-token');
+    });
+
+    test('multiple OpenClaw instance tokens are stored securely', () async {
+      const instance1 = OpenClawInstance(
+        id: 'id-1',
+        name: 'Instance 1',
+        baseUrl: 'http://localhost:3000/v1',
+        token: 'token-1',
+        sessionId: 'session-1',
+      );
+      const instance2 = OpenClawInstance(
+        id: 'id-2',
+        name: 'Instance 2',
+        baseUrl: 'http://10.0.0.1:8000/v1',
+        token: 'token-2',
+        sessionId: 'session-2',
+      );
+      const settings = Settings(openclawInstances: [instance1, instance2]);
+
+      await service.save(settings);
+      final loaded = await service.load();
+
+      // Verify both tokens are loaded correctly
+      expect(loaded.openclawInstances.length, 2);
+      expect(loaded.openclawInstances[0].token, 'token-1');
+      expect(loaded.openclawInstances[1].token, 'token-2');
+
+      // Verify tokens are NOT in SharedPreferences JSON
+      final prefs = await SharedPreferences.getInstance();
+      final instancesJson = prefs.getString('openclaw_instances');
+      expect(instancesJson, isNotNull);
+      expect(instancesJson!.contains('token-1'), isFalse);
+      expect(instancesJson.contains('token-2'), isFalse);
+    });
+
+    test('deleting API keys removes them from secure storage', () async {
+      // First save with API keys
+      const settings1 = Settings(
+        claudeApiKey: 'test-key',
+        openaiApiKey: 'test-key-2',
+        elevenLabsApiKey: 'test-key-3',
+      );
+      await service.save(settings1);
+      var loaded = await service.load();
+      expect(loaded.claudeApiKey, 'test-key');
+      expect(loaded.openaiApiKey, 'test-key-2');
+      expect(loaded.elevenLabsApiKey, 'test-key-3');
+
+      // Then save with null API keys
+      const settings2 = Settings(
+        claudeApiKey: null,
+        openaiApiKey: null,
+        elevenLabsApiKey: null,
+      );
+      await service.save(settings2);
+      loaded = await service.load();
+      expect(loaded.claudeApiKey, isNull);
+      expect(loaded.openaiApiKey, isNull);
+      expect(loaded.elevenLabsApiKey, isNull);
     });
   });
 }

@@ -29,6 +29,7 @@ dependencies:
 
   # Settings persistence
   shared_preferences: ^2.3.0
+  flutter_secure_storage: ^9.0.0
 
   # UUID for message IDs
   uuid: ^4.4.0

@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/settings.dart';
 
 class SettingsService {
-  static const _keyClaudeApiKey = 'claude_api_key';
-  static const _keyOpenaiApiKey = 'openai_api_key';
+  // Secure storage keys (sensitive data)
+  static const _secureKeyClaudeApiKey = 'claude_api_key';
+  static const _secureKeyOpenaiApiKey = 'openai_api_key';
+  static const _secureKeyElevenLabsApiKey = 'elevenlabs_api_key';
+
+  // SharedPreferences keys (non-sensitive data)
   static const _keyBackend = 'backend';
   static const _keyOpenaiBaseUrl = 'openai_base_url';
   static const _keyClaudeModelName = 'claude_model_name';
@@ -16,29 +21,38 @@ class SettingsService {
   static const _keySelectedInstanceId = 'selected_instance_id';
   static const _keySelectedAgentId = 'selected_agent_id';
   static const _keyTtsProvider = 'tts_provider';
-  static const _keyElevenLabsApiKey = 'elevenlabs_api_key';
   static const _keyElevenLabsVoiceId = 'elevenlabs_voice_id';
   static const _keyElevenLabsModelId = 'elevenlabs_model_id';
   static const _keyOpenaiTtsVoice = 'openai_tts_voice';
   static const _keyOpenaiTtsModel = 'openai_tts_model';
+
+  final _secureStorage = const FlutterSecureStorage();
 
   Future<Settings> load() async {
     final prefs = await SharedPreferences.getInstance();
     final backendIndex = prefs.getInt(_keyBackend) ?? 0;
 
     final instancesJson = prefs.getString(_keyOpenclawInstances);
-    final openclawInstances = instancesJson != null
+    final openclawInstancesWithoutTokens = instancesJson != null
         ? (jsonDecode(instancesJson) as List)
             .whereType<Map<String, dynamic>>()
             .map(OpenClawInstance.fromJson)
             .toList()
         : <OpenClawInstance>[];
 
+    // Load tokens from secure storage for each instance
+    final openclawInstances = <OpenClawInstance>[];
+    for (final instance in openclawInstancesWithoutTokens) {
+      final token =
+          await _secureStorage.read(key: 'openclaw_token_${instance.id}') ?? '';
+      openclawInstances.add(instance.copyWith(token: token));
+    }
+
     final ttsProviderIndex = prefs.getInt(_keyTtsProvider) ?? 0;
 
     return Settings(
-      claudeApiKey: prefs.getString(_keyClaudeApiKey),
-      openaiApiKey: prefs.getString(_keyOpenaiApiKey),
+      claudeApiKey: await _secureStorage.read(key: _secureKeyClaudeApiKey),
+      openaiApiKey: await _secureStorage.read(key: _secureKeyOpenaiApiKey),
       backend: LLMBackend.values[backendIndex],
       openaiBaseUrl:
           prefs.getString(_keyOpenaiBaseUrl) ?? 'https://api.openai.com/v1',
@@ -55,7 +69,8 @@ class SettingsService {
       selectedInstanceId: prefs.getString(_keySelectedInstanceId),
       selectedAgentId: prefs.getString(_keySelectedAgentId),
       ttsProvider: TtsProvider.values[ttsProviderIndex],
-      elevenLabsApiKey: prefs.getString(_keyElevenLabsApiKey),
+      elevenLabsApiKey:
+          await _secureStorage.read(key: _secureKeyElevenLabsApiKey),
       elevenLabsVoiceId:
           prefs.getString(_keyElevenLabsVoiceId) ?? '21m00Tcm4TlvDq8ikWAM',
       elevenLabsModelId:
@@ -67,16 +82,38 @@ class SettingsService {
 
   Future<void> save(Settings settings) async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Save sensitive keys to secure storage
     if (settings.claudeApiKey != null) {
-      await prefs.setString(_keyClaudeApiKey, settings.claudeApiKey!);
+      await _secureStorage.write(
+          key: _secureKeyClaudeApiKey, value: settings.claudeApiKey);
     } else {
-      await prefs.remove(_keyClaudeApiKey);
+      await _secureStorage.delete(key: _secureKeyClaudeApiKey);
     }
     if (settings.openaiApiKey != null) {
-      await prefs.setString(_keyOpenaiApiKey, settings.openaiApiKey!);
+      await _secureStorage.write(
+          key: _secureKeyOpenaiApiKey, value: settings.openaiApiKey);
     } else {
-      await prefs.remove(_keyOpenaiApiKey);
+      await _secureStorage.delete(key: _secureKeyOpenaiApiKey);
     }
+    if (settings.elevenLabsApiKey != null) {
+      await _secureStorage.write(
+          key: _secureKeyElevenLabsApiKey, value: settings.elevenLabsApiKey);
+    } else {
+      await _secureStorage.delete(key: _secureKeyElevenLabsApiKey);
+    }
+
+    // Save OpenClaw instance tokens to secure storage
+    for (final instance in settings.openclawInstances) {
+      if (instance.token.isNotEmpty) {
+        await _secureStorage.write(
+            key: 'openclaw_token_${instance.id}', value: instance.token);
+      } else {
+        await _secureStorage.delete(key: 'openclaw_token_${instance.id}');
+      }
+    }
+
+    // Save non-sensitive settings to SharedPreferences
     await prefs.setInt(_keyBackend, settings.backend.index);
     await prefs.setString(_keyOpenaiBaseUrl, settings.openaiBaseUrl);
     await prefs.setString(_keyClaudeModelName, settings.claudeModelName);
@@ -100,11 +137,6 @@ class SettingsService {
       await prefs.remove(_keySelectedAgentId);
     }
     await prefs.setInt(_keyTtsProvider, settings.ttsProvider.index);
-    if (settings.elevenLabsApiKey != null) {
-      await prefs.setString(_keyElevenLabsApiKey, settings.elevenLabsApiKey!);
-    } else {
-      await prefs.remove(_keyElevenLabsApiKey);
-    }
     await prefs.setString(_keyElevenLabsVoiceId, settings.elevenLabsVoiceId);
     await prefs.setString(_keyElevenLabsModelId, settings.elevenLabsModelId);
     await prefs.setString(_keyOpenaiTtsVoice, settings.openaiTtsVoice);

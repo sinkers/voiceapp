@@ -195,7 +195,8 @@ void main() {
       expect(json['id'], 'test-id');
       expect(json['name'], 'Test Instance');
       expect(json['baseUrl'], 'http://localhost:3000/v1');
-      expect(json['token'], 'test-token');
+      // Token is excluded from JSON (stored in secure storage instead)
+      expect(json.containsKey('token'), isFalse);
       expect(json['sessionId'], 'test-session');
       expect(json['elevenLabsVoiceId'], ElevenLabsVoice.rachel.voiceId);
       expect(json['elevenLabsSpeed'], 1.1);
@@ -282,7 +283,9 @@ void main() {
       expect(deserialized.id, original.id);
       expect(deserialized.name, original.name);
       expect(deserialized.baseUrl, original.baseUrl);
-      expect(deserialized.token, original.token);
+      // Token is excluded from JSON serialization (stored in secure storage)
+      // so it defaults to empty string when deserialized
+      expect(deserialized.token, '');
       expect(deserialized.sessionId, original.sessionId);
       expect(deserialized.elevenLabsVoice, original.elevenLabsVoice);
       expect(deserialized.elevenLabsSpeed, original.elevenLabsSpeed);
