@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 class SpeechService {
-  final SpeechToText _stt = SpeechToText();
+  final SpeechToText _stt;
   bool _isInitialized = false;
+  bool _hasReportedStop = false;
+
+  SpeechService({SpeechToText? stt}) : _stt = stt ?? SpeechToText();
 
   Function(String finalText)? onFinalResult;
   Function(String partialText)? onPartialResult;
@@ -11,6 +15,12 @@ class SpeechService {
 
   bool get isAvailable => _isInitialized;
   bool get isListening => _stt.isListening;
+
+  @visibleForTesting
+  bool get hasReportedStopForTesting => _hasReportedStop;
+
+  @visibleForTesting
+  void triggerStatusForTesting(String status) => _onStatus(status);
 
   Future<bool> initialize() async {
     _isInitialized = await _stt.initialize(
@@ -20,11 +30,9 @@ class SpeechService {
     return _isInitialized;
   }
 
-  bool _hasPartialResult = false;
-
   Future<void> startListening() async {
     if (!_isInitialized) return;
-    _hasPartialResult = false;
+    _hasReportedStop = false;
     await _stt.listen(
       onResult: _onResult,
       listenFor: const Duration(seconds: 55), // Stay under iOS 60s limit
@@ -49,9 +57,6 @@ class SpeechService {
   }
 
   void _onResult(SpeechRecognitionResult result) {
-    if (result.recognizedWords.isNotEmpty) {
-      _hasPartialResult = true;
-    }
     if (result.finalResult) {
       onFinalResult?.call(result.recognizedWords);
     } else {
@@ -60,11 +65,8 @@ class SpeechService {
   }
 
   void _onStatus(String status) {
-    // Only fire onStopped when we've actually received speech, OR on 'done'.
-    // Ignore 'notListening' fired immediately at startup before any speech.
-    if (status == 'done') {
-      onStopped?.call();
-    } else if (status == 'notListening' && _hasPartialResult) {
+    if ((status == 'notListening' || status == 'done') && !_hasReportedStop) {
+      _hasReportedStop = true;
       onStopped?.call();
     }
   }
