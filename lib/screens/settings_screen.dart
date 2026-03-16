@@ -821,8 +821,6 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
   late final TextEditingController _tokenController;
   bool _obscureToken = true;
   final _formKey = GlobalKey<FormState>();
-  late ElevenLabsVoice _selectedVoice;
-  late double _speed;
   late bool _allowBadCertificate;
 
   @override
@@ -833,8 +831,6 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
         TextEditingController(text: widget.instance?.baseUrl ?? '');
     _tokenController =
         TextEditingController(text: widget.instance?.token ?? '');
-    _selectedVoice = widget.instance?.elevenLabsVoice ?? ElevenLabsVoice.rachel;
-    _speed = widget.instance?.elevenLabsSpeed ?? 1.1;
     _allowBadCertificate = widget.instance?.allowBadCertificate ?? false;
   }
 
@@ -903,29 +899,6 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<ElevenLabsVoice>(
-                initialValue: _selectedVoice,
-                decoration: const InputDecoration(
-                  labelText: 'Voice',
-                  border: OutlineInputBorder(),
-                ),
-                items: ElevenLabsVoice.values
-                    .map(
-                        (v) => DropdownMenuItem(value: v, child: Text(v.label)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedVoice = v!),
-              ),
-              const SizedBox(height: 12),
-              Text('Speed: ${_speed.toStringAsFixed(1)}×'),
-              Slider(
-                value: _speed,
-                min: 0.7,
-                max: 1.2,
-                divisions: 5,
-                label: '${_speed.toStringAsFixed(1)}×',
-                onChanged: (v) => setState(() => _speed = v),
-              ),
               const SizedBox(height: 8),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -967,8 +940,6 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 baseUrl: url,
                 token: _tokenController.text.trim(),
                 sessionId: widget.instance?.sessionId ?? _uuid.v4(),
-                elevenLabsVoice: _selectedVoice,
-                elevenLabsSpeed: _speed,
                 allowBadCertificate: _allowBadCertificate,
               ),
             );
