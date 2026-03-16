@@ -59,6 +59,77 @@ The app has first-class support for [OpenClaw](https://openclaw.ai) — connect 
 2. The app fetches available agents from the instance's `/models` endpoint
 3. Pick an agent — the app routes all conversations through it
 
+**OpenClaw instance setup:**
+
+For the app to discover available agents automatically, the OpenClaw instance needs two things enabled:
+
+**1. Chat completions endpoint** — in `openclaw.json`:
+```json
+"gateway": {
+  "bind": "lan",
+  "http": {
+    "endpoints": {
+      "chatCompletions": { "enabled": true }
+    }
+  }
+}
+```
+
+**2. `agent-models` plugin** — exposes `GET /v1/models` returning configured agents in OpenAI format. Without this, the app falls back to `["main"]`.
+
+Install steps:
+```bash
+# Create the plugin directory
+mkdir -p ~/.openclaw/extensions/agent-models
+
+# Create the plugin file: ~/.openclaw/extensions/agent-models/index.ts
+cat > ~/.openclaw/extensions/agent-models/index.ts << 'PLUGIN'
+import type { IncomingMessage, ServerResponse } from "http";
+export default function register(api: any) {
+  api.registerHttpRoute({
+    path: "/v1/models",
+    auth: "gateway",
+    match: "exact",
+    handler: async (req: IncomingMessage, res: ServerResponse) => {
+      if (req.method !== "GET") {
+        res.statusCode = 405;
+        res.end(JSON.stringify({ error: { message: "Method not allowed" } }));
+        return true;
+      }
+      const agents: Array<{ id: string }> = api.config?.agents?.list ?? [{ id: "main" }];
+      const now = Math.floor(Date.now() / 1000);
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({
+        object: "list",
+        data: agents.map(a => ({ id: `openclaw:${a.id}`, object: "model", created: now, owned_by: "openclaw" }))
+      }));
+      return true;
+    }
+  });
+}
+PLUGIN
+
+# Create the plugin manifest: ~/.openclaw/extensions/agent-models/openclaw.plugin.json
+cat > ~/.openclaw/extensions/agent-models/openclaw.plugin.json << 'MANIFEST'
+{ "id": "agent-models", "name": "Agent Models", "description": "Exposes GET /v1/models returning configured agents" }
+MANIFEST
+```
+
+Then enable it in `openclaw.json`:
+```json
+"plugins": {
+  "allow": ["agent-models"],
+  "entries": { "agent-models": { "enabled": true } }
+}
+```
+
+Restart OpenClaw. Test with:
+```bash
+curl http://localhost:18789/v1/models -H "Authorization: Bearer <your-token>"
+```
+
+
 **Accessing your OpenClaw instance from a phone:**
 
 OpenClaw doesn't need to be publicly exposed. Options:
