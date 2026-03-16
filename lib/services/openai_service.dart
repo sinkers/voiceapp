@@ -1,5 +1,7 @@
+import 'package:http/http.dart' as http;
 import 'package:openai_dart/openai_dart.dart';
 import '../models/message.dart' as app;
+import 'http_client_factory.dart';
 import 'llm_service.dart';
 
 class OpenAIService implements LLMService {
@@ -7,21 +9,26 @@ class OpenAIService implements LLMService {
   final String baseUrl;
   final String model;
   final Map<String, String>? customHeaders;
+  final bool allowBadCertificate;
   late final OpenAIClient _client;
+  late final http.Client _httpClient;
 
   OpenAIService({
     required this.apiKey,
     required this.baseUrl,
     required this.model,
     this.customHeaders,
+    this.allowBadCertificate = false,
   }) {
     final cleanUrl = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
+    _httpClient = buildHttpClient(allowBadCertificate: allowBadCertificate);
     _client = OpenAIClient(
       apiKey: apiKey,
       baseUrl: cleanUrl,
       headers: customHeaders,
+      client: _httpClient,
     );
   }
 
@@ -61,5 +68,6 @@ class OpenAIService implements LLMService {
   @override
   void dispose() {
     _client.endSession();
+    _httpClient.close();
   }
 }

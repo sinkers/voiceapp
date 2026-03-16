@@ -59,7 +59,7 @@ class SettingsService {
       elevenLabsVoiceId:
           prefs.getString(_keyElevenLabsVoiceId) ?? '21m00Tcm4TlvDq8ikWAM',
       elevenLabsModelId:
-          prefs.getString(_keyElevenLabsModelId) ?? 'eleven_multilingual_v2',
+          prefs.getString(_keyElevenLabsModelId) ?? 'eleven_turbo_v2_5',
       openaiTtsVoice: prefs.getString(_keyOpenaiTtsVoice) ?? 'alloy',
       openaiTtsModel: prefs.getString(_keyOpenaiTtsModel) ?? 'tts-1',
     );

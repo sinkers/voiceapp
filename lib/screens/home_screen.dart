@@ -37,6 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Consumer<AgentSwitcherProvider>(
       builder: (context, switcher, _) {
+        if (!switcher.initialized) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
         final agents = switcher.agents;
         if (agents.isEmpty) {
           return const Scaffold(

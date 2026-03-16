@@ -13,6 +13,8 @@ class OpenClawInstance {
   final String sessionId;
   final ElevenLabsVoice elevenLabsVoice;
   final double elevenLabsSpeed;
+  final List<String> agentIds;
+  final bool allowBadCertificate;
 
   const OpenClawInstance({
     required this.id,
@@ -22,6 +24,8 @@ class OpenClawInstance {
     required this.sessionId,
     this.elevenLabsVoice = ElevenLabsVoice.rachel,
     this.elevenLabsSpeed = 1.1,
+    this.agentIds = const ['main'],
+    this.allowBadCertificate = false,
   });
 
   // TODO(security): token should be moved to flutter_secure_storage and excluded from serialization
@@ -33,6 +37,8 @@ class OpenClawInstance {
         'sessionId': sessionId,
         'elevenLabsVoiceId': elevenLabsVoice.voiceId,
         'elevenLabsSpeed': elevenLabsSpeed,
+        'agentIds': agentIds,
+        'allowBadCertificate': allowBadCertificate,
       };
 
   factory OpenClawInstance.fromJson(Map<String, dynamic> json) =>
@@ -46,6 +52,11 @@ class OpenClawInstance {
                 json['elevenLabsVoiceId'] as String? ?? '') ??
             ElevenLabsVoice.rachel,
         elevenLabsSpeed: (json['elevenLabsSpeed'] as num?)?.toDouble() ?? 1.1,
+        agentIds: (json['agentIds'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            const ['main'],
+        allowBadCertificate: (json['allowBadCertificate'] as bool?) ?? false,
       );
 
   OpenClawInstance copyWith({
@@ -56,6 +67,8 @@ class OpenClawInstance {
     String? sessionId,
     ElevenLabsVoice? elevenLabsVoice,
     double? elevenLabsSpeed,
+    List<String>? agentIds,
+    bool? allowBadCertificate,
   }) =>
       OpenClawInstance(
         id: id ?? this.id,
@@ -65,6 +78,8 @@ class OpenClawInstance {
         sessionId: sessionId ?? this.sessionId,
         elevenLabsVoice: elevenLabsVoice ?? this.elevenLabsVoice,
         elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
+        agentIds: agentIds ?? this.agentIds,
+        allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
       );
 }
 
@@ -124,15 +139,15 @@ class Settings {
   OpenClawInstance? get selectedInstance =>
       openclawInstances.firstWhereOrNull((i) => i.id == selectedInstanceId);
 
-  /// Flat list of all agents: one per OpenClaw instance + direct model agents.
+  /// Flat list of all agents: one per agent per OpenClaw instance + direct model agents.
   List<AgentConfig> get allAgents {
     return [
-      ...openclawInstances.map(
-        (instance) => OpenClawAgentConfig(
-          instance: instance,
-          agentId: instance.id == selectedInstanceId
-              ? (selectedAgentId ?? 'main')
-              : 'main',
+      ...openclawInstances.expand(
+        (instance) => instance.agentIds.map(
+          (agentId) => OpenClawAgentConfig(
+            instance: instance,
+            agentId: agentId,
+          ),
         ),
       ),
       DirectModelAgentConfig(

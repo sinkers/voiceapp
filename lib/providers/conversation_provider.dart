@@ -110,9 +110,19 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called from the Settings screen — persists to SharedPreferences.
   Future<void> updateSettings(Settings newSettings) async {
     _settings = newSettings;
     await _settingsService.save(newSettings);
+    await _rebuildTtsService();
+    _rebuildLlmService();
+    notifyListeners();
+  }
+
+  /// Called from [AgentSwitcherProvider] — applies agent-specific settings
+  /// WITHOUT persisting to SharedPreferences (avoid overwriting user prefs).
+  Future<void> applyAgentSettings(Settings agentSettings) async {
+    _settings = agentSettings;
     await _rebuildTtsService();
     _rebuildLlmService();
     notifyListeners();
@@ -314,12 +324,10 @@ class ConversationProvider extends ChangeNotifier {
         final String voiceId =
             _settings.selectedInstance?.elevenLabsVoice.voiceId ??
                 _settings.elevenLabsVoiceId;
-        final double speed = _settings.selectedInstance?.elevenLabsSpeed ?? 1.1;
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
           voiceId: voiceId,
           modelId: _settings.elevenLabsModelId,
-          speed: speed,
         );
         await svc.initialize();
         _ttsService = svc;
@@ -332,6 +340,12 @@ class ConversationProvider extends ChangeNotifier {
         await svc.initialize();
         _ttsService = svc;
     }
+  }
+
+  /// Ensures agentId is prefixed for OpenClaw's model field (e.g. 'main' → 'openclaw:main').
+  String _toOpenClawModelId(String agentId) {
+    if (agentId.contains(':')) return agentId; // already prefixed
+    return 'openclaw:$agentId';
   }
 
   void _rebuildLlmService() {
@@ -352,8 +366,9 @@ class ConversationProvider extends ChangeNotifier {
         _llmService = OpenAIService(
           apiKey: instance.token,
           baseUrl: instance.baseUrl,
-          model: _settings.selectedAgentId ?? 'openclaw:main',
+          model: _toOpenClawModelId(_settings.selectedAgentId ?? 'main'),
           customHeaders: {'x-openclaw-session-key': instance.sessionId},
+          allowBadCertificate: instance.allowBadCertificate,
         );
       } else {
         final key = _settings.openaiApiKey;

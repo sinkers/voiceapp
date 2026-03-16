@@ -341,4 +341,145 @@ void main() {
       expect(TtsProvider.values, contains(TtsProvider.openai));
     });
   });
+
+  group('Settings.allAgents', () {
+    test('returns 2 direct agents when no instances configured', () {
+      const settings = Settings();
+
+      final agents = settings.allAgents;
+
+      expect(agents.length, 2);
+      expect(agents[0].runtimeType.toString(), 'DirectModelAgentConfig');
+      expect(agents[1].runtimeType.toString(), 'DirectModelAgentConfig');
+    });
+
+    test('returns correct count with 2 instances with 1 agent each', () {
+      const settings = Settings(
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Instance 1',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'session-1',
+            agentIds: ['main'],
+          ),
+          OpenClawInstance(
+            id: 'inst-2',
+            name: 'Instance 2',
+            baseUrl: 'http://localhost:4000/v1',
+            sessionId: 'session-2',
+            agentIds: ['main'],
+          ),
+        ],
+      );
+
+      final agents = settings.allAgents;
+
+      // 2 OpenClaw agents (1 per instance) + 2 direct agents = 4 total
+      expect(agents.length, 4);
+    });
+
+    test('expands multi-agent instances correctly', () {
+      const settings = Settings(
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Multi-Agent Instance',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'session-1',
+            agentIds: ['main', 'elysse'],
+          ),
+        ],
+      );
+
+      final agents = settings.allAgents;
+
+      // 2 OpenClaw agents (from one instance with 2 agentIds) + 2 direct = 4
+      expect(agents.length, 4);
+    });
+
+    test('allAgents includes correct mix of OpenClaw and direct agents', () {
+      const settings = Settings(
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Instance 1',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'session-1',
+            agentIds: ['main', 'alex'],
+          ),
+          OpenClawInstance(
+            id: 'inst-2',
+            name: 'Instance 2',
+            baseUrl: 'http://localhost:4000/v1',
+            sessionId: 'session-2',
+            agentIds: ['elysse'],
+          ),
+        ],
+      );
+
+      final agents = settings.allAgents;
+
+      // 3 OpenClaw (2 from inst-1, 1 from inst-2) + 2 direct = 5
+      expect(agents.length, 5);
+    });
+  });
+
+  group('OpenClawInstance serialization', () {
+    test('toJson includes agentIds', () {
+      const instance = OpenClawInstance(
+        id: 'test-id',
+        name: 'Test Instance',
+        baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'test-session',
+        agentIds: ['main', 'elysse'],
+      );
+
+      final json = instance.toJson();
+
+      expect(json['agentIds'], ['main', 'elysse']);
+    });
+
+    test('fromJson preserves agentIds', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Instance',
+        'baseUrl': 'http://localhost:3000/v1',
+        'sessionId': 'test-session',
+        'agentIds': ['main', 'alex', 'elysse'],
+      };
+
+      final instance = OpenClawInstance.fromJson(json);
+
+      expect(instance.agentIds, ['main', 'alex', 'elysse']);
+    });
+
+    test('fromJson defaults agentIds to ["main"] when missing', () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Instance',
+        'baseUrl': 'http://localhost:3000/v1',
+        'sessionId': 'test-session',
+      };
+
+      final instance = OpenClawInstance.fromJson(json);
+
+      expect(instance.agentIds, ['main']);
+    });
+
+    test('round-trip serialization preserves agentIds', () {
+      const original = OpenClawInstance(
+        id: 'test-id',
+        name: 'Test Instance',
+        baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'test-session',
+        agentIds: ['main', 'elysse', 'alex'],
+      );
+
+      final json = original.toJson();
+      final deserialized = OpenClawInstance.fromJson(json);
+
+      expect(deserialized.agentIds, original.agentIds);
+    });
+  });
 }

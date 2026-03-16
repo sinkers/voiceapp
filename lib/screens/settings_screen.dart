@@ -64,12 +64,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  /// Updates [instance.agentIds] in the draft settings with [agents].
+  void _updateInstanceAgentIds(OpenClawInstance instance, List<String> agents) {
+    final updatedInstance = instance.copyWith(agentIds: agents);
+    final updatedInstances = _draft.openclawInstances
+        .map((i) => i.id == instance.id ? updatedInstance : i)
+        .toList();
+    _draft = _draft.copyWith(openclawInstances: updatedInstances);
+  }
+
   Future<void> _fetchAgentsForInstance(OpenClawInstance instance) async {
     final agents = await _openClawService.fetchAgents(instance);
     if (!mounted) return;
     setState(() {
       _agents = agents;
       _loadingAgents = false;
+      _updateInstanceAgentIds(instance, agents);
       if (!agents.contains(_draft.selectedAgentId)) {
         _draft = _draft.copyWith(
           selectedAgentId: agents.isNotEmpty ? agents.first : null,
@@ -156,6 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     final agents = await _openClawService.fetchAgents(instance);
     if (!mounted) return;
+    setState(() => _updateInstanceAgentIds(instance, agents));
     final message = agents.length == 1 && agents.first == 'main'
         ? 'Connected (no OpenClaw agents found, using fallback)'
         : 'Found ${agents.length} agent(s): ${agents.join(', ')}';
@@ -522,6 +533,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               _agents = [..._agents, agentId];
                             }
                             _draft = _draft.copyWith(selectedAgentId: agentId);
+                            // Persist added agent into the selected instance's agentIds
+                            final selId = _draft.selectedInstanceId;
+                            if (selId != null) {
+                              final updatedInstances =
+                                  _draft.openclawInstances.map((i) {
+                                if (i.id == selId &&
+                                    !i.agentIds.contains(agentId)) {
+                                  return i.copyWith(
+                                      agentIds: [...i.agentIds, agentId]);
+                                }
+                                return i;
+                              }).toList();
+                              _draft = _draft.copyWith(
+                                  openclawInstances: updatedInstances);
+                            }
                           });
                         },
                       ),
@@ -643,6 +669,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       controller: _elevenLabsModelIdController,
                       label: 'Model ID',
                       hint: 'eleven_turbo_v2_5',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Note: Per-agent voices can also be configured in OpenClaw instances above',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                   if (_draft.ttsProvider == TtsProvider.openai) ...[
@@ -783,8 +818,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
   late final TextEditingController _tokenController;
   bool _obscureToken = true;
   final _formKey = GlobalKey<FormState>();
-  late ElevenLabsVoice _selectedVoice;
-  late double _speed;
+  late bool _allowBadCertificate;
 
   @override
   void initState() {
@@ -794,8 +828,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
         TextEditingController(text: widget.instance?.baseUrl ?? '');
     _tokenController =
         TextEditingController(text: widget.instance?.token ?? '');
-    _selectedVoice = widget.instance?.elevenLabsVoice ?? ElevenLabsVoice.rachel;
-    _speed = widget.instance?.elevenLabsSpeed ?? 1.1;
+    _allowBadCertificate = widget.instance?.allowBadCertificate ?? false;
   }
 
   @override
@@ -863,28 +896,16 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<ElevenLabsVoice>(
-                initialValue: _selectedVoice,
-                decoration: const InputDecoration(
-                  labelText: 'Voice',
-                  border: OutlineInputBorder(),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Allow invalid TLS certificate'),
+                subtitle: const Text(
+                  'Use for self-signed certs on local/dev instances',
+                  style: TextStyle(fontSize: 12),
                 ),
-                items: ElevenLabsVoice.values
-                    .map(
-                        (v) => DropdownMenuItem(value: v, child: Text(v.label)))
-                    .toList(),
-                onChanged: (v) => setState(() => _selectedVoice = v!),
-              ),
-              const SizedBox(height: 12),
-              Text('Speed: ${_speed.toStringAsFixed(1)}×'),
-              Slider(
-                value: _speed,
-                min: 0.7,
-                max: 1.2,
-                divisions: 5,
-                label: '${_speed.toStringAsFixed(1)}×',
-                onChanged: (v) => setState(() => _speed = v),
+                value: _allowBadCertificate,
+                onChanged: (v) => setState(() => _allowBadCertificate = v),
               ),
             ],
           ),
@@ -916,8 +937,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 baseUrl: url,
                 token: _tokenController.text.trim(),
                 sessionId: widget.instance?.sessionId ?? _uuid.v4(),
-                elevenLabsVoice: _selectedVoice,
-                elevenLabsSpeed: _speed,
+                allowBadCertificate: _allowBadCertificate,
               ),
             );
           },

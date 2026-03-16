@@ -20,12 +20,15 @@ class SpeechService {
     return _isInitialized;
   }
 
+  bool _hasPartialResult = false;
+
   Future<void> startListening() async {
     if (!_isInitialized) return;
+    _hasPartialResult = false;
     await _stt.listen(
       onResult: _onResult,
       listenFor: const Duration(seconds: 55), // Stay under iOS 60s limit
-      pauseFor: const Duration(seconds: 3),
+      pauseFor: const Duration(seconds: 4),
       listenOptions: SpeechListenOptions(
         listenMode: ListenMode.dictation,
         cancelOnError: false,
@@ -46,6 +49,9 @@ class SpeechService {
   }
 
   void _onResult(SpeechRecognitionResult result) {
+    if (result.recognizedWords.isNotEmpty) {
+      _hasPartialResult = true;
+    }
     if (result.finalResult) {
       onFinalResult?.call(result.recognizedWords);
     } else {
@@ -54,7 +60,11 @@ class SpeechService {
   }
 
   void _onStatus(String status) {
-    if (status == 'notListening' || status == 'done') {
+    // Only fire onStopped when we've actually received speech, OR on 'done'.
+    // Ignore 'notListening' fired immediately at startup before any speech.
+    if (status == 'done') {
+      onStopped?.call();
+    } else if (status == 'notListening' && _hasPartialResult) {
       onStopped?.call();
     }
   }

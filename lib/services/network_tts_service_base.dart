@@ -20,6 +20,9 @@ abstract class NetworkTtsServiceBase implements TtsService {
 
   Future<Uint8List> fetchAudio(String text, http.Client client);
 
+  /// MIME type of the audio returned by [fetchAudio]. Override in subclasses.
+  String get audioMimeType => 'audio/mpeg';
+
   @visibleForTesting
   String sanitiseForTts(String text) {
     return text
@@ -120,7 +123,7 @@ abstract class NetworkTtsServiceBase implements TtsService {
     final bytes =
         await (_prefetchCache.remove(text) ?? fetchAudio(text, _httpClient));
     if (!_isSpeaking) return;
-    await _playBytes(bytes);
+    await _playBytes(bytes, mimeType: audioMimeType);
   }
 
   void _fallbackToOnDevice(String text) {
@@ -137,7 +140,7 @@ abstract class NetworkTtsServiceBase implements TtsService {
     }
   }
 
-  Future<void> _playBytes(Uint8List bytes) async {
+  Future<void> _playBytes(Uint8List bytes, {String? mimeType}) async {
     _currentPlayer = AudioPlayer();
     final stateCompleter = Completer<void>();
     StreamSubscription<PlayerState>? sub;
@@ -149,7 +152,7 @@ abstract class NetworkTtsServiceBase implements TtsService {
       }
     });
     try {
-      await _currentPlayer!.play(BytesSource(bytes));
+      await _currentPlayer!.play(BytesSource(bytes, mimeType: mimeType));
       await stateCompleter.future;
     } finally {
       sub.cancel();
