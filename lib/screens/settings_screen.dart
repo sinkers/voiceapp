@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/elevenlabs_voice.dart';
@@ -55,10 +54,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadVersionInfo() async {
-    final packageInfo = await PackageInfo.fromPlatform();
+    const sha = String.fromEnvironment('GIT_SHA', defaultValue: 'dev');
     setState(() {
-      _versionInfo =
-          'ClawTalk v${packageInfo.version}+${packageInfo.buildNumber}';
+      _versionInfo = 'ClawTalk $sha';
     });
   }
 
