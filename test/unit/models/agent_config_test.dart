@@ -23,7 +23,6 @@ void main() {
       expect(claude.providerLabel, 'Anthropic');
       expect(claude.id, 'claude:claude-opus-4-6');
 
-
       final openai = agents[1] as DirectModelAgentConfig;
       expect(openai.backend, LLMBackend.openaiCompatible);
       expect(openai.modelName, 'gpt-4o');
@@ -114,7 +113,7 @@ void main() {
       final oc2 = agents[1] as OpenClawAgentConfig;
 
       expect(oc1.agentId, 'custom-agent'); // selected
-      expect(oc2.agentId, 'main');          // not selected → main
+      expect(oc2.agentId, 'main'); // not selected → main
     });
   });
 
