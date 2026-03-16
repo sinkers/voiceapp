@@ -260,4 +260,66 @@ void main() {
       expect(provider.errorMessage, contains('Speech recognition unavailable'));
     });
   });
+
+  group('ConversationProvider OpenClaw Model ID', () {
+    test('initializeForAgent with bare agentId sets up OpenAI service', () async {
+      const openclawSettings = Settings(
+        backend: LLMBackend.openaiCompatible,
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Test Instance',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'session-1',
+            token: 'test-token',
+          ),
+        ],
+        selectedInstanceId: 'inst-1',
+        selectedAgentId: 'main',
+      );
+
+      await provider.initializeForAgent(openclawSettings);
+
+      // Verify provider is initialized and has an API key (via the LLM service)
+      expect(provider.initialized, true);
+      expect(provider.hasApiKey, true);
+    });
+
+    test('initializeForAgent with prefixed agentId works correctly', () async {
+      const openclawSettings = Settings(
+        backend: LLMBackend.openaiCompatible,
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Test Instance',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'session-1',
+            token: 'test-token',
+          ),
+        ],
+        selectedInstanceId: 'inst-1',
+        selectedAgentId: 'openclaw:elysse',
+      );
+
+      await provider.initializeForAgent(openclawSettings);
+
+      // Verify provider is initialized
+      expect(provider.initialized, true);
+      expect(provider.hasApiKey, true);
+    });
+
+    test('initializeForAgent without instance falls back to OpenAI key', () async {
+      const directOpenAISettings = Settings(
+        backend: LLMBackend.openaiCompatible,
+        openaiApiKey: 'test-openai-key',
+        openaiBaseUrl: 'https://api.openai.com/v1',
+        openaiModelName: 'gpt-4o',
+      );
+
+      await provider.initializeForAgent(directOpenAISettings);
+
+      expect(provider.initialized, true);
+      expect(provider.hasApiKey, true);
+    });
+  });
 }

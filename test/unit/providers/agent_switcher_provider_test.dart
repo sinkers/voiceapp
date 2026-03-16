@@ -202,5 +202,130 @@ void main() {
 
       expect(switcher.currentIndex, 2);
     });
+
+    test('multi-agent instance expands to multiple pages', () async {
+      const multiAgentSettings = Settings(
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Multi-Agent',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'ses-1',
+            agentIds: ['main', 'elysse'],
+          ),
+        ],
+      );
+
+      final switcher = AgentSwitcherProvider(
+        settingsService: _FakeSettingsService(multiAgentSettings),
+        speechService: MockSpeechService(),
+        providerFactory: makeMockProvider,
+      );
+      await switcher.initialize();
+
+      // 2 OpenClaw agents (from agentIds) + 2 direct = 4 total
+      expect(switcher.agents.length, 4);
+
+      // First two should be OpenClaw agents
+      expect(switcher.agents[0], isA<OpenClawAgentConfig>());
+      expect(switcher.agents[1], isA<OpenClawAgentConfig>());
+
+      final agent0 = switcher.agents[0] as OpenClawAgentConfig;
+      final agent1 = switcher.agents[1] as OpenClawAgentConfig;
+
+      expect(agent0.agentId, 'main');
+      expect(agent1.agentId, 'elysse');
+      expect(agent0.instance.id, 'inst-1');
+      expect(agent1.instance.id, 'inst-1');
+    });
+
+    test('OpenClawAgentConfig has correct agentId per agent', () async {
+      const multiAgentSettings = Settings(
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Multi-Agent',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'ses-1',
+            agentIds: ['main', 'alex', 'elysse'],
+          ),
+        ],
+      );
+
+      final switcher = AgentSwitcherProvider(
+        settingsService: _FakeSettingsService(multiAgentSettings),
+        speechService: MockSpeechService(),
+        providerFactory: makeMockProvider,
+      );
+      await switcher.initialize();
+
+      // 3 OpenClaw + 2 direct = 5
+      expect(switcher.agents.length, 5);
+
+      final agent0 = switcher.agents[0] as OpenClawAgentConfig;
+      final agent1 = switcher.agents[1] as OpenClawAgentConfig;
+      final agent2 = switcher.agents[2] as OpenClawAgentConfig;
+
+      expect(agent0.agentId, 'main');
+      expect(agent1.agentId, 'alex');
+      expect(agent2.agentId, 'elysse');
+    });
+
+    test('providerFor initializes with correct agentId in settings', () async {
+      const multiAgentSettings = Settings(
+        openclawInstances: [
+          OpenClawInstance(
+            id: 'inst-1',
+            name: 'Multi-Agent',
+            baseUrl: 'http://localhost:3000/v1',
+            sessionId: 'ses-1',
+            agentIds: ['main', 'elysse'],
+          ),
+        ],
+      );
+
+      Settings? capturedSettings0;
+      Settings? capturedSettings1;
+
+      final switcher = AgentSwitcherProvider(
+        settingsService: _FakeSettingsService(multiAgentSettings),
+        speechService: MockSpeechService(),
+        providerFactory: () {
+          final mock = MockConversationProvider();
+          when(mock.initializeForAgent(argThat(isA<Settings>())))
+              .thenAnswer((invocation) {
+            final settings = invocation.positionalArguments[0] as Settings;
+            if (capturedSettings0 == null) {
+              capturedSettings0 = settings;
+            } else {
+              capturedSettings1 = settings;
+            }
+            return Future.value();
+          });
+          when(mock.updateSettings(argThat(isA<Settings>())))
+              .thenAnswer((_) async {});
+          when(mock.state).thenReturn(ConversationState.idle);
+          when(mock.messages).thenReturn([]);
+          when(mock.partialSttText).thenReturn('');
+          when(mock.settings).thenReturn(const Settings());
+          when(mock.errorMessage).thenReturn(null);
+          when(mock.initialized).thenReturn(true);
+          when(mock.hasApiKey).thenReturn(false);
+          when(mock.hasListeners).thenReturn(false);
+          return mock;
+        },
+      );
+      await switcher.initialize();
+
+      final agent0 = switcher.agents[0] as OpenClawAgentConfig;
+      final agent1 = switcher.agents[1] as OpenClawAgentConfig;
+
+      switcher.providerFor(agent0);
+      switcher.providerFor(agent1);
+
+      // Verify correct agentId was set for each provider
+      expect(capturedSettings0?.selectedAgentId, 'main');
+      expect(capturedSettings1?.selectedAgentId, 'elysse');
+    });
   });
 }

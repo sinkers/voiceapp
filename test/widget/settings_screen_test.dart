@@ -272,8 +272,12 @@ void main() {
       // Change to ElevenLabs (it might already be selected based on mock)
       expect(find.text('ElevenLabs API Key'), findsOneWidget);
       expect(find.text('Model ID'), findsOneWidget);
-      // Voice settings are now per-instance
-      expect(find.text('Voice settings are configured per OpenClaw instance in the instance dialog above'), findsOneWidget);
+      // Global voice picker is restored
+      expect(find.text('Voice'), findsOneWidget);
+      expect(find.text('Rachel'), findsOneWidget);
+      expect(find.text('Liam'), findsOneWidget);
+      expect(find.text('Custom Voice ID'), findsOneWidget);
+      expect(find.text('Note: Per-agent voices can also be configured in OpenClaw instances above'), findsOneWidget);
     });
 
     testWidgets('shows OpenAI TTS settings when provider is selected',

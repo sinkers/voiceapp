@@ -610,6 +610,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       hint: 'Your ElevenLabs API key',
                     ),
                     const SizedBox(height: 12),
+                    Text('Voice', style: theme.textTheme.labelMedium),
+                    const SizedBox(height: 8),
+                    SegmentedButton<ElevenLabsVoice>(
+                      segments: const [
+                        ButtonSegment(
+                          value: ElevenLabsVoice.rachel,
+                          label: Text('Rachel'),
+                        ),
+                        ButtonSegment(
+                          value: ElevenLabsVoice.liam,
+                          label: Text('Liam'),
+                        ),
+                      ],
+                      selected: {
+                        ElevenLabsVoice.fromVoiceId(_draft.elevenLabsVoiceId) ??
+                            ElevenLabsVoice.rachel
+                      },
+                      onSelectionChanged: (s) {
+                        final voiceId = s.first.voiceId;
+                        setState(() {
+                          _draft = _draft.copyWith(elevenLabsVoiceId: voiceId);
+                          _elevenLabsVoiceIdController.text = voiceId;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _TextField(
+                      controller: _elevenLabsVoiceIdController,
+                      label: 'Custom Voice ID',
+                      hint: '21m00Tcm4TlvDq8ikWAM',
+                    ),
+                    const SizedBox(height: 4),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Use the buttons above or enter a custom voice ID',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     _TextField(
                       controller: _elevenLabsModelIdController,
                       label: 'Model ID',
@@ -617,7 +660,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Voice settings are configured per OpenClaw instance in the instance dialog above',
+                      'Note: Per-agent voices can also be configured in OpenClaw instances above',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color:
                             theme.colorScheme.onSurface.withValues(alpha: 0.6),
