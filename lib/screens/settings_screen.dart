@@ -808,6 +808,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late ElevenLabsVoice _selectedVoice;
   late double _speed;
+  late bool _allowBadCertificate;
 
   @override
   void initState() {
@@ -819,6 +820,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
         TextEditingController(text: widget.instance?.token ?? '');
     _selectedVoice = widget.instance?.elevenLabsVoice ?? ElevenLabsVoice.rachel;
     _speed = widget.instance?.elevenLabsSpeed ?? 1.1;
+    _allowBadCertificate = widget.instance?.allowBadCertificate ?? false;
   }
 
   @override
@@ -909,6 +911,17 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 label: '${_speed.toStringAsFixed(1)}×',
                 onChanged: (v) => setState(() => _speed = v),
               ),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Allow invalid TLS certificate'),
+                subtitle: const Text(
+                  'Use for self-signed certs on local/dev instances',
+                  style: TextStyle(fontSize: 12),
+                ),
+                value: _allowBadCertificate,
+                onChanged: (v) => setState(() => _allowBadCertificate = v),
+              ),
             ],
           ),
         ),
@@ -941,6 +954,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 sessionId: widget.instance?.sessionId ?? _uuid.v4(),
                 elevenLabsVoice: _selectedVoice,
                 elevenLabsSpeed: _speed,
+                allowBadCertificate: _allowBadCertificate,
               ),
             );
           },

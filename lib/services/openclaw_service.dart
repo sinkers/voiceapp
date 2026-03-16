@@ -1,9 +1,11 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/settings.dart';
+import 'http_client_factory.dart';
 
 class OpenClawService {
   Future<List<String>> fetchAgents(OpenClawInstance instance) async {
+    final client = buildHttpClient(
+        allowBadCertificate: instance.allowBadCertificate);
     try {
       final base = instance.baseUrl.endsWith('/')
           ? instance.baseUrl.substring(0, instance.baseUrl.length - 1)
@@ -13,7 +15,7 @@ class OpenClawService {
       if (instance.token.isNotEmpty) {
         headers['Authorization'] = 'Bearer ${instance.token}';
       }
-      final response = await http
+      final response = await client
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 5));
 
@@ -34,6 +36,8 @@ class OpenClawService {
       // ignore: avoid_print
       print('Failed to fetch OpenClaw agents: $e\n$s');
       return ['openclaw:main'];
+    } finally {
+      client.close();
     }
   }
 }

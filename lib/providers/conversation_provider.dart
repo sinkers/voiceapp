@@ -360,6 +360,7 @@ class ConversationProvider extends ChangeNotifier {
           baseUrl: instance.baseUrl,
           model: _toOpenClawModelId(_settings.selectedAgentId ?? 'main'),
           customHeaders: {'x-openclaw-session-key': instance.sessionId},
+          allowBadCertificate: instance.allowBadCertificate,
         );
       } else {
         final key = _settings.openaiApiKey;

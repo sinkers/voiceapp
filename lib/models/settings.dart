@@ -14,6 +14,7 @@ class OpenClawInstance {
   final ElevenLabsVoice elevenLabsVoice;
   final double elevenLabsSpeed;
   final List<String> agentIds;
+  final bool allowBadCertificate;
 
   const OpenClawInstance({
     required this.id,
@@ -24,6 +25,7 @@ class OpenClawInstance {
     this.elevenLabsVoice = ElevenLabsVoice.rachel,
     this.elevenLabsSpeed = 1.1,
     this.agentIds = const ['main'],
+    this.allowBadCertificate = false,
   });
 
   // TODO(security): token should be moved to flutter_secure_storage and excluded from serialization
@@ -36,6 +38,7 @@ class OpenClawInstance {
         'elevenLabsVoiceId': elevenLabsVoice.voiceId,
         'elevenLabsSpeed': elevenLabsSpeed,
         'agentIds': agentIds,
+        'allowBadCertificate': allowBadCertificate,
       };
 
   factory OpenClawInstance.fromJson(Map<String, dynamic> json) =>
@@ -53,6 +56,8 @@ class OpenClawInstance {
                 ?.map((e) => e as String)
                 .toList() ??
             const ['main'],
+        allowBadCertificate:
+            (json['allowBadCertificate'] as bool?) ?? false,
       );
 
   OpenClawInstance copyWith({
@@ -64,6 +69,7 @@ class OpenClawInstance {
     ElevenLabsVoice? elevenLabsVoice,
     double? elevenLabsSpeed,
     List<String>? agentIds,
+    bool? allowBadCertificate,
   }) =>
       OpenClawInstance(
         id: id ?? this.id,
@@ -74,6 +80,7 @@ class OpenClawInstance {
         elevenLabsVoice: elevenLabsVoice ?? this.elevenLabsVoice,
         elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
         agentIds: agentIds ?? this.agentIds,
+        allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
       );
 }
 
