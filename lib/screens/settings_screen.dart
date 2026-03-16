@@ -834,8 +834,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(fontSize: 12),
                     ),
                     value: _draft.conversationalMode,
-                    onChanged: (v) =>
-                        setState(() => _draft = _draft.copyWith(
+                    onChanged: (v) => setState(() => _draft = _draft.copyWith(
                           conversationalMode: v,
                         )),
                   ),
@@ -859,8 +858,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       min: 0.5,
                       max: 3.0,
                       divisions: 25,
-                      onChanged: (v) =>
-                          setState(() => _draft = _draft.copyWith(
+                      onChanged: (v) => setState(() => _draft = _draft.copyWith(
                             pauseDuration: v,
                           )),
                     ),
