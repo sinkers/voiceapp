@@ -70,6 +70,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _agents = agents;
       _loadingAgents = false;
+      // Save fetched agents to instance.agentIds
+      final updatedInstance = instance.copyWith(agentIds: agents);
+      final updatedInstances = _draft.openclawInstances
+          .map((i) => i.id == instance.id ? updatedInstance : i)
+          .toList();
+      _draft = _draft.copyWith(openclawInstances: updatedInstances);
       if (!agents.contains(_draft.selectedAgentId)) {
         _draft = _draft.copyWith(
           selectedAgentId: agents.isNotEmpty ? agents.first : null,
@@ -156,6 +162,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     final agents = await _openClawService.fetchAgents(instance);
     if (!mounted) return;
+    // Save fetched agents to instance.agentIds
+    setState(() {
+      final updatedInstance = instance.copyWith(agentIds: agents);
+      final updatedInstances = _draft.openclawInstances
+          .map((i) => i.id == instance.id ? updatedInstance : i)
+          .toList();
+      _draft = _draft.copyWith(openclawInstances: updatedInstances);
+    });
     final message = agents.length == 1 && agents.first == 'main'
         ? 'Connected (no OpenClaw agents found, using fallback)'
         : 'Found ${agents.length} agent(s): ${agents.join(', ')}';
@@ -596,53 +610,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       hint: 'Your ElevenLabs API key',
                     ),
                     const SizedBox(height: 12),
-                    Text('Voice', style: theme.textTheme.labelMedium),
-                    const SizedBox(height: 8),
-                    SegmentedButton<ElevenLabsVoice>(
-                      segments: const [
-                        ButtonSegment(
-                          value: ElevenLabsVoice.rachel,
-                          label: Text('Rachel'),
-                        ),
-                        ButtonSegment(
-                          value: ElevenLabsVoice.liam,
-                          label: Text('Liam'),
-                        ),
-                      ],
-                      selected: {
-                        ElevenLabsVoice.fromVoiceId(_draft.elevenLabsVoiceId) ??
-                            ElevenLabsVoice.rachel
-                      },
-                      onSelectionChanged: (s) {
-                        final voiceId = s.first.voiceId;
-                        setState(() {
-                          _draft = _draft.copyWith(elevenLabsVoiceId: voiceId);
-                          _elevenLabsVoiceIdController.text = voiceId;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _TextField(
-                      controller: _elevenLabsVoiceIdController,
-                      label: 'Custom Voice ID',
-                      hint: '21m00Tcm4TlvDq8ikWAM',
-                    ),
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Use the buttons above or enter a custom voice ID',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     _TextField(
                       controller: _elevenLabsModelIdController,
                       label: 'Model ID',
                       hint: 'eleven_turbo_v2_5',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Voice settings are configured per OpenClaw instance in the instance dialog above',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ],
                   if (_draft.ttsProvider == TtsProvider.openai) ...[
