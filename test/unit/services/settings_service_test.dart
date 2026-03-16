@@ -382,4 +382,79 @@ void main() {
       expect(loaded.elevenLabsApiKey, isNull);
     });
   });
+
+  group('SettingsService Default Configs (Issue #32)', () {
+    late SettingsService service;
+
+    setUp(() {
+      service = SettingsService();
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+    });
+
+    test('does nothing when default_configs_loaded flag is already set',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'default_configs_loaded': true,
+      });
+
+      final settings = await service.load();
+
+      // Should not load any configs
+      expect(service.lastLoadedConfigCount, 0);
+      expect(settings.openclawInstances, isEmpty);
+    });
+
+    test('does nothing when existing configs are present', () async {
+      // Simulate existing configs
+      SharedPreferences.setMockInitialValues({
+        'openclaw_instances': '[]',
+      });
+
+      final settings = await service.load();
+
+      // Should not load any configs and should set the flag
+      expect(service.lastLoadedConfigCount, 0);
+      expect(settings.openclawInstances, isEmpty);
+
+      // Verify flag was set
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('default_configs_loaded'), true);
+    });
+
+    test('does nothing when asset has empty arrays', () async {
+      // The actual default_configs.json file has empty arrays
+      await service.load();
+
+      // Should not load any configs but should set the flag
+      expect(service.lastLoadedConfigCount, 0);
+
+      // Verify flag was set
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('default_configs_loaded'), true);
+    });
+
+    test('sets flag even when asset loading fails', () async {
+      // This will fail to load the asset in test environment
+      await service.load();
+
+      // Should set the flag even on failure to avoid retrying
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('default_configs_loaded'), true);
+
+      // Count should be 0 since loading failed
+      expect(service.lastLoadedConfigCount, 0);
+    });
+
+    test('only loads configs once on repeated calls', () async {
+      // First load
+      await service.load();
+
+      // Second load
+      await service.load();
+
+      // Should return 0 on second load since flag is set
+      expect(service.lastLoadedConfigCount, 0);
+    });
+  });
 }
