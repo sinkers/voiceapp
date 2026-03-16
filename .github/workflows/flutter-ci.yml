@@ -33,7 +33,7 @@ jobs:
       - name: Run tests
         run: |
           if [ -d "test" ]; then
-            flutter test --coverage
+            flutter test --coverage --dart-define=GIT_SHA=$(git rev-parse --short HEAD)
           else
             echo "No test directory found — skipping (see issue #13)"
           fi
