@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import '../models/elevenlabs_voice.dart';
@@ -27,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _openClawService = OpenClawService();
   List<String> _agents = [];
   bool _loadingAgents = false;
+  String _versionInfo = '';
 
   @override
   void initState() {
@@ -48,6 +50,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _loadingAgents = true;
       _fetchAgentsForInstance(selectedInstance);
     }
+
+    _loadVersionInfo();
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _versionInfo = 'ClawTalk v${packageInfo.version}+${packageInfo.buildNumber}';
+    });
   }
 
   @override
@@ -795,6 +806,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: _save,
             child: const Text('Save Settings'),
           ),
+          const SizedBox(height: 24),
+          if (_versionInfo.isNotEmpty)
+            Center(
+              child: Text(
+                _versionInfo,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
+              ),
+            ),
           const SizedBox(height: 40),
         ],
       ),
