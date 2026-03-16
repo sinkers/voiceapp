@@ -124,56 +124,37 @@ void main() {
       expect(provider.messages, isEmpty);
     });
 
-    test('interrupts when toggleConversation called during speaking state',
-        () async {
-      final mockTts = MockTtsService();
-      when(mockTts.stop()).thenAnswer((_) async {});
-      when(mockTts.dispose()).thenAnswer((_) async {});
+    group('interrupt tests', () {
+      for (final state in [
+        ConversationState.processing,
+        ConversationState.speaking
+      ]) {
+        test('interrupts when toggleConversation called during $state state',
+            () async {
+          final mockTts = MockTtsService();
+          when(mockTts.stop()).thenAnswer((_) async {});
+          when(mockTts.dispose()).thenAnswer((_) async {});
 
-      // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
-      // Injecting ttsService in the constructor is enough for this unit test.
-      final speakingProvider = ConversationProvider(
-        speechService: mockSpeechService,
-        settingsService: mockSettingsService,
-        ttsService: mockTts,
-      );
+          // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
+          // Injecting ttsService in the constructor is enough for this unit test.
+          final testProvider = ConversationProvider(
+            speechService: mockSpeechService,
+            settingsService: mockSettingsService,
+            ttsService: mockTts,
+          );
 
-      // Force into speaking state via the @visibleForTesting helper
-      speakingProvider.forceStateForTesting(ConversationState.speaking);
-      expect(speakingProvider.state, ConversationState.speaking);
+          // Force into target state via the @visibleForTesting helper
+          testProvider.forceStateForTesting(state);
+          expect(testProvider.state, state);
 
-      // toggleConversation in speaking state should call _interrupt → idle
-      speakingProvider.toggleConversation();
+          // toggleConversation in processing/speaking state should call _interrupt → idle
+          testProvider.toggleConversation();
 
-      expect(speakingProvider.state, ConversationState.idle);
-      verify(mockTts.stop()).called(1);
-      verify(mockSpeechService.cancelListening()).called(1);
-    });
-
-    test('interrupts when toggleConversation called during processing state',
-        () async {
-      final mockTts = MockTtsService();
-      when(mockTts.stop()).thenAnswer((_) async {});
-      when(mockTts.dispose()).thenAnswer((_) async {});
-
-      // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
-      // Injecting ttsService in the constructor is enough for this unit test.
-      final processingProvider = ConversationProvider(
-        speechService: mockSpeechService,
-        settingsService: mockSettingsService,
-        ttsService: mockTts,
-      );
-
-      // Force into processing state via the @visibleForTesting helper
-      processingProvider.forceStateForTesting(ConversationState.processing);
-      expect(processingProvider.state, ConversationState.processing);
-
-      // toggleConversation in processing state should call _interrupt → idle
-      processingProvider.toggleConversation();
-
-      expect(processingProvider.state, ConversationState.idle);
-      verify(mockTts.stop()).called(1);
-      verify(mockSpeechService.cancelListening()).called(1);
+          expect(testProvider.state, ConversationState.idle);
+          verify(mockTts.stop()).called(1);
+          verify(mockSpeechService.cancelListening()).called(1);
+        });
+      }
     });
 
     test('partial STT text is updated during listening', () async {

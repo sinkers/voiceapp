@@ -24,6 +24,7 @@ class ConversationProvider extends ChangeNotifier {
   TtsService _ttsService;
   Settings _settings = const Settings();
   StreamSubscription<String>? _llmSubscription;
+  Completer<void>? _llmCompleter;
 
   ConversationState _state = ConversationState.idle;
   List<Message> _messages = [];
@@ -218,7 +219,7 @@ class ConversationProvider extends ChangeNotifier {
       );
 
       bool firstChunk = true;
-      final completer = Completer<void>();
+      _llmCompleter = Completer<void>();
       _llmSubscription = stream.listen(
         (delta) {
           _streamingText += delta;
@@ -249,15 +250,15 @@ class ConversationProvider extends ChangeNotifier {
           _updateLastMessage(_streamingText, isComplete: true);
           notifyListeners();
 
-          completer.complete();
+          _llmCompleter?.complete();
         },
         onError: (e) {
-          completer.completeError(e);
+          _llmCompleter?.completeError(e);
         },
         cancelOnError: true,
       );
 
-      await completer.future;
+      await _llmCompleter!.future;
 
       // Wait for TTS to finish
       await _ttsService.waitUntilDone();
@@ -277,6 +278,7 @@ class ConversationProvider extends ChangeNotifier {
     }
 
     _llmSubscription = null;
+    _llmCompleter = null;
     _setState(ConversationState.idle);
   }
 
@@ -307,6 +309,8 @@ class ConversationProvider extends ChangeNotifier {
   void _interrupt() {
     _llmSubscription?.cancel();
     _llmSubscription = null;
+    _llmCompleter?.complete();
+    _llmCompleter = null;
     _ttsService.stop();
     _speechService.cancelListening();
     _setState(ConversationState.idle);
