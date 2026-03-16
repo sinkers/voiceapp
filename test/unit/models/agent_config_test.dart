@@ -125,8 +125,8 @@ void main() {
         baseUrl: 'http://10.0.0.1/v1',
         sessionId: 'ses-1',
       );
-      final a = OpenClawAgentConfig(instance: instance, agentId: 'main');
-      final b = OpenClawAgentConfig(instance: instance, agentId: 'assistant');
+      const a = OpenClawAgentConfig(instance: instance, agentId: 'main');
+      const b = OpenClawAgentConfig(instance: instance, agentId: 'assistant');
 
       expect(a.id, 'openclaw:inst-1:main');
       expect(b.id, 'openclaw:inst-1:assistant');
@@ -136,9 +136,9 @@ void main() {
 
   group('DirectModelAgentConfig', () {
     test('id format is backend:modelName', () {
-      final c = DirectModelAgentConfig(
+      const c = DirectModelAgentConfig(
           backend: LLMBackend.claude, modelName: 'claude-opus-4-6');
-      final o = DirectModelAgentConfig(
+      const o = DirectModelAgentConfig(
           backend: LLMBackend.openaiCompatible, modelName: 'gpt-4o');
 
       expect(c.id, 'claude:claude-opus-4-6');

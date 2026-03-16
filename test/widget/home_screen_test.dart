@@ -17,7 +17,7 @@ import 'home_screen_test.mocks.dart';
 void main() {
   late MockConversationProvider mockProvider;
 
-  final _dummyAgent = DirectModelAgentConfig(
+  const dummyAgent = DirectModelAgentConfig(
     backend: LLMBackend.claude,
     modelName: 'claude-opus-4-6',
   );
@@ -38,8 +38,8 @@ void main() {
   Widget createAgentPage() {
     return ChangeNotifierProvider<ConversationProvider>.value(
       value: mockProvider,
-      child: MaterialApp(
-        home: AgentConversationPage(agent: _dummyAgent),
+      child: const MaterialApp(
+        home: AgentConversationPage(agent: dummyAgent),
       ),
     );
   }

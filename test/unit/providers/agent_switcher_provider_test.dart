@@ -32,7 +32,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  const _twoInstances = Settings(
+  const twoInstances = Settings(
     openclawInstances: [
       OpenClawInstance(
         id: 'inst-1',
@@ -49,7 +49,7 @@ void main() {
     ],
   );
 
-  MockConversationProvider _makeMockProvider() {
+  MockConversationProvider makeMockProvider() {
     final mock = MockConversationProvider();
     when(mock.initializeForAgent(any)).thenAnswer((_) async {});
     when(mock.updateSettings(any)).thenAnswer((_) async {});
@@ -69,7 +69,7 @@ void main() {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -78,9 +78,9 @@ void main() {
 
     test('agents list is built from settings', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(_twoInstances),
+        settingsService: _FakeSettingsService(twoInstances),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -95,9 +95,9 @@ void main() {
     test('setCurrentIndex changes currentIndex and persists to prefs',
         () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(_twoInstances),
+        settingsService: _FakeSettingsService(twoInstances),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -116,7 +116,7 @@ void main() {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -126,9 +126,9 @@ void main() {
 
     test('switching agent index changes active ConversationProvider', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(_twoInstances),
+        settingsService: _FakeSettingsService(twoInstances),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -146,7 +146,7 @@ void main() {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -160,7 +160,7 @@ void main() {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(const Settings()),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -173,9 +173,9 @@ void main() {
 
     test('different agents get different ConversationProviders', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(_twoInstances),
+        settingsService: _FakeSettingsService(twoInstances),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
@@ -186,7 +186,7 @@ void main() {
     });
 
     test('restores last active agent index from SharedPreferences', () async {
-      final agents = _twoInstances.allAgents;
+      final agents = twoInstances.allAgents;
       final targetId = agents[2].id; // third agent
 
       SharedPreferences.setMockInitialValues({
@@ -194,9 +194,9 @@ void main() {
       });
 
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(_twoInstances),
+        settingsService: _FakeSettingsService(twoInstances),
         speechService: MockSpeechService(),
-        providerFactory: _makeMockProvider,
+        providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
