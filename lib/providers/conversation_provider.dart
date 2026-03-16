@@ -314,11 +314,6 @@ class ConversationProvider extends ChangeNotifier {
 
   Future<void> _rebuildTtsService() async {
     await _ttsService.dispose();
-    // ignore: avoid_print
-    print('[TTS:rebuild] provider=${_settings.ttsProvider.name}'
-        ' apiKey=${(_settings.elevenLabsApiKey ?? "").isEmpty ? "EMPTY" : "SET(${(_settings.elevenLabsApiKey ?? "").substring(0, 8)}...)"}'
-        ' voiceId=${_settings.elevenLabsVoiceId}'
-        ' modelId=${_settings.elevenLabsModelId}');
     switch (_settings.ttsProvider) {
       case TtsProvider.onDevice:
         final svc = OnDeviceTtsService();
