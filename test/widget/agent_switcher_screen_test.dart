@@ -17,8 +17,8 @@ void main() {
   late MockAgentSwitcherProvider mockSwitcher;
   late MockConversationProvider mockProvider;
 
-  final instance1 = OpenClawAgentConfig(
-    instance: const OpenClawInstance(
+  const instance1 = OpenClawAgentConfig(
+    instance: OpenClawInstance(
       id: 'inst-1',
       name: 'Pi Home',
       baseUrl: 'http://10.0.0.1/v1',
@@ -27,8 +27,8 @@ void main() {
     agentId: 'main',
   );
 
-  final instance2 = OpenClawAgentConfig(
-    instance: const OpenClawInstance(
+  const instance2 = OpenClawAgentConfig(
+    instance: OpenClawInstance(
       id: 'inst-2',
       name: 'Pi Work',
       baseUrl: 'http://10.0.0.2/v1',

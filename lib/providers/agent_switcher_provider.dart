@@ -40,7 +40,7 @@ class AgentSwitcherProvider extends ChangeNotifier {
   ConversationProvider providerFor(AgentConfig agent) {
     return _providers.putIfAbsent(agent.id, () {
       final provider = _providerFactory != null
-          ? _providerFactory!()
+          ? _providerFactory()
           : ConversationProvider(
               speechService: _speechService,
               settingsService: _settingsService,
