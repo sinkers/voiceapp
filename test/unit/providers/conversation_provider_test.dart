@@ -20,10 +20,10 @@ void main() {
   // Mock FlutterTts method channel
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
-        MethodCall methodCall,
-      ) async {
-        return null;
-      });
+    MethodCall methodCall,
+  ) async {
+    return null;
+  });
 
   late ConversationProvider provider;
   late MockSpeechService mockSpeechService;
@@ -266,7 +266,8 @@ void main() {
   });
 
   group('ConversationProvider OpenClaw Model ID', () {
-    test('initializeForAgent with bare agentId sets up OpenAI service', () async {
+    test('initializeForAgent with bare agentId sets up OpenAI service',
+        () async {
       const openclawSettings = Settings(
         backend: LLMBackend.openaiCompatible,
         openclawInstances: [

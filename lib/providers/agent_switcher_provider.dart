@@ -27,9 +27,9 @@ class AgentSwitcherProvider extends ChangeNotifier {
     required SettingsService settingsService,
     required SpeechService speechService,
     ConversationProvider Function()? providerFactory,
-  }) : _settingsService = settingsService,
-       _speechService = speechService,
-       _providerFactory = providerFactory;
+  })  : _settingsService = settingsService,
+        _speechService = speechService,
+        _providerFactory = providerFactory;
 
   List<AgentConfig> get agents => _settings.allAgents;
   int get currentIndex => _currentIndex;
