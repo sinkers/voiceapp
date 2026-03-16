@@ -182,8 +182,7 @@ class SettingsService {
     }
 
     // Check if configs already exist (don't clobber)
-    final hasExistingInstances =
-        prefs.getString(_keyOpenclawInstances) != null;
+    final hasExistingInstances = prefs.getString(_keyOpenclawInstances) != null;
     if (hasExistingInstances) {
       // Mark as loaded to avoid checking again
       await prefs.setBool(_keyDefaultConfigsLoaded, true);
@@ -200,8 +199,8 @@ class SettingsService {
       final elevenLabsApiKey = json['elevenlabs_api_key'] as String?;
 
       // Check if there are any configs to load
-      final hasConfigs = openclawInstancesJson != null &&
-          openclawInstancesJson.isNotEmpty;
+      final hasConfigs =
+          openclawInstancesJson != null && openclawInstancesJson.isNotEmpty;
 
       if (!hasConfigs) {
         // Empty placeholder - mark as loaded but don't import anything
