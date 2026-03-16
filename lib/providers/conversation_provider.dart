@@ -23,6 +23,7 @@ class ConversationProvider extends ChangeNotifier {
   LLMService? _llmService;
   TtsService _ttsService;
   Settings _settings = const Settings();
+  StreamSubscription<String>? _llmSubscription;
 
   ConversationState _state = ConversationState.idle;
   List<Message> _messages = [];
@@ -92,11 +93,9 @@ class ConversationProvider extends ChangeNotifier {
         _startListening();
       case ConversationState.listening:
         _stopListeningAndProcess();
+      case ConversationState.processing:
       case ConversationState.speaking:
         _interrupt();
-      case ConversationState.processing:
-        // Do nothing while processing
-        break;
     }
   }
 
@@ -219,34 +218,46 @@ class ConversationProvider extends ChangeNotifier {
       );
 
       bool firstChunk = true;
-      await for (final delta in stream) {
-        _streamingText += delta;
-        _textBuffer += delta;
+      final completer = Completer<void>();
+      _llmSubscription = stream.listen(
+        (delta) {
+          _streamingText += delta;
+          _textBuffer += delta;
 
-        // Update assistant message in place
-        _updateLastMessage(_streamingText, isComplete: false);
+          // Update assistant message in place
+          _updateLastMessage(_streamingText, isComplete: false);
 
-        if (firstChunk) {
-          _setState(ConversationState.speaking);
-          firstChunk = false;
-        } else {
+          if (firstChunk) {
+            _setState(ConversationState.speaking);
+            firstChunk = false;
+          } else {
+            notifyListeners();
+          }
+
+          // Extract complete sentences and send to TTS
+          _flushSentences();
+        },
+        onDone: () {
+          // Flush remaining buffer to TTS
+          if (_textBuffer.trim().isNotEmpty) {
+            _ttsService.enqueue(_textBuffer.trim());
+            _textBuffer = '';
+          }
+          _ttsService.markFinished();
+
+          // Mark message complete
+          _updateLastMessage(_streamingText, isComplete: true);
           notifyListeners();
-        }
 
-        // Extract complete sentences and send to TTS
-        _flushSentences();
-      }
+          completer.complete();
+        },
+        onError: (e) {
+          completer.completeError(e);
+        },
+        cancelOnError: true,
+      );
 
-      // Flush remaining buffer to TTS
-      if (_textBuffer.trim().isNotEmpty) {
-        _ttsService.enqueue(_textBuffer.trim());
-        _textBuffer = '';
-      }
-      _ttsService.markFinished();
-
-      // Mark message complete
-      _updateLastMessage(_streamingText, isComplete: true);
-      notifyListeners();
+      await completer.future;
 
       // Wait for TTS to finish
       await _ttsService.waitUntilDone();
@@ -265,6 +276,7 @@ class ConversationProvider extends ChangeNotifier {
       }
     }
 
+    _llmSubscription = null;
     _setState(ConversationState.idle);
   }
 
@@ -293,6 +305,8 @@ class ConversationProvider extends ChangeNotifier {
   }
 
   void _interrupt() {
+    _llmSubscription?.cancel();
+    _llmSubscription = null;
     _ttsService.stop();
     _speechService.cancelListening();
     _setState(ConversationState.idle);
@@ -401,6 +415,7 @@ class ConversationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _llmSubscription?.cancel();
     _speechService.dispose();
     unawaited(_ttsService.dispose());
     _llmService?.dispose();
