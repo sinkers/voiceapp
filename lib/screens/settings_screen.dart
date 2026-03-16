@@ -57,7 +57,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadVersionInfo() async {
     final packageInfo = await PackageInfo.fromPlatform();
     setState(() {
-      _versionInfo = 'ClawTalk v${packageInfo.version}+${packageInfo.buildNumber}';
+      _versionInfo =
+          'ClawTalk v${packageInfo.version}+${packageInfo.buildNumber}';
     });
   }
 
@@ -154,8 +155,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _deleteInstance(OpenClawInstance instance) {
     final wasSelected = _draft.selectedInstanceId == instance.id;
     setState(() {
-      final updated =
-          _draft.openclawInstances.where((i) => i.id != instance.id).toList();
+      final updated = _draft.openclawInstances
+          .where((i) => i.id != instance.id)
+          .toList();
       _draft = _draft.copyWith(
         openclawInstances: updated,
         clearSelectedInstanceId: wasSelected,
@@ -184,10 +186,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 4),
-        ),
+        SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
       );
   }
 
@@ -242,12 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         title: const Text('Settings'),
         centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Save'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _save, child: const Text('Save'))],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -277,7 +271,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                     selected: {_draft.backend},
                     onSelectionChanged: (s) => setState(
-                        () => _draft = _draft.copyWith(backend: s.first)),
+                      () => _draft = _draft.copyWith(backend: s.first),
+                    ),
                   ),
                 ],
               ),
@@ -336,8 +331,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'For vLLM: http://localhost:8000/v1\n'
                         'For OpenClaw: http://localhost:3000/v1',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -367,8 +363,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       'No instances configured',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ),
@@ -378,15 +375,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          instance.baseUrl,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        Text(instance.baseUrl, overflow: TextOverflow.ellipsis),
                         Text(
                           'Session: ${instance.sessionId.length > 8 ? instance.sessionId.substring(0, 8) : instance.sessionId}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
                       ],
@@ -405,8 +400,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onPressed: () => _editInstance(instance),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded,
-                              size: 20),
+                          icon: const Icon(
+                            Icons.delete_outline_rounded,
+                            size: 20,
+                          ),
                           tooltip: 'Delete',
                           onPressed: () => _deleteInstance(instance),
                         ),
@@ -415,8 +412,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
                   child: TextButton.icon(
                     icon: const Icon(Icons.add, size: 18),
                     label: const Text('Add instance'),
@@ -477,8 +476,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               visualDensity: VisualDensity.compact,
                               onPressed: () {
                                 final instance = _draft.openclawInstances
-                                    .where((i) =>
-                                        i.id == _draft.selectedInstanceId)
+                                    .where(
+                                      (i) => i.id == _draft.selectedInstanceId,
+                                    )
                                     .firstOrNull;
                                 if (instance != null) {
                                   _fetchAgentsForInstance(instance);
@@ -502,24 +502,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           items: _agents
                               .map(
-                                (a) => DropdownMenuItem(
-                                  value: a,
-                                  child: Text(a),
-                                ),
+                                (a) =>
+                                    DropdownMenuItem(value: a, child: Text(a)),
                               )
                               .toList(),
                           onChanged: (v) {
                             if (v != null) {
-                              setState(() =>
-                                  _draft = _draft.copyWith(selectedAgentId: v));
+                              setState(
+                                () => _draft = _draft.copyWith(
+                                  selectedAgentId: v,
+                                ),
+                              );
                             }
                           },
                         )
                       else if (_loadingAgents)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text('Loading agents…',
-                              style: TextStyle(fontSize: 12)),
+                          child: Text(
+                            'Loading agents…',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         )
                       else
                         // No agents yet — prompt user to add one manually
@@ -529,9 +532,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             'No agents found. Add one below.',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -547,17 +550,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Persist added agent into the selected instance's agentIds
                             final selId = _draft.selectedInstanceId;
                             if (selId != null) {
-                              final updatedInstances =
-                                  _draft.openclawInstances.map((i) {
-                                if (i.id == selId &&
-                                    !i.agentIds.contains(agentId)) {
-                                  return i.copyWith(
-                                      agentIds: [...i.agentIds, agentId]);
-                                }
-                                return i;
-                              }).toList();
+                              final updatedInstances = _draft.openclawInstances
+                                  .map((i) {
+                                    if (i.id == selId &&
+                                        !i.agentIds.contains(agentId)) {
+                                      return i.copyWith(
+                                        agentIds: [...i.agentIds, agentId],
+                                      );
+                                    }
+                                    return i;
+                                  })
+                                  .toList();
                               _draft = _draft.copyWith(
-                                  openclawInstances: updatedInstances);
+                                openclawInstances: updatedInstances,
+                              );
                             }
                           });
                         },
@@ -621,7 +627,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (v) {
                       if (v != null) {
                         setState(
-                            () => _draft = _draft.copyWith(ttsProvider: v));
+                          () => _draft = _draft.copyWith(ttsProvider: v),
+                        );
                       }
                     },
                   ),
@@ -648,7 +655,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                       selected: {
                         ElevenLabsVoice.fromVoiceId(_draft.elevenLabsVoiceId) ??
-                            ElevenLabsVoice.rachel
+                            ElevenLabsVoice.rachel,
                       },
                       onSelectionChanged: (s) {
                         final voiceId = s.first.voiceId;
@@ -670,8 +677,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Text(
                         'Use the buttons above or enter a custom voice ID',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -685,8 +693,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'Note: Per-agent voices can also be configured in OpenClaw instances above',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -696,8 +705,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'Uses your OpenAI API key above',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -716,12 +726,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         DropdownMenuItem(value: 'onyx', child: Text('Onyx')),
                         DropdownMenuItem(value: 'nova', child: Text('Nova')),
                         DropdownMenuItem(
-                            value: 'shimmer', child: Text('Shimmer')),
+                          value: 'shimmer',
+                          child: Text('Shimmer'),
+                        ),
                       ],
                       onChanged: (v) {
                         if (v != null) {
-                          setState(() =>
-                              _draft = _draft.copyWith(openaiTtsVoice: v));
+                          setState(
+                            () => _draft = _draft.copyWith(openaiTtsVoice: v),
+                          );
                         }
                       },
                     ),
@@ -737,12 +750,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       items: const [
                         DropdownMenuItem(value: 'tts-1', child: Text('tts-1')),
                         DropdownMenuItem(
-                            value: 'tts-1-hd', child: Text('tts-1-hd')),
+                          value: 'tts-1-hd',
+                          child: Text('tts-1-hd'),
+                        ),
                       ],
                       onChanged: (v) {
                         if (v != null) {
-                          setState(() =>
-                              _draft = _draft.copyWith(openaiTtsModel: v));
+                          setState(
+                            () => _draft = _draft.copyWith(openaiTtsModel: v),
+                          );
                         }
                       },
                     ),
@@ -766,8 +782,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Speech Rate', style: theme.textTheme.bodyMedium),
-                        Text('${(_draft.ttsRate * 100).round()}%',
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          '${(_draft.ttsRate * 100).round()}%',
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ],
                     ),
                     Slider(
@@ -783,8 +801,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Pitch', style: theme.textTheme.bodyMedium),
-                        Text('${(_draft.ttsPitch * 100).round()}%',
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          '${(_draft.ttsPitch * 100).round()}%',
+                          style: theme.textTheme.bodySmall,
+                        ),
                       ],
                     ),
                     Slider(
@@ -802,10 +822,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
 
           const SizedBox(height: 24),
-          FilledButton(
-            onPressed: _save,
-            child: const Text('Save Settings'),
-          ),
+          FilledButton(onPressed: _save, child: const Text('Save Settings')),
           const SizedBox(height: 24),
           if (_versionInfo.isNotEmpty)
             Center(
@@ -845,10 +862,12 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.instance?.name ?? '');
-    _urlController =
-        TextEditingController(text: widget.instance?.baseUrl ?? '');
-    _tokenController =
-        TextEditingController(text: widget.instance?.token ?? '');
+    _urlController = TextEditingController(
+      text: widget.instance?.baseUrl ?? '',
+    );
+    _tokenController = TextEditingController(
+      text: widget.instance?.token ?? '',
+    );
     _allowBadCertificate = widget.instance?.allowBadCertificate ?? false;
   }
 
@@ -980,9 +999,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
