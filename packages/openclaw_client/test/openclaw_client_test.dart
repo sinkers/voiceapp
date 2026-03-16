@@ -44,20 +44,19 @@ void main() {
       expect(agents[0].id, 'openclaw:main');
     });
 
-    test('falls back to openclaw:main when no matching agents found', () async {
+    test('falls back to openclaw:main when no matching agents found',
+        () async {
       final client = OpenClawClient(
         baseUrl: 'http://localhost:1234/v1',
-        httpClient: MockClient(
-          (_) async => http.Response(
-            jsonEncode({
-              'data': [
-                {'id': 'gpt-4'},
-                {'id': 'llama-3'},
-              ],
-            }),
-            200,
-          ),
-        ),
+        httpClient: MockClient((_) async => http.Response(
+              jsonEncode({
+                'data': [
+                  {'id': 'gpt-4'},
+                  {'id': 'llama-3'},
+                ],
+              }),
+              200,
+            )),
       );
 
       final agents = await client.listAgents();
@@ -71,7 +70,8 @@ void main() {
         token: 'mytoken',
         httpClient: MockClient((request) async {
           expect(request.headers['Authorization'], 'Bearer mytoken');
-          return http.Response(jsonEncode({'data': []}), 200);
+          return http.Response(
+              jsonEncode({'data': []}), 200);
         }),
       );
 
@@ -101,9 +101,10 @@ void main() {
         }),
       );
 
-      final result = await client.chatCompletion('openclaw:main', [
-        OpenClawMessage.user('Hi'),
-      ]);
+      final result = await client.chatCompletion(
+        'openclaw:main',
+        [OpenClawMessage.user('Hi')],
+      );
       expect(result, 'Hello world');
     });
 
@@ -111,7 +112,8 @@ void main() {
       final client = OpenClawClient(
         baseUrl: 'http://localhost:1234/v1',
         httpClient: MockClient((request) async {
-          expect(request.headers['x-openclaw-session-key'], 'test-session-id');
+          expect(
+              request.headers['x-openclaw-session-key'], 'test-session-id');
           return http.Response(
             jsonEncode({
               'choices': [
@@ -125,9 +127,11 @@ void main() {
         }),
       );
 
-      await client.chatCompletion('openclaw:main', [
-        OpenClawMessage.user('Hi'),
-      ], sessionKey: 'test-session-id');
+      await client.chatCompletion(
+        'openclaw:main',
+        [OpenClawMessage.user('Hi')],
+        sessionKey: 'test-session-id',
+      );
     });
 
     test('throws OpenClawException on non-200 response', () async {
@@ -147,19 +151,15 @@ void main() {
     test('yields text deltas from SSE stream', () async {
       final sseBody = [
         'data: ${jsonEncode({
-          'choices': [
-            {
-              'delta': {'content': 'Hello'},
-            },
-          ],
-        })}',
+              'choices': [
+                {'delta': {'content': 'Hello'}}
+              ]
+            })}',
         'data: ${jsonEncode({
-          'choices': [
-            {
-              'delta': {'content': ' world'},
-            },
-          ],
-        })}',
+              'choices': [
+                {'delta': {'content': ' world'}}
+              ]
+            })}',
         'data: [DONE]',
       ].join('\n');
 
@@ -172,29 +172,25 @@ void main() {
         }),
       );
 
-      final chunks = await client.streamChatCompletion('openclaw:main', [
-        OpenClawMessage.user('Hi'),
-      ]).toList();
+      final chunks = await client
+          .streamChatCompletion('openclaw:main', [OpenClawMessage.user('Hi')])
+          .toList();
       expect(chunks, ['Hello', ' world']);
     });
 
     test('stops at [DONE] sentinel', () async {
       final sseBody = [
         'data: ${jsonEncode({
-          'choices': [
-            {
-              'delta': {'content': 'first'},
-            },
-          ],
-        })}',
+              'choices': [
+                {'delta': {'content': 'first'}}
+              ]
+            })}',
         'data: [DONE]',
         'data: ${jsonEncode({
-          'choices': [
-            {
-              'delta': {'content': 'should not appear'},
-            },
-          ],
-        })}',
+              'choices': [
+                {'delta': {'content': 'should not appear'}}
+              ]
+            })}',
       ].join('\n');
 
       final client = OpenClawClient(
@@ -212,12 +208,13 @@ void main() {
       final client = OpenClawClient(
         baseUrl: 'http://localhost:1234/v1',
         httpClient: MockClient(
-          (_) async => http.Response('Internal Server Error', 500),
-        ),
+            (_) async => http.Response('Internal Server Error', 500)),
       );
 
       expect(
-        () => client.streamChatCompletion('openclaw:main', []).toList(),
+        () => client
+            .streamChatCompletion('openclaw:main', [])
+            .toList(),
         throwsA(isA<OpenClawException>()),
       );
     });

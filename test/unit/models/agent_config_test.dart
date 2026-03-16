@@ -46,7 +46,9 @@ void main() {
         agentIds: ['main'], // default
       );
 
-      const settings = Settings(openclawInstances: [instance1, instance2]);
+      const settings = Settings(
+        openclawInstances: [instance1, instance2],
+      );
 
       final agents = settings.allAgents;
 
@@ -76,7 +78,9 @@ void main() {
         agentIds: ['main', 'assistant', 'helper'],
       );
 
-      const settings = Settings(openclawInstances: [instance]);
+      const settings = Settings(
+        openclawInstances: [instance],
+      );
 
       final agents = settings.allAgents;
 
@@ -112,7 +116,9 @@ void main() {
         agentIds: ['main'],
       );
 
-      const settings = Settings(openclawInstances: [instance1, instance2]);
+      const settings = Settings(
+        openclawInstances: [instance1, instance2],
+      );
 
       final agents = settings.allAgents;
 
@@ -153,13 +159,9 @@ void main() {
   group('DirectModelAgentConfig', () {
     test('id format is backend:modelName', () {
       const c = DirectModelAgentConfig(
-        backend: LLMBackend.claude,
-        modelName: 'claude-opus-4-6',
-      );
+          backend: LLMBackend.claude, modelName: 'claude-opus-4-6');
       const o = DirectModelAgentConfig(
-        backend: LLMBackend.openaiCompatible,
-        modelName: 'gpt-4o',
-      );
+          backend: LLMBackend.openaiCompatible, modelName: 'gpt-4o');
 
       expect(c.id, 'claude:claude-opus-4-6');
       expect(o.id, 'openaiCompatible:gpt-4o');

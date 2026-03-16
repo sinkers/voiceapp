@@ -24,12 +24,15 @@ class OpenAITtsService extends NetworkTtsServiceBase {
         'Authorization': 'Bearer $apiKey',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'model': model, 'input': text, 'voice': voice}),
+      body: jsonEncode({
+        'model': model,
+        'input': text,
+        'voice': voice,
+      }),
     );
     if (response.statusCode != 200) {
       throw Exception(
-        'OpenAI TTS error: ${response.statusCode} ${response.body}',
-      );
+          'OpenAI TTS error: ${response.statusCode} ${response.body}');
     }
     return response.bodyBytes;
   }

@@ -188,7 +188,9 @@ class _AgentConversationPageState extends State<AgentConversationPage> {
                 tooltip: 'Settings',
                 onPressed: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => const SettingsScreen(),
+                  ),
                 ),
               ),
             ],
@@ -204,7 +206,9 @@ class _AgentConversationPageState extends State<AgentConversationPage> {
                 _SetupPrompt(
                   onSetup: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const SettingsScreen(),
+                    ),
                   ),
                 ),
               Expanded(
@@ -243,16 +247,13 @@ class _AgentConversationPageState extends State<AgentConversationPage> {
   }
 
   Future<void> _confirmClear(
-    BuildContext context,
-    ConversationProvider provider,
-  ) async {
+      BuildContext context, ConversationProvider provider) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear conversation?'),
         content: const Text(
-          'This will delete all messages in the current conversation.',
-        ),
+            'This will delete all messages in the current conversation.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -376,12 +377,14 @@ class _SetupPrompt extends StatelessWidget {
           Expanded(
             child: Text(
               'Add your API key to get started.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-              ),
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onPrimaryContainer),
             ),
           ),
-          TextButton(onPressed: onSetup, child: const Text('Setup')),
+          TextButton(
+            onPressed: onSetup,
+            child: const Text('Setup'),
+          ),
         ],
       ),
     );

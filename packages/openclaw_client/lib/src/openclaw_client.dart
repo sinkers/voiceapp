@@ -52,7 +52,9 @@ class OpenClawClient {
   }
 
   Map<String, String> _headers({String? sessionKey}) {
-    final headers = <String, String>{'Content-Type': 'application/json'};
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
     if (token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
@@ -70,31 +72,29 @@ class OpenClawClient {
   Future<List<OpenClawAgent>> listAgents() async {
     final uri = Uri.parse('$_base/models');
     try {
-      final response = await _httpClient
-          .get(
-            uri,
-            headers: token.isNotEmpty ? {'Authorization': 'Bearer $token'} : {},
-          )
-          .timeout(const Duration(seconds: 5));
+      final response = await _httpClient.get(
+        uri,
+        headers: token.isNotEmpty ? {'Authorization': 'Bearer $token'} : {},
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode != 200) {
         return _fallback();
       }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      final models =
-          (data['data'] as List?)?.whereType<Map<String, dynamic>>().toList() ??
+      final models = (data['data'] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .toList() ??
           [];
 
       final agents = models
           .map((m) => m['id'] as String? ?? '')
-          .where((id) => id.startsWith('openclaw:') || id.startsWith('agent:'))
-          .map(
-            (id) => OpenClawAgent(
-              id: id,
-              displayName: id.contains(':') ? id.split(':').last : id,
-            ),
-          )
+          .where((id) =>
+              id.startsWith('openclaw:') || id.startsWith('agent:'))
+          .map((id) => OpenClawAgent(
+                id: id,
+                displayName: id.contains(':') ? id.split(':').last : id,
+              ))
           .toList();
 
       return agents.isEmpty ? _fallback() : agents;
@@ -105,9 +105,8 @@ class OpenClawClient {
     }
   }
 
-  List<OpenClawAgent> _fallback() => const [
-    OpenClawAgent(id: 'openclaw:main', displayName: 'main'),
-  ];
+  List<OpenClawAgent> _fallback() =>
+      const [OpenClawAgent(id: 'openclaw:main', displayName: 'main')];
 
   /// Sends a single-turn chat completion request and returns the full response.
   Future<String> chatCompletion(
@@ -128,14 +127,15 @@ class OpenClawClient {
     );
 
     if (response.statusCode != 200) {
-      throw OpenClawException('HTTP ${response.statusCode}: ${response.body}');
+      throw OpenClawException(
+          'HTTP ${response.statusCode}: ${response.body}');
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     final choices = data['choices'] as List?;
     if (choices == null || choices.isEmpty) return '';
-    return (choices.first as Map<String, dynamic>)['message']?['content']
-            as String? ??
+    return (choices.first as Map<String, dynamic>)['message']
+            ?['content'] as String? ??
         '';
   }
 
@@ -159,7 +159,8 @@ class OpenClawClient {
     final streamedResponse = await _httpClient.send(request);
     if (streamedResponse.statusCode != 200) {
       final body = await streamedResponse.stream.bytesToString();
-      throw OpenClawException('HTTP ${streamedResponse.statusCode}: $body');
+      throw OpenClawException(
+          'HTTP ${streamedResponse.statusCode}: $body');
     }
 
     final lines = streamedResponse.stream
@@ -174,13 +175,12 @@ class OpenClawClient {
         final json = jsonDecode(data) as Map<String, dynamic>;
         final choices = json['choices'] as List?;
         if (choices == null || choices.isEmpty) continue;
-        final delta =
-            (choices.first as Map<String, dynamic>)['delta']?['content']
-                as String?;
+        final delta = (choices.first as Map<String, dynamic>)['delta']
+            ?['content'] as String?;
         if (delta != null) yield delta;
       } catch (e, s) {
-        // ignore: avoid_print
-        print('OpenClawClient error: $e\n$s');
+      // ignore: avoid_print
+      print('OpenClawClient error: $e\n$s');
         // Ignore malformed SSE lines.
       }
     }

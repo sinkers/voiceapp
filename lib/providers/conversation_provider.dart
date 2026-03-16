@@ -36,9 +36,9 @@ class ConversationProvider extends ChangeNotifier {
     required SpeechService speechService,
     required SettingsService settingsService,
     TtsService? ttsService,
-  }) : _speechService = speechService,
-       _settingsService = settingsService,
-       _ttsService = ttsService ?? OnDeviceTtsService() {
+  })  : _speechService = speechService,
+        _settingsService = settingsService,
+        _ttsService = ttsService ?? OnDeviceTtsService() {
     _speechService.onFinalResult = _onSpeechFinal;
     _speechService.onPartialResult = _onSpeechPartial;
     _speechService.onStopped = _onSpeechStopped;
@@ -211,9 +211,8 @@ class ConversationProvider extends ChangeNotifier {
       final historyForLLM = _messages.sublist(0, _messages.length - 1);
       // When routing through an OpenClaw agent, suppress the app system prompt
       // so OpenClaw applies the agent's own persona (SOUL.md, IDENTITY.md, etc.)
-      final effectiveSystemPrompt = _settings.selectedInstance != null
-          ? ''
-          : _settings.systemPrompt;
+      final effectiveSystemPrompt =
+          _settings.selectedInstance != null ? '' : _settings.systemPrompt;
       final stream = _llmService!.streamResponse(
         historyForLLM,
         effectiveSystemPrompt,
@@ -319,14 +318,12 @@ class ConversationProvider extends ChangeNotifier {
       case TtsProvider.onDevice:
         final svc = OnDeviceTtsService();
         await svc.initialize(
-          rate: _settings.ttsRate,
-          pitch: _settings.ttsPitch,
-        );
+            rate: _settings.ttsRate, pitch: _settings.ttsPitch);
         _ttsService = svc;
       case TtsProvider.elevenlabs:
         final String voiceId =
             _settings.selectedInstance?.elevenLabsVoiceId ??
-            _settings.elevenLabsVoiceId;
+                _settings.elevenLabsVoiceId;
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
           voiceId: voiceId,

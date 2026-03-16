@@ -28,14 +28,24 @@ import 'package:voiceapp/providers/conversation_provider.dart' as _i3;
 // ignore_for_file: invalid_use_of_internal_member
 
 class _FakeSettings_0 extends _i1.SmartFake implements _i2.Settings {
-  _FakeSettings_0(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+  _FakeSettings_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
 }
 
 class _FakeConversationProvider_1 extends _i1.SmartFake
     implements _i3.ConversationProvider {
-  _FakeConversationProvider_1(Object parent, Invocation parentInvocation)
-    : super(parent, parentInvocation);
+  _FakeConversationProvider_1(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
 }
 
 /// A class which mocks [AgentSwitcherProvider].
@@ -48,95 +58,118 @@ class MockAgentSwitcherProvider extends _i1.Mock
   }
 
   @override
-  List<_i5.AgentConfig> get agents =>
-      (super.noSuchMethod(
-            Invocation.getter(#agents),
-            returnValue: <_i5.AgentConfig>[],
-          )
-          as List<_i5.AgentConfig>);
+  List<_i5.AgentConfig> get agents => (super.noSuchMethod(
+        Invocation.getter(#agents),
+        returnValue: <_i5.AgentConfig>[],
+      ) as List<_i5.AgentConfig>);
 
   @override
-  int get currentIndex =>
-      (super.noSuchMethod(Invocation.getter(#currentIndex), returnValue: 0)
-          as int);
+  int get currentIndex => (super.noSuchMethod(
+        Invocation.getter(#currentIndex),
+        returnValue: 0,
+      ) as int);
 
   @override
-  _i2.Settings get settings =>
-      (super.noSuchMethod(
-            Invocation.getter(#settings),
-            returnValue: _FakeSettings_0(this, Invocation.getter(#settings)),
-          )
-          as _i2.Settings);
+  _i2.Settings get settings => (super.noSuchMethod(
+        Invocation.getter(#settings),
+        returnValue: _FakeSettings_0(
+          this,
+          Invocation.getter(#settings),
+        ),
+      ) as _i2.Settings);
 
   @override
-  bool get initialized =>
-      (super.noSuchMethod(Invocation.getter(#initialized), returnValue: false)
-          as bool);
+  bool get initialized => (super.noSuchMethod(
+        Invocation.getter(#initialized),
+        returnValue: false,
+      ) as bool);
 
   @override
-  bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
-          as bool);
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+      ) as bool);
 
   @override
   _i3.ConversationProvider providerFor(_i5.AgentConfig? agent) =>
       (super.noSuchMethod(
-            Invocation.method(#providerFor, [agent]),
-            returnValue: _FakeConversationProvider_1(
-              this,
-              Invocation.method(#providerFor, [agent]),
-            ),
-          )
-          as _i3.ConversationProvider);
+        Invocation.method(
+          #providerFor,
+          [agent],
+        ),
+        returnValue: _FakeConversationProvider_1(
+          this,
+          Invocation.method(
+            #providerFor,
+            [agent],
+          ),
+        ),
+      ) as _i3.ConversationProvider);
 
   @override
-  _i6.Future<void> initialize() =>
-      (super.noSuchMethod(
-            Invocation.method(#initialize, []),
-            returnValue: _i6.Future<void>.value(),
-            returnValueForMissingStub: _i6.Future<void>.value(),
-          )
-          as _i6.Future<void>);
+  _i6.Future<void> initialize() => (super.noSuchMethod(
+        Invocation.method(
+          #initialize,
+          [],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
   _i6.Future<void> updateSettings(_i2.Settings? newSettings) =>
       (super.noSuchMethod(
-            Invocation.method(#updateSettings, [newSettings]),
-            returnValue: _i6.Future<void>.value(),
-            returnValueForMissingStub: _i6.Future<void>.value(),
-          )
-          as _i6.Future<void>);
+        Invocation.method(
+          #updateSettings,
+          [newSettings],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
-  _i6.Future<void> setCurrentIndex(int? index) =>
-      (super.noSuchMethod(
-            Invocation.method(#setCurrentIndex, [index]),
-            returnValue: _i6.Future<void>.value(),
-            returnValueForMissingStub: _i6.Future<void>.value(),
-          )
-          as _i6.Future<void>);
+  _i6.Future<void> setCurrentIndex(int? index) => (super.noSuchMethod(
+        Invocation.method(
+          #setCurrentIndex,
+          [index],
+        ),
+        returnValue: _i6.Future<void>.value(),
+        returnValueForMissingStub: _i6.Future<void>.value(),
+      ) as _i6.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
-    Invocation.method(#dispose, []),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(
+          #dispose,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void addListener(_i7.VoidCallback? listener) => super.noSuchMethod(
-    Invocation.method(#addListener, [listener]),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void removeListener(_i7.VoidCallback? listener) => super.noSuchMethod(
-    Invocation.method(#removeListener, [listener]),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
+        returnValueForMissingStub: null,
+      );
 
   @override
   void notifyListeners() => super.noSuchMethod(
-    Invocation.method(#notifyListeners, []),
-    returnValueForMissingStub: null,
-  );
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
+        returnValueForMissingStub: null,
+      );
 }

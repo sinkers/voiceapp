@@ -24,7 +24,9 @@ void main() {
   Widget createSettingsScreen() {
     return ChangeNotifierProvider<AgentSwitcherProvider>.value(
       value: mockProvider,
-      child: const MaterialApp(home: SettingsScreen()),
+      child: const MaterialApp(
+        home: SettingsScreen(),
+      ),
     );
   }
 
@@ -61,12 +63,11 @@ void main() {
       expect(find.text('OpenAI / vLLM'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows Claude settings when Claude backend is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.claude));
+    testWidgets('shows Claude settings when Claude backend is selected',
+        (tester) async {
+      when(mockProvider.settings).thenReturn(const Settings(
+        backend: LLMBackend.claude,
+      ));
 
       await pumpSettings(tester);
 
@@ -74,12 +75,11 @@ void main() {
       expect(find.text('Model'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows OpenAI settings when OpenAI backend is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.openaiCompatible));
+    testWidgets('shows OpenAI settings when OpenAI backend is selected',
+        (tester) async {
+      when(mockProvider.settings).thenReturn(const Settings(
+        backend: LLMBackend.openaiCompatible,
+      ));
 
       await pumpSettings(tester);
 
@@ -87,9 +87,9 @@ void main() {
     });
 
     testWidgets('can switch backend from Claude to OpenAI', (tester) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.claude));
+      when(mockProvider.settings).thenReturn(const Settings(
+        backend: LLMBackend.claude,
+      ));
 
       await pumpSettings(tester);
 
@@ -117,9 +117,9 @@ void main() {
     });
 
     testWidgets('shows on-device TTS settings when selected', (tester) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.onDevice));
+      when(mockProvider.settings).thenReturn(const Settings(
+        ttsProvider: TtsProvider.onDevice,
+      ));
 
       await pumpSettings(tester);
 
@@ -135,12 +135,11 @@ void main() {
       expect(find.text('Add instance'), findsOneWidget);
     });
 
-    testWidgets('shows no instances message when none configured', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(openclawInstances: []));
+    testWidgets('shows no instances message when none configured',
+        (tester) async {
+      when(mockProvider.settings).thenReturn(const Settings(
+        openclawInstances: [],
+      ));
 
       await pumpSettings(tester);
 
@@ -154,9 +153,9 @@ void main() {
         baseUrl: 'http://localhost:3000/v1',
         sessionId: 'test-session',
       );
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(openclawInstances: [instance]));
+      when(mockProvider.settings).thenReturn(const Settings(
+        openclawInstances: [instance],
+      ));
 
       await pumpSettings(tester);
 
@@ -171,9 +170,9 @@ void main() {
         baseUrl: 'http://localhost:3000/v1',
         sessionId: 'test-session',
       );
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(openclawInstances: [instance]));
+      when(mockProvider.settings).thenReturn(const Settings(
+        openclawInstances: [instance],
+      ));
 
       await pumpSettings(tester);
 
@@ -183,9 +182,8 @@ void main() {
       expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
     });
 
-    testWidgets('shows add instance dialog when add button tapped', (
-      tester,
-    ) async {
+    testWidgets('shows add instance dialog when add button tapped',
+        (tester) async {
       await pumpSettings(tester);
 
       await tester.tap(find.text('Add instance'));
@@ -214,9 +212,8 @@ void main() {
       expect(find.text('Name and Base URL are required.'), findsOneWidget);
     });
 
-    testWidgets('calls updateSettings when Save button is tapped', (
-      tester,
-    ) async {
+    testWidgets('calls updateSettings when Save button is tapped',
+        (tester) async {
       await pumpSettings(tester);
 
       // Tap the save button
@@ -228,9 +225,8 @@ void main() {
       verify(mockProvider.updateSettings(any)).called(1);
     });
 
-    testWidgets('bottom Save Settings button calls updateSettings', (
-      tester,
-    ) async {
+    testWidgets('bottom Save Settings button calls updateSettings',
+        (tester) async {
       await pumpSettings(tester);
 
       // pumpSettings uses a tall viewport so the bottom FilledButton is built
@@ -242,9 +238,9 @@ void main() {
     });
 
     testWidgets('can edit text in Claude API key field', (tester) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.claude));
+      when(mockProvider.settings).thenReturn(const Settings(
+        backend: LLMBackend.claude,
+      ));
 
       await pumpSettings(tester);
 
@@ -265,12 +261,11 @@ void main() {
       expect(find.text('Custom test prompt'), findsOneWidget);
     });
 
-    testWidgets('shows ElevenLabs settings when provider is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.elevenlabs));
+    testWidgets('shows ElevenLabs settings when provider is selected',
+        (tester) async {
+      when(mockProvider.settings).thenReturn(const Settings(
+        ttsProvider: TtsProvider.elevenlabs,
+      ));
 
       await pumpSettings(tester);
 
@@ -283,19 +278,16 @@ void main() {
       expect(find.text('Liam'), findsOneWidget);
       expect(find.text('Custom Voice ID'), findsOneWidget);
       expect(
-        find.text(
-          'Note: Per-agent voices can also be configured in OpenClaw instances above',
-        ),
-        findsOneWidget,
-      );
+          find.text(
+              'Note: Per-agent voices can also be configured in OpenClaw instances above'),
+          findsOneWidget);
     });
 
-    testWidgets('shows OpenAI TTS settings when provider is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.openai));
+    testWidgets('shows OpenAI TTS settings when provider is selected',
+        (tester) async {
+      when(mockProvider.settings).thenReturn(const Settings(
+        ttsProvider: TtsProvider.openai,
+      ));
 
       await pumpSettings(tester);
 
@@ -313,13 +305,9 @@ void main() {
 
       // Enter invalid URL
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Name'),
-        'Test',
-      );
+          find.widgetWithText(TextFormField, 'Name'), 'Test');
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Base URL'),
-        'not-a-url',
-      );
+          find.widgetWithText(TextFormField, 'Base URL'), 'not-a-url');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -339,13 +327,9 @@ void main() {
 
       // Enter valid data
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Name'),
-        'Test Instance',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Base URL'),
-        'http://localhost:3000/v1',
-      );
+          find.widgetWithText(TextFormField, 'Name'), 'Test Instance');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Base URL'),
+          'http://localhost:3000/v1');
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -360,9 +344,9 @@ void main() {
 
   group('SettingsScreen Provider Switching', () {
     testWidgets('switching TTS provider updates UI', (tester) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.onDevice));
+      when(mockProvider.settings).thenReturn(const Settings(
+        ttsProvider: TtsProvider.onDevice,
+      ));
 
       await pumpSettings(tester);
 
@@ -372,9 +356,10 @@ void main() {
     });
 
     testWidgets('shows speech rate text', (tester) async {
-      when(mockProvider.settings).thenReturn(
-        const Settings(ttsProvider: TtsProvider.onDevice, ttsRate: 0.5),
-      );
+      when(mockProvider.settings).thenReturn(const Settings(
+        ttsProvider: TtsProvider.onDevice,
+        ttsRate: 0.5,
+      ));
 
       await pumpSettings(tester);
 
@@ -382,9 +367,10 @@ void main() {
     });
 
     testWidgets('shows pitch text', (tester) async {
-      when(mockProvider.settings).thenReturn(
-        const Settings(ttsProvider: TtsProvider.onDevice, ttsPitch: 1.0),
-      );
+      when(mockProvider.settings).thenReturn(const Settings(
+        ttsProvider: TtsProvider.onDevice,
+        ttsPitch: 1.0,
+      ));
 
       await pumpSettings(tester);
 

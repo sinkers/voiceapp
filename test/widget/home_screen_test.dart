@@ -38,7 +38,9 @@ void main() {
   Widget createAgentPage() {
     return ChangeNotifierProvider<ConversationProvider>.value(
       value: mockProvider,
-      child: const MaterialApp(home: AgentConversationPage(agent: dummyAgent)),
+      child: const MaterialApp(
+        home: AgentConversationPage(agent: dummyAgent),
+      ),
     );
   }
 
@@ -238,9 +240,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300)); // finish open
     }
 
-    testWidgets('shows confirmation dialog when clear button tapped', (
-      tester,
-    ) async {
+    testWidgets('shows confirmation dialog when clear button tapped',
+        (tester) async {
       final now = DateTime(2024);
       when(mockProvider.messages).thenReturn([
         Message(
@@ -258,9 +259,9 @@ void main() {
 
       expect(find.text('Clear conversation?'), findsOneWidget);
       expect(
-        find.text('This will delete all messages in the current conversation.'),
-        findsOneWidget,
-      );
+          find.text(
+              'This will delete all messages in the current conversation.'),
+          findsOneWidget);
     });
 
     testWidgets('calls clearMessages when confirmed', (tester) async {

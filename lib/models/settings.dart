@@ -3,10 +3,11 @@ import 'elevenlabs_voice.dart';
 import 'package:collection/collection.dart';
 import 'package:openclaw_client/openclaw_client.dart';
 
-export 'package:openclaw_client/openclaw_client.dart' show OpenClawInstance;
-
 const _defaultElevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM';
 const _defaultElevenLabsSpeed = 1.1;
+
+
+export 'package:openclaw_client/openclaw_client.dart' show OpenClawInstance;
 
 enum LLMBackend { claude, openaiCompatible }
 
@@ -42,8 +43,8 @@ class Settings {
     this.openaiModelName = 'gpt-4o',
     this.systemPrompt =
         'You are a helpful voice assistant. Keep your responses concise and conversational, '
-        'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
-        'Speak naturally as if in a conversation.',
+            'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
+            'Speak naturally as if in a conversation.',
     this.ttsRate = 0.5,
     this.ttsPitch = 1.0,
     this.openclawInstances = const [],
@@ -69,8 +70,10 @@ class Settings {
     return [
       ...openclawInstances.expand(
         (instance) => instance.agentIds.map(
-          (agentId) =>
-              OpenClawAgentConfig(instance: instance, agentId: agentId),
+          (agentId) => OpenClawAgentConfig(
+            instance: instance,
+            agentId: agentId,
+          ),
         ),
       ),
       DirectModelAgentConfig(
@@ -111,12 +114,10 @@ class Settings {
     bool clearElevenLabsApiKey = false,
   }) {
     return Settings(
-      claudeApiKey: clearClaudeApiKey
-          ? null
-          : (claudeApiKey ?? this.claudeApiKey),
-      openaiApiKey: clearOpenaiApiKey
-          ? null
-          : (openaiApiKey ?? this.openaiApiKey),
+      claudeApiKey:
+          clearClaudeApiKey ? null : (claudeApiKey ?? this.claudeApiKey),
+      openaiApiKey:
+          clearOpenaiApiKey ? null : (openaiApiKey ?? this.openaiApiKey),
       backend: backend ?? this.backend,
       openaiBaseUrl: openaiBaseUrl ?? this.openaiBaseUrl,
       claudeModelName: claudeModelName ?? this.claudeModelName,

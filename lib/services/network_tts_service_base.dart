@@ -110,15 +110,13 @@ abstract class NetworkTtsServiceBase implements TtsService {
     }
     final text = _queue.removeAt(0);
     _isSpeaking = true;
-    _fetchAndPlay(text)
-        .then((_) {
-          _isSpeaking = false;
-          _playNext();
-        })
-        .catchError((Object e) {
-          debugPrint('Network TTS error: $e. Falling back to on-device TTS.');
-          _fallbackToOnDevice(text);
-        });
+    _fetchAndPlay(text).then((_) {
+      _isSpeaking = false;
+      _playNext();
+    }).catchError((Object e) {
+      debugPrint('Network TTS error: $e. Falling back to on-device TTS.');
+      _fallbackToOnDevice(text);
+    });
   }
 
   Future<void> _fetchAndPlay(String text) async {

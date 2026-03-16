@@ -238,38 +238,34 @@ void main() {
       expect(instance.elevenLabsSpeed, 1.1);
     });
 
-    test(
-      'fromJson generates sessionId if missing (backward compatibility)',
-      () {
-        final json = {
-          'id': 'test-id',
-          'name': 'Test Instance',
-          'baseUrl': 'http://localhost:3000/v1',
-          'token': 'test-token',
-        };
+    test('fromJson generates sessionId if missing (backward compatibility)',
+        () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Instance',
+        'baseUrl': 'http://localhost:3000/v1',
+        'token': 'test-token',
+      };
 
-        final instance = OpenClawInstance.fromJson(json);
+      final instance = OpenClawInstance.fromJson(json);
 
-        expect(instance.sessionId, isNotEmpty);
-        expect(instance.sessionId.length, 36); // UUID v4 format
-      },
-    );
+      expect(instance.sessionId, isNotEmpty);
+      expect(instance.sessionId.length, 36); // UUID v4 format
+    });
 
-    test(
-      'two instances created from JSON without sessionId have different IDs',
-      () {
-        final json = {
-          'id': 'test-id',
-          'name': 'Test Instance',
-          'baseUrl': 'http://localhost:3000/v1',
-        };
+    test('two instances created from JSON without sessionId have different IDs',
+        () {
+      final json = {
+        'id': 'test-id',
+        'name': 'Test Instance',
+        'baseUrl': 'http://localhost:3000/v1',
+      };
 
-        final instance1 = OpenClawInstance.fromJson(json);
-        final instance2 = OpenClawInstance.fromJson(json);
+      final instance1 = OpenClawInstance.fromJson(json);
+      final instance2 = OpenClawInstance.fromJson(json);
 
-        expect(instance1.sessionId, isNot(equals(instance2.sessionId)));
-      },
-    );
+      expect(instance1.sessionId, isNot(equals(instance2.sessionId)));
+    });
 
     test('round-trip serialisation preserves data', () {
       const original = OpenClawInstance(

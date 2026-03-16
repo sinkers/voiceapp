@@ -70,10 +70,8 @@ void main() {
 
   // MicButton has a repeating animation so pumpAndSettle never settles.
   // Use pump(Duration) instead.
-  Future<void> pumpFor(
-    WidgetTester tester, [
-    Duration d = const Duration(milliseconds: 500),
-  ]) async {
+  Future<void> pumpFor(WidgetTester tester,
+      [Duration d = const Duration(milliseconds: 500)]) async {
     await tester.pump();
     await tester.pump(d);
   }
@@ -109,9 +107,8 @@ void main() {
       expect(find.byType(AnimatedContainer), findsAtLeastNWidgets(2));
     });
 
-    testWidgets('swiping left calls setCurrentIndex with next page', (
-      tester,
-    ) async {
+    testWidgets('swiping left calls setCurrentIndex with next page',
+        (tester) async {
       await tester.pumpWidget(createHomeScreen());
       await tester.pump();
 
@@ -121,9 +118,8 @@ void main() {
       verify(mockSwitcher.setCurrentIndex(1)).called(1);
     });
 
-    testWidgets('second agent name visible when starting at page 1', (
-      tester,
-    ) async {
+    testWidgets('second agent name visible when starting at page 1',
+        (tester) async {
       when(mockSwitcher.currentIndex).thenReturn(1);
       when(mockSwitcher.agents).thenReturn([instance1, instance2]);
 

@@ -151,9 +151,7 @@ void main() {
       expect(loaded.openclawInstances.first.id, 'test-id');
       expect(loaded.openclawInstances.first.name, 'Test Instance');
       expect(
-        loaded.openclawInstances.first.baseUrl,
-        'http://localhost:3000/v1',
-      );
+          loaded.openclawInstances.first.baseUrl, 'http://localhost:3000/v1');
       expect(loaded.openclawInstances.first.token, 'test-token');
       expect(loaded.openclawInstances.first.sessionId, 'test-session');
       expect(loaded.selectedInstanceId, 'test-id');
