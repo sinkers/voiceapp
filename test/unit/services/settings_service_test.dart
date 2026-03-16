@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -422,18 +424,6 @@ void main() {
       expect(prefs.getBool('default_configs_loaded'), true);
     });
 
-    test('does nothing when asset has empty arrays', () async {
-      // The actual default_configs.json file has empty arrays
-      await service.load();
-
-      // Should not load any configs but should set the flag
-      expect(service.lastLoadedConfigCount, 0);
-
-      // Verify flag was set
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('default_configs_loaded'), true);
-    });
-
     test('sets flag even when asset loading fails', () async {
       // This will fail to load the asset in test environment
       await service.load();
@@ -455,6 +445,92 @@ void main() {
 
       // Should return 0 on second load since flag is set
       expect(service.lastLoadedConfigCount, 0);
+    });
+
+    test(
+        'simulates successful default config load by manually storing then loading',
+        () async {
+      // Simulate what would happen if default_configs.json loaded successfully
+      // by manually storing configs, then verifying load() reads them correctly
+
+      // Start with clean state
+      SharedPreferences.setMockInitialValues({});
+      FlutterSecureStorage.setMockInitialValues({});
+
+      // Manually store configs as if they came from default_configs.json
+      final prefs = await SharedPreferences.getInstance();
+      const instance1 = OpenClawInstance(
+        id: 'test-instance-1',
+        name: 'Test Instance 1',
+        baseUrl: 'http://localhost:3000/v1',
+        token: 'test-token-1',
+        sessionId: 'test-session-1',
+      );
+      const instance2 = OpenClawInstance(
+        id: 'test-instance-2',
+        name: 'Test Instance 2',
+        baseUrl: 'http://10.0.0.1:8000/v1',
+        token: 'test-token-2',
+        sessionId: 'test-session-2',
+      );
+
+      // Store instances to SharedPreferences (without tokens, as the service does)
+      await prefs.setString(
+        'openclaw_instances',
+        jsonEncode([instance1.toJson(), instance2.toJson()]),
+      );
+
+      // Store tokens to secure storage
+      const secureStorage = FlutterSecureStorage();
+      await secureStorage.write(
+        key: 'openclaw_token_test-instance-1',
+        value: 'test-token-1',
+      );
+      await secureStorage.write(
+        key: 'openclaw_token_test-instance-2',
+        value: 'test-token-2',
+      );
+
+      // Store ElevenLabs API key
+      await secureStorage.write(
+        key: 'elevenlabs_api_key',
+        value: 'test-elevenlabs-key',
+      );
+
+      // Mark as loaded
+      await prefs.setBool('default_configs_loaded', true);
+
+      // Now load and verify everything is read correctly
+      final freshService = SettingsService();
+      final settings = await freshService.load();
+
+      // Verify openclaw instances are loaded correctly
+      expect(settings.openclawInstances.length, 2);
+      expect(settings.openclawInstances[0].id, 'test-instance-1');
+      expect(settings.openclawInstances[0].name, 'Test Instance 1');
+      expect(settings.openclawInstances[0].baseUrl, 'http://localhost:3000/v1');
+      expect(settings.openclawInstances[0].token, 'test-token-1');
+      expect(settings.openclawInstances[0].sessionId, 'test-session-1');
+      expect(settings.openclawInstances[1].id, 'test-instance-2');
+      expect(settings.openclawInstances[1].name, 'Test Instance 2');
+      expect(settings.openclawInstances[1].token, 'test-token-2');
+
+      // Verify ElevenLabs API key is loaded
+      expect(settings.elevenLabsApiKey, 'test-elevenlabs-key');
+
+      // Verify instances are still in SharedPreferences
+      final instancesJson = prefs.getString('openclaw_instances');
+      expect(instancesJson, isNotNull);
+      final storedInstances = jsonDecode(instancesJson!);
+      expect(storedInstances, isList);
+      expect(storedInstances.length, 2);
+
+      // Verify tokens are NOT in SharedPreferences JSON
+      expect(instancesJson.contains('test-token-1'), isFalse);
+      expect(instancesJson.contains('test-token-2'), isFalse);
+
+      // Verify the flag is set
+      expect(prefs.getBool('default_configs_loaded'), true);
     });
   });
 }

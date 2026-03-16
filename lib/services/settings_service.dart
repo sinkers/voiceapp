@@ -181,11 +181,11 @@ class SettingsService {
       return 0;
     }
 
+    // Mark as loaded upfront to avoid checking again
+    await prefs.setBool(_keyDefaultConfigsLoaded, true);
+
     // Check if configs already exist (don't clobber)
-    final hasExistingInstances = prefs.getString(_keyOpenclawInstances) != null;
-    if (hasExistingInstances) {
-      // Mark as loaded to avoid checking again
-      await prefs.setBool(_keyDefaultConfigsLoaded, true);
+    if (prefs.getString(_keyOpenclawInstances) != null) {
       return 0;
     }
 
@@ -198,46 +198,30 @@ class SettingsService {
       final openclawInstancesJson = json['openclaw_instances'] as List?;
       final elevenLabsApiKey = json['elevenlabs_api_key'] as String?;
 
-      // Check if there are any configs to load
-      final hasConfigs =
-          openclawInstancesJson != null && openclawInstancesJson.isNotEmpty;
-
-      if (!hasConfigs) {
-        // Empty placeholder - mark as loaded but don't import anything
-        await prefs.setBool(_keyDefaultConfigsLoaded, true);
+      if (openclawInstancesJson == null || openclawInstancesJson.isEmpty) {
         return 0;
       }
 
-      // Load OpenClaw instances
-      int configCount = 0;
-      if (openclawInstancesJson.isNotEmpty) {
-        final instances = openclawInstancesJson
-            .whereType<Map<String, dynamic>>()
-            .map(OpenClawInstance.fromJson)
-            .toList();
+      final instances = openclawInstancesJson
+          .whereType<Map<String, dynamic>>()
+          .map(OpenClawInstance.fromJson)
+          .toList();
 
-        // Save instances to SharedPreferences (without tokens)
-        await prefs.setString(
-          _keyOpenclawInstances,
-          jsonEncode(instances.map((i) => i.toJson()).toList()),
-        );
+      // Save instances to SharedPreferences (without tokens)
+      await prefs.setString(
+        _keyOpenclawInstances,
+        jsonEncode(instances.map((i) => i.toJson()).toList()),
+      );
 
-        // Save tokens to secure storage
-        await Future.wait(
-          instances.map((instance) {
-            if (instance.token.isNotEmpty) {
-              return _secureStorage.write(
-                key: _openClawTokenKey(instance.id),
-                value: instance.token,
-              );
-            } else {
-              return Future.value();
-            }
-          }),
-        );
-
-        configCount += instances.length;
-      }
+      // Save tokens to secure storage using functional approach
+      await Future.wait(
+        instances
+            .where((i) => i.token.isNotEmpty)
+            .map((i) => _secureStorage.write(
+                  key: _openClawTokenKey(i.id),
+                  value: i.token,
+                )),
+      );
 
       // Load ElevenLabs API key
       if (elevenLabsApiKey != null && elevenLabsApiKey.isNotEmpty) {
@@ -247,13 +231,9 @@ class SettingsService {
         );
       }
 
-      // Mark as loaded
-      await prefs.setBool(_keyDefaultConfigsLoaded, true);
-
-      return configCount;
+      return instances.length;
     } catch (e) {
-      // Asset not found or invalid JSON - mark as loaded to avoid retrying
-      await prefs.setBool(_keyDefaultConfigsLoaded, true);
+      // Asset not found or invalid JSON - already marked as loaded
       return 0;
     }
   }
