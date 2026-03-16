@@ -37,6 +37,7 @@ Fix all issues before opening a PR. Do not open a PR with failing tests or analy
 - Every new feature must include unit or widget tests covering the acceptance criteria
 - Tests live in `test/` — mirror the `lib/` structure
 - Run with `flutter test`
+- **Test coverage must not decrease.** Check the test count before and after your changes. If your PR removes or skips tests, it will be rejected.
 
 ## Pull Requests
 
