@@ -105,7 +105,7 @@ class AgentSwitcherProvider extends ChangeNotifier {
               clearSelectedAgentId: true,
             );
         }
-        await entry.value.updateSettings(agentSettings);
+        await entry.value.applyAgentSettings(agentSettings);
       }
     }
     notifyListeners();

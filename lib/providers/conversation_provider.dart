@@ -110,9 +110,19 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Called from the Settings screen — persists to SharedPreferences.
   Future<void> updateSettings(Settings newSettings) async {
     _settings = newSettings;
     await _settingsService.save(newSettings);
+    await _rebuildTtsService();
+    _rebuildLlmService();
+    notifyListeners();
+  }
+
+  /// Called from [AgentSwitcherProvider] — applies agent-specific settings
+  /// WITHOUT persisting to SharedPreferences (avoid overwriting user prefs).
+  Future<void> applyAgentSettings(Settings agentSettings) async {
+    _settings = agentSettings;
     await _rebuildTtsService();
     _rebuildLlmService();
     notifyListeners();
