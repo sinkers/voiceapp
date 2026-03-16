@@ -151,7 +151,8 @@ OpenClaw doesn't need to be publicly exposed. Options:
 
 2. **Build a development IPA** — use `--export-method development` (not the default App Store method, which requires a distribution certificate):
    ```bash
-   flutter build ipa --release --export-method development
+   flutter build ipa --release --export-method development \
+     --dart-define=GIT_SHA=$(git rev-parse --short HEAD)
    ```
    Output: `build/ios/ipa/voiceapp.ipa`
 
@@ -194,12 +195,12 @@ OpenClaw doesn't need to be publicly exposed. Options:
 
 3. **Run:**
    ```bash
-   flutter run
+   flutter run --dart-define=GIT_SHA=$(git rev-parse --short HEAD)
    ```
 
 4. **Or build a standalone APK:**
    ```bash
-   flutter build apk --release
+   flutter build apk --release --dart-define=GIT_SHA=$(git rev-parse --short HEAD)
    # Output: build/app/outputs/flutter-apk/app-release.apk
    ```
    Transfer to device and install (Settings → install unknown apps must be enabled).

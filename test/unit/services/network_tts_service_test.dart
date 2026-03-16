@@ -17,20 +17,16 @@ void main() {
   setUp(() {
     // Mock the FlutterTts method channel to prevent MissingPluginException
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('flutter_tts'),
-      (MethodCall methodCall) async {
-        return null;
-      },
-    );
+        .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
+      MethodCall methodCall,
+    ) async {
+      return null;
+    });
   });
 
   tearDown(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-      const MethodChannel('flutter_tts'),
-      null,
-    );
+        .setMockMethodCallHandler(const MethodChannel('flutter_tts'), null);
   });
 
   group('ElevenLabsTtsService', () {

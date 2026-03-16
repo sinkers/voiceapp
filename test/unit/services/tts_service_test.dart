@@ -13,31 +13,27 @@ void main() {
 
       // Mock the FlutterTts method channel to prevent MissingPluginException
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('flutter_tts'),
-        (MethodCall methodCall) async {
-          switch (methodCall.method) {
-            case 'speak':
-            case 'stop':
-            case 'setLanguage':
-            case 'setSpeechRate':
-            case 'setPitch':
-            case 'awaitSpeakCompletion':
-            case 'setSharedInstance':
-              return null;
-            default:
-              return null;
-          }
-        },
-      );
+          .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
+        MethodCall methodCall,
+      ) async {
+        switch (methodCall.method) {
+          case 'speak':
+          case 'stop':
+          case 'setLanguage':
+          case 'setSpeechRate':
+          case 'setPitch':
+          case 'awaitSpeakCompletion':
+          case 'setSharedInstance':
+            return null;
+          default:
+            return null;
+        }
+      });
     });
 
     tearDown(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('flutter_tts'),
-        null,
-      );
+          .setMockMethodCallHandler(const MethodChannel('flutter_tts'), null);
     });
 
     test('enqueue adds text to queue', () async {
@@ -93,15 +89,17 @@ void main() {
       expect(() => service.markFinished(), returnsNormally);
     });
 
-    test('waitUntilDone completes immediately if already finished and empty',
-        () async {
-      await service.initialize();
+    test(
+      'waitUntilDone completes immediately if already finished and empty',
+      () async {
+        await service.initialize();
 
-      service.markFinished();
+        service.markFinished();
 
-      final future = service.waitUntilDone();
-      expect(future, completes);
-    });
+        final future = service.waitUntilDone();
+        expect(future, completes);
+      },
+    );
 
     test('onDone callback can be set', () async {
       await service.initialize();
@@ -169,15 +167,14 @@ void main() {
       bool stopCalled = false;
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('flutter_tts'),
-        (MethodCall methodCall) async {
-          if (methodCall.method == 'stop') {
-            stopCalled = true;
-          }
-          return null;
-        },
-      );
+          .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
+        MethodCall methodCall,
+      ) async {
+        if (methodCall.method == 'stop') {
+          stopCalled = true;
+        }
+        return null;
+      });
 
       service.enqueue('Test sentence');
 
@@ -196,20 +193,16 @@ void main() {
 
       // Mock the FlutterTts method channel
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('flutter_tts'),
-        (MethodCall methodCall) async {
-          return null;
-        },
-      );
+          .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
     });
 
     tearDown(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('flutter_tts'),
-        null,
-      );
+          .setMockMethodCallHandler(const MethodChannel('flutter_tts'), null);
     });
 
     test('calling stop multiple times does not crash', () async {

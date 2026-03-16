@@ -42,6 +42,8 @@ dependencies:
   # Audio playback for network TTS
   audioplayers: ^6.1.0
 
+  # App version and build info
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

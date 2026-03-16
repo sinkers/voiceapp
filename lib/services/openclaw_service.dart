@@ -4,8 +4,9 @@ import 'http_client_factory.dart';
 
 class OpenClawService {
   Future<List<String>> fetchAgents(OpenClawInstance instance) async {
-    final client =
-        buildHttpClient(allowBadCertificate: instance.allowBadCertificate);
+    final client = buildHttpClient(
+      allowBadCertificate: instance.allowBadCertificate,
+    );
     try {
       final base = instance.baseUrl.endsWith('/')
           ? instance.baseUrl.substring(0, instance.baseUrl.length - 1)

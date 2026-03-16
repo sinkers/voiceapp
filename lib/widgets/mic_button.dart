@@ -5,11 +5,7 @@ class MicButton extends StatefulWidget {
   final ConversationState state;
   final VoidCallback onTap;
 
-  const MicButton({
-    super.key,
-    required this.state,
-    required this.onTap,
-  });
+  const MicButton({super.key, required this.state, required this.onTap});
 
   @override
   State<MicButton> createState() => _MicButtonState();
@@ -93,9 +89,7 @@ class _MicButtonState extends State<MicButton>
                     ),
                   ),
                 )
-              : Center(
-                  child: Icon(icon, size: 44, color: iconColor),
-                ),
+              : Center(child: Icon(icon, size: 44, color: iconColor)),
         ),
       ),
     );
@@ -103,10 +97,8 @@ class _MicButtonState extends State<MicButton>
     if (isListening) {
       button = AnimatedBuilder(
         animation: _pulseAnimation,
-        builder: (context, child) => Transform.scale(
-          scale: _pulseAnimation.value,
-          child: child,
-        ),
+        builder: (context, child) =>
+            Transform.scale(scale: _pulseAnimation.value, child: child),
         child: button,
       );
     }

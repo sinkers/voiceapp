@@ -90,7 +90,9 @@ class SettingsService {
     );
     if (settings.selectedInstanceId != null) {
       await prefs.setString(
-          _keySelectedInstanceId, settings.selectedInstanceId!);
+        _keySelectedInstanceId,
+        settings.selectedInstanceId!,
+      );
     } else {
       await prefs.remove(_keySelectedInstanceId);
     }

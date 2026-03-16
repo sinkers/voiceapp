@@ -40,13 +40,13 @@ class OpenAIService implements LLMService {
     final messages = <ChatCompletionMessage>[
       if (systemPrompt.isNotEmpty)
         ChatCompletionMessage.system(content: systemPrompt),
-      ...history
-          .where((m) => m.role != app.MessageRole.system)
-          .map((m) => m.role == app.MessageRole.user
-              ? ChatCompletionMessage.user(
-                  content: ChatCompletionUserMessageContent.string(m.content),
-                )
-              : ChatCompletionMessage.assistant(content: m.content)),
+      ...history.where((m) => m.role != app.MessageRole.system).map(
+            (m) => m.role == app.MessageRole.user
+                ? ChatCompletionMessage.user(
+                    content: ChatCompletionUserMessageContent.string(m.content),
+                  )
+                : ChatCompletionMessage.assistant(content: m.content),
+          ),
     ];
 
     final stream = _client.createChatCompletionStream(

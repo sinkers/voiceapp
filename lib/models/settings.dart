@@ -49,7 +49,8 @@ class OpenClawInstance {
         token: (json['token'] as String?) ?? '',
         sessionId: json['sessionId'] as String? ?? _uuid.v4(),
         elevenLabsVoice: ElevenLabsVoice.fromVoiceId(
-                json['elevenLabsVoiceId'] as String? ?? '') ??
+              json['elevenLabsVoiceId'] as String? ?? '',
+            ) ??
             ElevenLabsVoice.rachel,
         elevenLabsSpeed: (json['elevenLabsSpeed'] as num?)?.toDouble() ?? 1.1,
         agentIds: (json['agentIds'] as List<dynamic>?)
@@ -144,10 +145,8 @@ class Settings {
     return [
       ...openclawInstances.expand(
         (instance) => instance.agentIds.map(
-          (agentId) => OpenClawAgentConfig(
-            instance: instance,
-            agentId: agentId,
-          ),
+          (agentId) =>
+              OpenClawAgentConfig(instance: instance, agentId: agentId),
         ),
       ),
       DirectModelAgentConfig(

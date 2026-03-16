@@ -332,7 +332,9 @@ class ConversationProvider extends ChangeNotifier {
       case TtsProvider.onDevice:
         final svc = OnDeviceTtsService();
         await svc.initialize(
-            rate: _settings.ttsRate, pitch: _settings.ttsPitch);
+          rate: _settings.ttsRate,
+          pitch: _settings.ttsPitch,
+        );
         _ttsService = svc;
       case TtsProvider.elevenlabs:
         final String voiceId =
