@@ -28,12 +28,12 @@ class OpenClawInstance {
     this.allowBadCertificate = false,
   });
 
-  // TODO(security): token should be moved to flutter_secure_storage and excluded from serialization
+  // Token is stored in secure storage, not in JSON
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
         'baseUrl': baseUrl,
-        'token': token,
+        // token excluded - stored in flutter_secure_storage
         'sessionId': sessionId,
         'elevenLabsVoiceId': elevenLabsVoice.voiceId,
         'elevenLabsSpeed': elevenLabsSpeed,
