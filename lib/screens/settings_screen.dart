@@ -64,18 +64,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  /// Updates [instance.agentIds] in the draft settings with [agents].
+  void _updateInstanceAgentIds(OpenClawInstance instance, List<String> agents) {
+    final updatedInstance = instance.copyWith(agentIds: agents);
+    final updatedInstances = _draft.openclawInstances
+        .map((i) => i.id == instance.id ? updatedInstance : i)
+        .toList();
+    _draft = _draft.copyWith(openclawInstances: updatedInstances);
+  }
+
   Future<void> _fetchAgentsForInstance(OpenClawInstance instance) async {
     final agents = await _openClawService.fetchAgents(instance);
     if (!mounted) return;
     setState(() {
       _agents = agents;
       _loadingAgents = false;
-      // Save fetched agents to instance.agentIds
-      final updatedInstance = instance.copyWith(agentIds: agents);
-      final updatedInstances = _draft.openclawInstances
-          .map((i) => i.id == instance.id ? updatedInstance : i)
-          .toList();
-      _draft = _draft.copyWith(openclawInstances: updatedInstances);
+      _updateInstanceAgentIds(instance, agents);
       if (!agents.contains(_draft.selectedAgentId)) {
         _draft = _draft.copyWith(
           selectedAgentId: agents.isNotEmpty ? agents.first : null,
@@ -162,14 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
     final agents = await _openClawService.fetchAgents(instance);
     if (!mounted) return;
-    // Save fetched agents to instance.agentIds
-    setState(() {
-      final updatedInstance = instance.copyWith(agentIds: agents);
-      final updatedInstances = _draft.openclawInstances
-          .map((i) => i.id == instance.id ? updatedInstance : i)
-          .toList();
-      _draft = _draft.copyWith(openclawInstances: updatedInstances);
-    });
+    setState(() => _updateInstanceAgentIds(instance, agents));
     final message = agents.length == 1 && agents.first == 'main'
         ? 'Connected (no OpenClaw agents found, using fallback)'
         : 'Found ${agents.length} agent(s): ${agents.join(', ')}';
