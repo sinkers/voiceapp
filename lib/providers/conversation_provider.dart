@@ -144,7 +144,8 @@ class ConversationProvider extends ChangeNotifier {
     _partialSttText = '';
     _setState(ConversationState.listening);
     _speechService.startListening(
-      pauseDuration: Duration(milliseconds: (_settings.pauseDuration * 1000).round()),
+      pauseDuration:
+          Duration(milliseconds: (_settings.pauseDuration * 1000).round()),
     );
   }
 
@@ -288,7 +289,8 @@ class ConversationProvider extends ChangeNotifier {
       await _ttsService.waitUntilDone();
 
       // In conversational mode, automatically start listening again
-      if (_settings.conversationalMode && _state == ConversationState.speaking) {
+      if (_settings.conversationalMode &&
+          _state == ConversationState.speaking) {
         _setState(ConversationState.idle);
         _startListening();
         return;
