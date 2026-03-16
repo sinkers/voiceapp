@@ -27,7 +27,8 @@ class DirectModelAgentConfig extends AgentConfig {
   final LLMBackend backend;
   final String modelName;
 
-  const DirectModelAgentConfig({required this.backend, required this.modelName});
+  const DirectModelAgentConfig(
+      {required this.backend, required this.modelName});
 
   @override
   String get id => '${backend.name}:$modelName';

@@ -70,7 +70,8 @@ void main() {
 
   // MicButton has a repeating animation so pumpAndSettle never settles.
   // Use pump(Duration) instead.
-  Future<void> pumpFor(WidgetTester tester, [Duration d = const Duration(milliseconds: 500)]) async {
+  Future<void> pumpFor(WidgetTester tester,
+      [Duration d = const Duration(milliseconds: 500)]) async {
     await tester.pump();
     await tester.pump(d);
   }

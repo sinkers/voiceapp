@@ -124,8 +124,7 @@ void main() {
       expect(switcher.currentIndex, 0); // unchanged
     });
 
-    test('switching agent index changes active ConversationProvider',
-        () async {
+    test('switching agent index changes active ConversationProvider', () async {
       final switcher = AgentSwitcherProvider(
         settingsService: _FakeSettingsService(_twoInstances),
         speechService: MockSpeechService(),

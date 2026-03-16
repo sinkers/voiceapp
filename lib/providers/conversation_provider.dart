@@ -118,7 +118,6 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-
   void _startListening() {
     _errorMessage = null;
     _partialSttText = '';
