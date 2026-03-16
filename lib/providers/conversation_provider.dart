@@ -334,6 +334,12 @@ class ConversationProvider extends ChangeNotifier {
     }
   }
 
+  /// Ensures agentId is prefixed for OpenClaw's model field (e.g. 'main' → 'openclaw:main').
+  String _toOpenClawModelId(String agentId) {
+    if (agentId.contains(':')) return agentId; // already prefixed
+    return 'openclaw:$agentId';
+  }
+
   void _rebuildLlmService() {
     _llmService?.dispose();
     _llmService = null;
@@ -352,7 +358,7 @@ class ConversationProvider extends ChangeNotifier {
         _llmService = OpenAIService(
           apiKey: instance.token,
           baseUrl: instance.baseUrl,
-          model: _settings.selectedAgentId ?? 'openclaw:main',
+          model: _toOpenClawModelId(_settings.selectedAgentId ?? 'main'),
           customHeaders: {'x-openclaw-session-key': instance.sessionId},
         );
       } else {
