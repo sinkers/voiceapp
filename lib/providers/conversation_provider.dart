@@ -322,7 +322,7 @@ class ConversationProvider extends ChangeNotifier {
         _ttsService = svc;
       case TtsProvider.elevenlabs:
         final String voiceId =
-            _settings.selectedInstance?.elevenLabsVoice.voiceId ??
+            _settings.selectedInstance?.elevenLabsVoiceId ??
                 _settings.elevenLabsVoiceId;
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',

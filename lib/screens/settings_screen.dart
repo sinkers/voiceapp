@@ -938,6 +938,9 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 token: _tokenController.text.trim(),
                 sessionId: widget.instance?.sessionId ?? _uuid.v4(),
                 allowBadCertificate: _allowBadCertificate,
+                elevenLabsVoiceId: widget.instance?.elevenLabsVoiceId ??
+                    '21m00Tcm4TlvDq8ikWAM',
+                elevenLabsSpeed: widget.instance?.elevenLabsSpeed ?? 1.1,
               ),
             );
           },

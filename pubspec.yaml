@@ -36,6 +36,10 @@ dependencies:
   # HTTP client (used internally by SDKs)
   http: ^1.2.0
 
+  # OpenClaw gateway client
+  openclaw_client:
+    path: packages/openclaw_client
+
   # Collection utilities (firstWhereOrNull, etc.)
   collection: ^1.18.0
 
