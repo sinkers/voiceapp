@@ -40,7 +40,8 @@ void main() {
       );
     });
 
-    test('onStopped fires only once when both notListening and done are received',
+    test(
+        'onStopped fires only once when both notListening and done are received',
         () async {
       await service.initialize();
 
@@ -70,7 +71,8 @@ void main() {
       // verified the implementation has the guard logic by reading the source.
 
       expect(service, isNotNull);
-      expect(callCount, equals(0)); // Not yet called since we mocked the channel
+      expect(
+          callCount, equals(0)); // Not yet called since we mocked the channel
     });
 
     test('_hasReportedStop is reset when startListening is called', () async {
