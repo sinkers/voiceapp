@@ -22,9 +22,10 @@ class _StateIndicatorState extends State<StateIndicator>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -51,8 +52,9 @@ class _StateIndicatorState extends State<StateIndicator>
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color:
-                      Colors.red.shade500.withValues(alpha: _animation.value),
+                  color: Colors.red.shade500.withValues(
+                    alpha: _animation.value,
+                  ),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -100,8 +102,9 @@ class _StateIndicatorState extends State<StateIndicator>
               Icon(
                 Icons.volume_up_rounded,
                 size: 16,
-                color: Colors.orange.shade600
-                    .withValues(alpha: 0.5 + _animation.value * 0.5),
+                color: Colors.orange.shade600.withValues(
+                  alpha: 0.5 + _animation.value * 0.5,
+                ),
               ),
               const SizedBox(width: 8),
               Text(

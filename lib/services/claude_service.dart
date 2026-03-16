@@ -18,17 +18,20 @@ class ClaudeService implements LLMService {
   ) async* {
     final messages = history
         .where((m) => m.role != app.MessageRole.system)
-        .map((m) => m.role == app.MessageRole.user
-            ? InputMessage.user(m.content)
-            : InputMessage.assistant(m.content))
+        .map(
+          (m) => m.role == app.MessageRole.user
+              ? InputMessage.user(m.content)
+              : InputMessage.assistant(m.content),
+        )
         .toList();
 
     final stream = _client.messages.createStream(
       MessageCreateRequest(
         model: model,
         maxTokens: 4096,
-        system:
-            systemPrompt.isNotEmpty ? SystemPrompt.text(systemPrompt) : null,
+        system: systemPrompt.isNotEmpty
+            ? SystemPrompt.text(systemPrompt)
+            : null,
         messages: messages,
       ),
     );

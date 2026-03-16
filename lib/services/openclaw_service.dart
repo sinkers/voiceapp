@@ -4,8 +4,9 @@ import 'http_client_factory.dart';
 
 class OpenClawService {
   Future<List<String>> fetchAgents(OpenClawInstance instance) async {
-    final client =
-        buildHttpClient(allowBadCertificate: instance.allowBadCertificate);
+    final client = buildHttpClient(
+      allowBadCertificate: instance.allowBadCertificate,
+    );
     try {
       final base = instance.baseUrl.endsWith('/')
           ? instance.baseUrl.substring(0, instance.baseUrl.length - 1)
@@ -24,7 +25,7 @@ class OpenClawService {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final models =
           (data['data'] as List?)?.whereType<Map<String, dynamic>>().toList() ??
-              [];
+          [];
 
       final agents = models
           .map((m) => m['id'] as String? ?? '')

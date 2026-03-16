@@ -22,9 +22,10 @@ class _MessageBubbleState extends State<MessageBubble>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     )..repeat(reverse: true);
-    _cursorAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      _cursorController,
-    );
+    _cursorAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_cursorController);
   }
 
   @override
@@ -70,8 +71,9 @@ class _MessageBubbleState extends State<MessageBubble>
   }
 
   Widget _buildText(ThemeData theme, bool isUser, bool isStreaming) {
-    final textColor =
-        isUser ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface;
+    final textColor = isUser
+        ? theme.colorScheme.onPrimary
+        : theme.colorScheme.onSurface;
 
     if (!isStreaming) {
       return Text(
@@ -148,8 +150,9 @@ class _DotState extends State<_Dot> with SingleTickerProviderStateMixin {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
             shape: BoxShape.circle,
           ),
         ),

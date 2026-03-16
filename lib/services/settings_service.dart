@@ -29,9 +29,9 @@ class SettingsService {
     final instancesJson = prefs.getString(_keyOpenclawInstances);
     final openclawInstances = instancesJson != null
         ? (jsonDecode(instancesJson) as List)
-            .whereType<Map<String, dynamic>>()
-            .map(OpenClawInstance.fromJson)
-            .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(OpenClawInstance.fromJson)
+              .toList()
         : <OpenClawInstance>[];
 
     final ttsProviderIndex = prefs.getInt(_keyTtsProvider) ?? 0;
@@ -45,7 +45,8 @@ class SettingsService {
       claudeModelName:
           prefs.getString(_keyClaudeModelName) ?? 'claude-opus-4-6',
       openaiModelName: prefs.getString(_keyOpenaiModelName) ?? 'gpt-4o',
-      systemPrompt: prefs.getString(_keySystemPrompt) ??
+      systemPrompt:
+          prefs.getString(_keySystemPrompt) ??
           'You are a helpful voice assistant. Keep your responses concise and conversational, '
               'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
               'Speak naturally as if in a conversation.',
@@ -90,7 +91,9 @@ class SettingsService {
     );
     if (settings.selectedInstanceId != null) {
       await prefs.setString(
-          _keySelectedInstanceId, settings.selectedInstanceId!);
+        _keySelectedInstanceId,
+        settings.selectedInstanceId!,
+      );
     } else {
       await prefs.remove(_keySelectedInstanceId);
     }

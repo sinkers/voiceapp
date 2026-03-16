@@ -19,12 +19,11 @@ void main() {
 
   // Mock FlutterTts method channel
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(
-    const MethodChannel('flutter_tts'),
-    (MethodCall methodCall) async {
-      return null;
-    },
-  );
+      .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
 
   late ConversationProvider provider;
   late MockSpeechService mockSpeechService;
@@ -49,37 +48,40 @@ void main() {
       expect(provider.state, ConversationState.idle);
     });
 
-    test('transitions from idle to listening when starting conversation',
-        () async {
-      await provider.initialize();
+    test(
+      'transitions from idle to listening when starting conversation',
+      () async {
+        await provider.initialize();
 
-      provider.toggleConversation();
+        provider.toggleConversation();
 
-      expect(provider.state, ConversationState.listening);
-      verify(mockSpeechService.startListening()).called(1);
-    });
+        expect(provider.state, ConversationState.listening);
+        verify(mockSpeechService.startListening()).called(1);
+      },
+    );
 
     test(
-        'transitions from listening to idle when speech is stopped with empty text',
-        () async {
-      await provider.initialize();
+      'transitions from listening to idle when speech is stopped with empty text',
+      () async {
+        await provider.initialize();
 
-      // Start listening
-      provider.toggleConversation();
-      expect(provider.state, ConversationState.listening);
+        // Start listening
+        provider.toggleConversation();
+        expect(provider.state, ConversationState.listening);
 
-      // Simulate speech stopped callback with empty text
-      provider.toggleConversation(); // Stop listening
+        // Simulate speech stopped callback with empty text
+        provider.toggleConversation(); // Stop listening
 
-      // Call the onStopped callback with empty partial text
-      final onStoppedCallback = verify(mockSpeechService.onStopped = captureAny)
-          .captured
-          .last as Function;
-      onStoppedCallback();
+        // Call the onStopped callback with empty partial text
+        final onStoppedCallback =
+            verify(mockSpeechService.onStopped = captureAny).captured.last
+                as Function;
+        onStoppedCallback();
 
-      expect(provider.state, ConversationState.idle);
-      expect(provider.messages, isEmpty);
-    });
+        expect(provider.state, ConversationState.idle);
+        expect(provider.messages, isEmpty);
+      },
+    );
 
     test('clears error message when clearError is called', () async {
       await provider.initialize();
@@ -124,31 +126,33 @@ void main() {
       expect(provider.messages, isEmpty);
     });
 
-    test('interrupts when toggleConversation called during speaking state',
-        () async {
-      final mockTts = MockTtsService();
-      when(mockTts.stop()).thenAnswer((_) async {});
-      when(mockTts.dispose()).thenAnswer((_) async {});
+    test(
+      'interrupts when toggleConversation called during speaking state',
+      () async {
+        final mockTts = MockTtsService();
+        when(mockTts.stop()).thenAnswer((_) async {});
+        when(mockTts.dispose()).thenAnswer((_) async {});
 
-      // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
-      // Injecting ttsService in the constructor is enough for this unit test.
-      final speakingProvider = ConversationProvider(
-        speechService: mockSpeechService,
-        settingsService: mockSettingsService,
-        ttsService: mockTts,
-      );
+        // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
+        // Injecting ttsService in the constructor is enough for this unit test.
+        final speakingProvider = ConversationProvider(
+          speechService: mockSpeechService,
+          settingsService: mockSettingsService,
+          ttsService: mockTts,
+        );
 
-      // Force into speaking state via the @visibleForTesting helper
-      speakingProvider.forceStateForTesting(ConversationState.speaking);
-      expect(speakingProvider.state, ConversationState.speaking);
+        // Force into speaking state via the @visibleForTesting helper
+        speakingProvider.forceStateForTesting(ConversationState.speaking);
+        expect(speakingProvider.state, ConversationState.speaking);
 
-      // toggleConversation in speaking state should call _interrupt → idle
-      speakingProvider.toggleConversation();
+        // toggleConversation in speaking state should call _interrupt → idle
+        speakingProvider.toggleConversation();
 
-      expect(speakingProvider.state, ConversationState.idle);
-      verify(mockTts.stop()).called(1);
-      verify(mockSpeechService.cancelListening()).called(1);
-    });
+        expect(speakingProvider.state, ConversationState.idle);
+        verify(mockTts.stop()).called(1);
+        verify(mockSpeechService.cancelListening()).called(1);
+      },
+    );
 
     test('partial STT text is updated during listening', () async {
       await provider.initialize();
@@ -262,8 +266,7 @@ void main() {
   });
 
   group('ConversationProvider OpenClaw Model ID', () {
-    test('initializeForAgent with bare agentId sets up OpenAI service',
-        () async {
+    test('initializeForAgent with bare agentId sets up OpenAI service', () async {
       const openclawSettings = Settings(
         backend: LLMBackend.openaiCompatible,
         openclawInstances: [
@@ -309,19 +312,21 @@ void main() {
       expect(provider.hasApiKey, true);
     });
 
-    test('initializeForAgent without instance falls back to OpenAI key',
-        () async {
-      const directOpenAISettings = Settings(
-        backend: LLMBackend.openaiCompatible,
-        openaiApiKey: 'test-openai-key',
-        openaiBaseUrl: 'https://api.openai.com/v1',
-        openaiModelName: 'gpt-4o',
-      );
+    test(
+      'initializeForAgent without instance falls back to OpenAI key',
+      () async {
+        const directOpenAISettings = Settings(
+          backend: LLMBackend.openaiCompatible,
+          openaiApiKey: 'test-openai-key',
+          openaiBaseUrl: 'https://api.openai.com/v1',
+          openaiModelName: 'gpt-4o',
+        );
 
-      await provider.initializeForAgent(directOpenAISettings);
+        await provider.initializeForAgent(directOpenAISettings);
 
-      expect(provider.initialized, true);
-      expect(provider.hasApiKey, true);
-    });
+        expect(provider.initialized, true);
+        expect(provider.hasApiKey, true);
+      },
+    );
   });
 }

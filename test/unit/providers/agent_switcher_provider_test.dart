@@ -92,25 +92,24 @@ void main() {
       expect(switcher.agents[3], isA<DirectModelAgentConfig>());
     });
 
-    test('setCurrentIndex changes currentIndex and persists to prefs',
-        () async {
-      final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(twoInstances),
-        speechService: MockSpeechService(),
-        providerFactory: makeMockProvider,
-      );
-      await switcher.initialize();
+    test(
+      'setCurrentIndex changes currentIndex and persists to prefs',
+      () async {
+        final switcher = AgentSwitcherProvider(
+          settingsService: _FakeSettingsService(twoInstances),
+          speechService: MockSpeechService(),
+          providerFactory: makeMockProvider,
+        );
+        await switcher.initialize();
 
-      await switcher.setCurrentIndex(2);
+        await switcher.setCurrentIndex(2);
 
-      expect(switcher.currentIndex, 2);
+        expect(switcher.currentIndex, 2);
 
-      final prefs = await SharedPreferences.getInstance();
-      expect(
-        prefs.getString('last_active_agent_id'),
-        switcher.agents[2].id,
-      );
-    });
+        final prefs = await SharedPreferences.getInstance();
+        expect(prefs.getString('last_active_agent_id'), switcher.agents[2].id);
+      },
+    );
 
     test('setCurrentIndex ignores out-of-range values', () async {
       final switcher = AgentSwitcherProvider(
@@ -292,8 +291,9 @@ void main() {
         speechService: MockSpeechService(),
         providerFactory: () {
           final mock = MockConversationProvider();
-          when(mock.initializeForAgent(argThat(isA<Settings>())))
-              .thenAnswer((invocation) {
+          when(mock.initializeForAgent(argThat(isA<Settings>()))).thenAnswer((
+            invocation,
+          ) {
             final settings = invocation.positionalArguments[0] as Settings;
             if (capturedSettings0 == null) {
               capturedSettings0 = settings;
@@ -302,8 +302,9 @@ void main() {
             }
             return Future.value();
           });
-          when(mock.updateSettings(argThat(isA<Settings>())))
-              .thenAnswer((_) async {});
+          when(
+            mock.updateSettings(argThat(isA<Settings>())),
+          ).thenAnswer((_) async {});
           when(mock.state).thenReturn(ConversationState.idle);
           when(mock.messages).thenReturn([]);
           when(mock.partialSttText).thenReturn('');

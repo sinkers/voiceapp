@@ -153,8 +153,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _deleteInstance(OpenClawInstance instance) {
     final wasSelected = _draft.selectedInstanceId == instance.id;
     setState(() {
-      final updated =
-          _draft.openclawInstances.where((i) => i.id != instance.id).toList();
+      final updated = _draft.openclawInstances
+          .where((i) => i.id != instance.id)
+          .toList();
       _draft = _draft.copyWith(
         openclawInstances: updated,
         clearSelectedInstanceId: wasSelected,
@@ -547,16 +548,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Persist added agent into the selected instance's agentIds
                             final selId = _draft.selectedInstanceId;
                             if (selId != null) {
-                              final updatedInstances =
-                                  _draft.openclawInstances.map((i) {
-                                if (i.id == selId &&
-                                    !i.agentIds.contains(agentId)) {
-                                  return i.copyWith(
-                                    agentIds: [...i.agentIds, agentId],
-                                  );
-                                }
-                                return i;
-                              }).toList();
+                              final updatedInstances = _draft.openclawInstances
+                                  .map((i) {
+                                    if (i.id == selId &&
+                                        !i.agentIds.contains(agentId)) {
+                                      return i.copyWith(
+                                        agentIds: [...i.agentIds, agentId],
+                                      );
+                                    }
+                                    return i;
+                                  })
+                                  .toList();
                               _draft = _draft.copyWith(
                                 openclawInstances: updatedInstances,
                               );
@@ -995,9 +997,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
