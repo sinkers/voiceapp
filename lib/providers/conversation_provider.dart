@@ -314,12 +314,10 @@ class ConversationProvider extends ChangeNotifier {
         final String voiceId =
             _settings.selectedInstance?.elevenLabsVoice.voiceId ??
                 _settings.elevenLabsVoiceId;
-        final double speed = _settings.selectedInstance?.elevenLabsSpeed ?? 1.1;
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
           voiceId: voiceId,
           modelId: _settings.elevenLabsModelId,
-          speed: speed,
         );
         await svc.initialize();
         _ttsService = svc;

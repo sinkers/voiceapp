@@ -536,6 +536,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               _agents = [..._agents, agentId];
                             }
                             _draft = _draft.copyWith(selectedAgentId: agentId);
+                            // Persist added agent into the selected instance's agentIds
+                            final selId = _draft.selectedInstanceId;
+                            if (selId != null) {
+                              final updatedInstances =
+                                  _draft.openclawInstances.map((i) {
+                                if (i.id == selId &&
+                                    !i.agentIds.contains(agentId)) {
+                                  return i.copyWith(
+                                      agentIds: [...i.agentIds, agentId]);
+                                }
+                                return i;
+                              }).toList();
+                              _draft = _draft.copyWith(
+                                  openclawInstances: updatedInstances);
+                            }
                           });
                         },
                       ),
