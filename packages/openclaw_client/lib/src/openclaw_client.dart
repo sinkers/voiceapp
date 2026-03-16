@@ -98,7 +98,9 @@ class OpenClawClient {
           .toList();
 
       return agents.isEmpty ? _fallback() : agents;
-    } catch (_) {
+    } catch (e, s) {
+      // ignore: avoid_print
+      print('OpenClawClient error: $e\n$s');
       return _fallback();
     }
   }
@@ -176,7 +178,9 @@ class OpenClawClient {
         final delta = (choices.first as Map<String, dynamic>)['delta']
             ?['content'] as String?;
         if (delta != null) yield delta;
-      } catch (_) {
+      } catch (e, s) {
+      // ignore: avoid_print
+      print('OpenClawClient error: $e\n$s');
         // Ignore malformed SSE lines.
       }
     }

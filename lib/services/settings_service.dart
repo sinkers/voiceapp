@@ -57,7 +57,7 @@ class SettingsService {
       ttsProvider: TtsProvider.values[ttsProviderIndex],
       elevenLabsApiKey: prefs.getString(_keyElevenLabsApiKey),
       elevenLabsVoiceId:
-          prefs.getString(_keyElevenLabsVoiceId) ?? '21m00Tcm4TlvDq8ikWAM',
+          prefs.getString(_keyElevenLabsVoiceId) ?? _defaultElevenLabsVoiceId,
       elevenLabsModelId:
           prefs.getString(_keyElevenLabsModelId) ?? 'eleven_turbo_v2_5',
       openaiTtsVoice: prefs.getString(_keyOpenaiTtsVoice) ?? 'alloy',

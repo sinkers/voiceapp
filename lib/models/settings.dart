@@ -3,6 +3,10 @@ import 'elevenlabs_voice.dart';
 import 'package:collection/collection.dart';
 import 'package:openclaw_client/openclaw_client.dart';
 
+const _defaultElevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM';
+const _defaultElevenLabsSpeed = 1.1;
+
+
 export 'package:openclaw_client/openclaw_client.dart' show OpenClawInstance;
 
 enum LLMBackend { claude, openaiCompatible }
@@ -49,7 +53,7 @@ class Settings {
     this.ttsProvider = TtsProvider.onDevice,
     this.elevenLabsApiKey,
     this.elevenLabsVoice = ElevenLabsVoice.rachel,
-    this.elevenLabsVoiceId = '21m00Tcm4TlvDq8ikWAM',
+    this.elevenLabsVoiceId = _defaultElevenLabsVoiceId,
     this.elevenLabsModelId = 'eleven_turbo_v2_5',
     this.openaiTtsVoice = 'alloy',
     this.openaiTtsModel = 'tts-1',
