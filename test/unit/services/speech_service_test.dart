@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:voiceapp/services/speech_service.dart';
 
