@@ -68,6 +68,13 @@ Elysse coordinates review assignments. Do not merge your own PR.
 - Merge commit acceptable for larger feature branches
 - Delete the feature branch after merge
 
+**A PR is not done until:**
+1. CI is green (all checks passing)
+2. All review comments are addressed (Gemini or human)
+3. `mergeable` status is clean (no conflicts)
+
+Do not consider a task complete, report it as finished, or move on to the next task until all three conditions are met. If CI is failing or comments are unaddressed, fix them before declaring done.
+
 ## Style
 
 Follow the rules in `CLAUDE.md`:
