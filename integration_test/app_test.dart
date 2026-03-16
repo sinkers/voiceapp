@@ -17,8 +17,9 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('VoiceApp Integration Tests', () {
-    testWidgets('app launches and displays main screen with app bar',
-        (tester) async {
+    testWidgets('app launches and displays main screen with app bar', (
+      tester,
+    ) async {
       await tester.pumpWidget(const VoiceApp());
       await tester.pumpAndSettle();
 

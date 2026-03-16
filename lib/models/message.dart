@@ -15,10 +15,7 @@ class Message {
     this.isComplete = true,
   });
 
-  Message copyWith({
-    String? content,
-    bool? isComplete,
-  }) {
+  Message copyWith({String? content, bool? isComplete}) {
     return Message(
       id: id,
       role: role,

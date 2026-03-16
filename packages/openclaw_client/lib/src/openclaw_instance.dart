@@ -37,16 +37,16 @@ class OpenClawInstance {
   // TODO(security): token should be moved to flutter_secure_storage
   // and excluded from serialization.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'baseUrl': baseUrl,
-        'token': token,
-        'sessionId': sessionId,
-        'elevenLabsVoiceId': elevenLabsVoiceId,
-        'elevenLabsSpeed': elevenLabsSpeed,
-        'agentIds': agentIds,
-        'allowBadCertificate': allowBadCertificate,
-      };
+    'id': id,
+    'name': name,
+    'baseUrl': baseUrl,
+    'token': token,
+    'sessionId': sessionId,
+    'elevenLabsVoiceId': elevenLabsVoiceId,
+    'elevenLabsSpeed': elevenLabsSpeed,
+    'agentIds': agentIds,
+    'allowBadCertificate': allowBadCertificate,
+  };
 
   factory OpenClawInstance.fromJson(Map<String, dynamic> json) =>
       OpenClawInstance(
@@ -57,9 +57,9 @@ class OpenClawInstance {
         sessionId: json['sessionId'] as String? ?? _uuid.v4(),
         elevenLabsVoiceId:
             json['elevenLabsVoiceId'] as String? ?? '21m00Tcm4TlvDq8ikWAM',
-        elevenLabsSpeed:
-            (json['elevenLabsSpeed'] as num?)?.toDouble() ?? 1.1,
-        agentIds: (json['agentIds'] as List<dynamic>?)
+        elevenLabsSpeed: (json['elevenLabsSpeed'] as num?)?.toDouble() ?? 1.1,
+        agentIds:
+            (json['agentIds'] as List<dynamic>?)
                 ?.map((e) => e as String)
                 .toList() ??
             const ['main'],
@@ -76,16 +76,15 @@ class OpenClawInstance {
     double? elevenLabsSpeed,
     List<String>? agentIds,
     bool? allowBadCertificate,
-  }) =>
-      OpenClawInstance(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        baseUrl: baseUrl ?? this.baseUrl,
-        token: token ?? this.token,
-        sessionId: sessionId ?? this.sessionId,
-        elevenLabsVoiceId: elevenLabsVoiceId ?? this.elevenLabsVoiceId,
-        elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
-        agentIds: agentIds ?? this.agentIds,
-        allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
-      );
+  }) => OpenClawInstance(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    baseUrl: baseUrl ?? this.baseUrl,
+    token: token ?? this.token,
+    sessionId: sessionId ?? this.sessionId,
+    elevenLabsVoiceId: elevenLabsVoiceId ?? this.elevenLabsVoiceId,
+    elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
+    agentIds: agentIds ?? this.agentIds,
+    allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
+  );
 }
