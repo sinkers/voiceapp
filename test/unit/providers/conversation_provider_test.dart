@@ -56,7 +56,9 @@ void main() {
         provider.toggleConversation();
 
         expect(provider.state, ConversationState.listening);
-        verify(mockSpeechService.startListening()).called(1);
+        verify(mockSpeechService.startListening(
+          pauseDuration: anyNamed('pauseDuration'),
+        )).called(1);
       },
     );
 
@@ -355,5 +357,151 @@ void main() {
         expect(provider.hasApiKey, true);
       },
     );
+  });
+
+  group('ConversationProvider Conversational Mode', () {
+    test('conversational mode is disabled by default', () async {
+      await provider.initialize();
+
+      expect(provider.conversationalMode, false);
+      expect(provider.pauseDuration, 1.5);
+    });
+
+    test('loads conversational mode settings from SettingsService', () async {
+      when(mockSettingsService.load()).thenAnswer(
+        (_) async => const Settings(
+          conversationalMode: true,
+          pauseDuration: 2.0,
+        ),
+      );
+
+      await provider.initialize();
+
+      expect(provider.conversationalMode, true);
+      expect(provider.pauseDuration, 2.0);
+    });
+
+    test('updateConversationalMode persists settings', () async {
+      await provider.initialize();
+
+      await provider.updateConversationalMode(true, 2.5);
+
+      expect(provider.conversationalMode, true);
+      expect(provider.pauseDuration, 2.5);
+      verify(mockSettingsService.save(any)).called(1);
+    });
+
+    test('uses configurable pause duration when starting listening', () async {
+      when(mockSettingsService.load()).thenAnswer(
+        (_) async => const Settings(pauseDuration: 2.0),
+      );
+
+      await provider.initialize();
+      provider.toggleConversation();
+
+      // Verify startListening was called (we can't easily verify the exact Duration parameter)
+      verify(mockSpeechService.startListening(
+        pauseDuration: const Duration(milliseconds: 2000),
+      )).called(1);
+    });
+
+    test('barge-in interrupts TTS when speaking and speech detected', () async {
+      final mockTts = MockTtsService();
+      when(mockTts.stop()).thenAnswer((_) async {});
+      when(mockTts.dispose()).thenAnswer((_) async {});
+
+      when(mockSettingsService.load()).thenAnswer(
+        (_) async => const Settings(conversationalMode: true),
+      );
+
+      // Create provider and initialize with conversational mode
+      final conversationalProvider = ConversationProvider(
+        speechService: mockSpeechService,
+        settingsService: mockSettingsService,
+        ttsService: mockTts,
+      );
+
+      // Initialize will load settings with conversationalMode=true
+      await conversationalProvider.initialize();
+
+      // Verify conversational mode is enabled
+      expect(conversationalProvider.conversationalMode, true);
+
+      // Capture the onPartialResult callback
+      final onPartialCallback = verify(
+        mockSpeechService.onPartialResult = captureAny,
+      ).captured.last as Function(String);
+
+      // Force into speaking state
+      conversationalProvider.forceStateForTesting(ConversationState.speaking);
+
+      // Trigger partial speech result (barge-in)
+      onPartialCallback('hello');
+
+      // Should transition to listening (TTS stop is called internally but on real service)
+      expect(conversationalProvider.state, ConversationState.listening);
+      expect(conversationalProvider.partialSttText, 'hello');
+    });
+
+    test('barge-in does not trigger when not in conversational mode', () async {
+      final mockTts = MockTtsService();
+      when(mockTts.stop()).thenAnswer((_) async {});
+      when(mockTts.dispose()).thenAnswer((_) async {});
+
+      when(mockSettingsService.load()).thenAnswer(
+        (_) async => const Settings(conversationalMode: false),
+      );
+
+      final nonConversationalProvider = ConversationProvider(
+        speechService: mockSpeechService,
+        settingsService: mockSettingsService,
+        ttsService: mockTts,
+      );
+
+      await nonConversationalProvider.initialize();
+
+      // Force into speaking state
+      nonConversationalProvider.forceStateForTesting(
+        ConversationState.speaking,
+      );
+
+      // Trigger partial speech result
+      final onPartialCallback = verify(
+        mockSpeechService.onPartialResult = captureAny,
+      ).captured.last as Function(String);
+      onPartialCallback('hello');
+
+      // Should NOT interrupt - just update partial text
+      verifyNever(mockTts.stop());
+      expect(nonConversationalProvider.partialSttText, 'hello');
+    });
+
+    test('barge-in ignores empty text', () async {
+      final mockTts = MockTtsService();
+      when(mockTts.stop()).thenAnswer((_) async {});
+      when(mockTts.dispose()).thenAnswer((_) async {});
+
+      when(mockSettingsService.load()).thenAnswer(
+        (_) async => const Settings(conversationalMode: true),
+      );
+
+      final conversationalProvider = ConversationProvider(
+        speechService: mockSpeechService,
+        settingsService: mockSettingsService,
+        ttsService: mockTts,
+      );
+
+      await conversationalProvider.initialize();
+      conversationalProvider.forceStateForTesting(ConversationState.speaking);
+
+      // Trigger partial speech with empty text
+      final onPartialCallback = verify(
+        mockSpeechService.onPartialResult = captureAny,
+      ).captured.last as Function(String);
+      onPartialCallback('   ');
+
+      // Should NOT interrupt with empty text
+      verifyNever(mockTts.stop());
+    });
   });
 }

@@ -25,6 +25,8 @@ class SettingsService {
   static const _keyElevenLabsModelId = 'elevenlabs_model_id';
   static const _keyOpenaiTtsVoice = 'openai_tts_voice';
   static const _keyOpenaiTtsModel = 'openai_tts_model';
+  static const _keyConversationalMode = 'conversational_mode';
+  static const _keyPauseDuration = 'pause_duration';
 
   static String _openClawTokenKey(String instanceId) =>
       'openclaw_token_$instanceId';
@@ -83,6 +85,8 @@ class SettingsService {
           prefs.getString(_keyElevenLabsModelId) ?? 'eleven_turbo_v2_5',
       openaiTtsVoice: prefs.getString(_keyOpenaiTtsVoice) ?? 'alloy',
       openaiTtsModel: prefs.getString(_keyOpenaiTtsModel) ?? 'tts-1',
+      conversationalMode: prefs.getBool(_keyConversationalMode) ?? false,
+      pauseDuration: prefs.getDouble(_keyPauseDuration) ?? 1.5,
     );
   }
 
@@ -159,5 +163,7 @@ class SettingsService {
     await prefs.setString(_keyElevenLabsModelId, settings.elevenLabsModelId);
     await prefs.setString(_keyOpenaiTtsVoice, settings.openaiTtsVoice);
     await prefs.setString(_keyOpenaiTtsModel, settings.openaiTtsModel);
+    await prefs.setBool(_keyConversationalMode, settings.conversationalMode);
+    await prefs.setDouble(_keyPauseDuration, settings.pauseDuration);
   }
 }

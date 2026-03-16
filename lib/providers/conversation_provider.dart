@@ -32,6 +32,8 @@ class ConversationProvider extends ChangeNotifier {
   String _textBuffer = '';
   String? _errorMessage;
   bool _initialized = false;
+  bool _conversationalMode = false;
+  double _pauseDuration = 1.5;
 
   ConversationProvider({
     required SpeechService speechService,
@@ -57,9 +59,13 @@ class ConversationProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get initialized => _initialized;
   bool get hasApiKey => _llmService != null;
+  bool get conversationalMode => _conversationalMode;
+  double get pauseDuration => _pauseDuration;
 
   Future<void> initialize() async {
     _settings = await _settingsService.load();
+    _conversationalMode = _settings.conversationalMode;
+    _pauseDuration = _settings.pauseDuration;
     final sttAvailable = await _speechService.initialize();
     if (!sttAvailable) {
       _errorMessage =
@@ -127,11 +133,25 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update conversational mode and persist to settings.
+  Future<void> updateConversationalMode(
+      bool enabled, double pauseDuration) async {
+    _conversationalMode = enabled;
+    _pauseDuration = pauseDuration;
+    final newSettings = _settings.copyWith(
+      conversationalMode: enabled,
+      pauseDuration: pauseDuration,
+    );
+    await updateSettings(newSettings);
+  }
+
   void _startListening() {
     _errorMessage = null;
     _partialSttText = '';
     _setState(ConversationState.listening);
-    _speechService.startListening();
+    _speechService.startListening(
+      pauseDuration: Duration(milliseconds: (_pauseDuration * 1000).round()),
+    );
   }
 
   void _stopListeningAndProcess() {
@@ -140,6 +160,17 @@ class ConversationProvider extends ChangeNotifier {
   }
 
   void _onSpeechPartial(String text) {
+    // Barge-in: if in conversational mode and speaking, interrupt TTS
+    if (_conversationalMode &&
+        _state == ConversationState.speaking &&
+        text.trim().isNotEmpty) {
+      // Stop TTS and LLM streaming, transition to listening
+      _llmSubscription?.cancel();
+      _llmSubscription = null;
+      _ttsService.stop();
+      _setState(ConversationState.listening);
+    }
+
     _partialSttText = text;
     notifyListeners();
   }
@@ -261,6 +292,13 @@ class ConversationProvider extends ChangeNotifier {
 
       // Wait for TTS to finish
       await _ttsService.waitUntilDone();
+
+      // In conversational mode, automatically start listening again
+      if (_conversationalMode && _state == ConversationState.speaking) {
+        _setState(ConversationState.idle);
+        _startListening();
+        return;
+      }
     } catch (e) {
       final errMsg = _friendlyError(e);
       _errorMessage = errMsg;

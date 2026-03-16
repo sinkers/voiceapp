@@ -108,6 +108,8 @@ class Settings {
   final String elevenLabsModelId;
   final String openaiTtsVoice;
   final String openaiTtsModel;
+  final bool conversationalMode;
+  final double pauseDuration;
 
   const Settings({
     this.claudeApiKey,
@@ -132,6 +134,8 @@ class Settings {
     this.elevenLabsModelId = 'eleven_turbo_v2_5',
     this.openaiTtsVoice = 'alloy',
     this.openaiTtsModel = 'tts-1',
+    this.conversationalMode = false,
+    this.pauseDuration = 1.5,
   });
 
   String get activeModelName =>
@@ -180,6 +184,8 @@ class Settings {
     String? elevenLabsModelId,
     String? openaiTtsVoice,
     String? openaiTtsModel,
+    bool? conversationalMode,
+    double? pauseDuration,
     bool clearClaudeApiKey = false,
     bool clearOpenaiApiKey = false,
     bool clearSelectedInstanceId = false,
@@ -214,6 +220,8 @@ class Settings {
       elevenLabsModelId: elevenLabsModelId ?? this.elevenLabsModelId,
       openaiTtsVoice: openaiTtsVoice ?? this.openaiTtsVoice,
       openaiTtsModel: openaiTtsModel ?? this.openaiTtsModel,
+      conversationalMode: conversationalMode ?? this.conversationalMode,
+      pauseDuration: pauseDuration ?? this.pauseDuration,
     );
   }
 }
