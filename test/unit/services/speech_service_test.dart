@@ -1,6 +1,26 @@
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:voiceapp/services/speech_service.dart';
+
+/// Hand-crafted fake that avoids platform channels.
+/// Only [isListening] and the methods called by [SpeechService] are handled;
+/// everything else falls through to [Fake.noSuchMethod] and throws.
+class _FakeSpeechToText extends Fake implements SpeechToText {
+  @override
+  bool get isListening => false;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #initialize) return Future<bool>.value(true);
+    if (invocation.memberName == #listen ||
+        invocation.memberName == #stop ||
+        invocation.memberName == #cancel) {
+      return Future<void>.value();
+    }
+    return super.noSuchMethod(invocation);
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -9,35 +29,7 @@ void main() {
     late SpeechService service;
 
     setUp(() {
-      service = SpeechService();
-
-      // Mock the speech_to_text method channel to prevent errors
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('plugin.csdcorp.com/speech_to_text'),
-        (MethodCall methodCall) async {
-          switch (methodCall.method) {
-            case 'initialize':
-              return true;
-            case 'listen':
-              return null;
-            case 'stop':
-              return null;
-            case 'cancel':
-              return null;
-            default:
-              return null;
-          }
-        },
-      );
-    });
-
-    tearDown(() {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-        const MethodChannel('plugin.csdcorp.com/speech_to_text'),
-        null,
-      );
+      service = SpeechService(stt: _FakeSpeechToText());
     });
 
     test(
@@ -46,50 +38,31 @@ void main() {
       await service.initialize();
 
       int callCount = 0;
-      service.onStopped = () {
-        callCount++;
-      };
+      service.onStopped = () => callCount++;
 
-      // Start listening to reset the _hasReportedStop flag
       await service.startListening();
 
-      // To test the private _onStatus method, we need to trigger it through
-      // the speech_to_text library's callback. Since we can't directly call
-      // the private method in the test, we'll verify the implementation by
-      // checking the code has the guard in place.
+      // Simulate speech_to_text firing both status strings for the same session
+      service.triggerStatusForTesting('notListening');
+      service.triggerStatusForTesting('done');
 
-      // The fix ensures that _hasReportedStop is:
-      // 1. Reset to false at the start of startListening()
-      // 2. Set to true on first "notListening" or "done" status
-      // 3. Prevents subsequent calls to onStopped
-
-      // This test documents the expected behavior and serves as a regression test.
-      // If the bug were present, onStopped would be called twice (once for
-      // "notListening" and once for "done").
-
-      // We can't directly invoke _onStatus because it's private, but we've
-      // verified the implementation has the guard logic by reading the source.
-
-      expect(service, isNotNull);
-      expect(
-          callCount, equals(0)); // Not yet called since we mocked the channel
+      expect(callCount, equals(1));
     });
 
     test('_hasReportedStop is reset when startListening is called', () async {
       await service.initialize();
-
       service.onStopped = () {};
 
-      // First session
       await service.startListening();
-      // In a real scenario, _onStatus would be called and fire onStopped
+      expect(service.hasReportedStopForTesting, isFalse);
 
-      // Second session - _hasReportedStop should be reset
+      // Trigger a stop — flag becomes true
+      service.triggerStatusForTesting('notListening');
+      expect(service.hasReportedStopForTesting, isTrue);
+
+      // New session resets the flag
       await service.startListening();
-      // In a real scenario, onStopped could fire again for the new session
-
-      // This test verifies that the reset logic exists in the implementation
-      expect(service, isNotNull);
+      expect(service.hasReportedStopForTesting, isFalse);
     });
 
     test('service can be initialized and listening started', () async {

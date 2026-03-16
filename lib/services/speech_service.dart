@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 class SpeechService {
-  final SpeechToText _stt = SpeechToText();
+  final SpeechToText _stt;
   bool _isInitialized = false;
   bool _hasReportedStop = false;
+
+  SpeechService({SpeechToText? stt}) : _stt = stt ?? SpeechToText();
 
   Function(String finalText)? onFinalResult;
   Function(String partialText)? onPartialResult;
@@ -12,6 +15,12 @@ class SpeechService {
 
   bool get isAvailable => _isInitialized;
   bool get isListening => _stt.isListening;
+
+  @visibleForTesting
+  bool get hasReportedStopForTesting => _hasReportedStop;
+
+  @visibleForTesting
+  void triggerStatusForTesting(String status) => _onStatus(status);
 
   Future<bool> initialize() async {
     _isInitialized = await _stt.initialize(
@@ -56,7 +65,7 @@ class SpeechService {
   }
 
   void _onStatus(String status) {
-    if ((status == "notListening" || status == "done") && !_hasReportedStop) {
+    if ((status == 'notListening' || status == 'done') && !_hasReportedStop) {
       _hasReportedStop = true;
       onStopped?.call();
     }
