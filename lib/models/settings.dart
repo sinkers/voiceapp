@@ -1,5 +1,6 @@
 import 'agent_config.dart';
 import 'voice_config.dart';
+import 'elevenlabs_voice.dart';
 import 'package:collection/collection.dart';
 import 'package:uuid/uuid.dart';
 

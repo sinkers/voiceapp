@@ -174,7 +174,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     setState(() {
-      final updatedVoices = _draft.voices.where((v) => v.id != voice.id).toList();
+      final updatedVoices =
+          _draft.voices.where((v) => v.id != voice.id).toList();
       _draft = _draft.copyWith(voices: updatedVoices);
     });
   }
@@ -309,13 +310,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Card(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: _draft.openclawServers.map(
-                  (server) => _ServerTile(
-                    server: server,
-                    onEdit: () => _editServer(server),
-                    onDelete: () => _deleteServer(server),
-                  ),
-                ).toList(),
+                children: _draft.openclawServers
+                    .map(
+                      (server) => _ServerTile(
+                        server: server,
+                        onEdit: () => _editServer(server),
+                        onDelete: () => _deleteServer(server),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
             const SizedBox(height: 12),
@@ -515,12 +518,15 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.agent?.name ?? '');
     _apiKeyController = TextEditingController(text: widget.agent?.apiKey ?? '');
-    _modelController = TextEditingController(text: widget.agent?.model ?? _defaultModel());
+    _modelController =
+        TextEditingController(text: widget.agent?.model ?? _defaultModel());
     _baseUrlController = TextEditingController(
       text: widget.agent?.baseUrl ?? 'https://api.openai.com/v1',
     );
-    _agentNameController = TextEditingController(text: widget.agent?.agentName ?? '');
-    _selectedVoiceId = widget.agent?.voiceId ?? widget.voices.firstOrNull?.id ?? 'system';
+    _agentNameController =
+        TextEditingController(text: widget.agent?.agentName ?? '');
+    _selectedVoiceId =
+        widget.agent?.voiceId ?? widget.voices.firstOrNull?.id ?? 'system';
     _selectedServerId = widget.agent?.serverId;
   }
 
@@ -628,16 +634,17 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                        _obscureApiKey
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () =>
                           setState(() => _obscureApiKey = !_obscureApiKey),
                     ),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty)
-                          ? 'API Key is required'
-                          : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'API Key is required'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -661,16 +668,17 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                        _obscureApiKey
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () =>
                           setState(() => _obscureApiKey = !_obscureApiKey),
                     ),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty)
-                          ? 'API Key is required'
-                          : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'API Key is required'
+                      : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -733,10 +741,9 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                     hintText: 'main',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty)
-                          ? 'Agent name is required'
-                          : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Agent name is required'
+                      : null,
                 ),
               ],
 
@@ -803,8 +810,10 @@ class _VoiceFormDialogState extends State<_VoiceFormDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.voice?.name ?? '');
     _apiKeyController = TextEditingController(text: widget.voice?.apiKey ?? '');
-    _voiceIdController = TextEditingController(text: widget.voice?.voiceId ?? _defaultVoiceId());
-    _modelIdController = TextEditingController(text: widget.voice?.modelId ?? _defaultModelId());
+    _voiceIdController =
+        TextEditingController(text: widget.voice?.voiceId ?? _defaultVoiceId());
+    _modelIdController =
+        TextEditingController(text: widget.voice?.modelId ?? _defaultModelId());
     _rate = widget.voice?.rate ?? 0.5;
     _pitch = widget.voice?.pitch ?? 1.0;
     _presetVoiceId = widget.voice?.voiceId;
@@ -857,7 +866,8 @@ class _VoiceFormDialogState extends State<_VoiceFormDialog> {
         final modelId = _modelIdController.text.trim();
         result = VoiceConfig.elevenlabs(
           name: name,
-          voiceId: voiceId.isNotEmpty ? voiceId : ElevenLabsVoice.rachel.voiceId,
+          voiceId:
+              voiceId.isNotEmpty ? voiceId : ElevenLabsVoice.rachel.voiceId,
           apiKey: apiKey.isNotEmpty ? apiKey : null,
           modelId: modelId.isNotEmpty ? modelId : 'eleven_turbo_v2_5',
         );
@@ -939,7 +949,9 @@ class _VoiceFormDialogState extends State<_VoiceFormDialog> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                        _obscureApiKey
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () =>
                           setState(() => _obscureApiKey = !_obscureApiKey),
@@ -955,7 +967,8 @@ class _VoiceFormDialogState extends State<_VoiceFormDialog> {
                   ),
                   items: [
                     ...ElevenLabsVoice.values.map(
-                      (v) => DropdownMenuItem(value: v.voiceId, child: Text(v.label)),
+                      (v) => DropdownMenuItem(
+                          value: v.voiceId, child: Text(v.label)),
                     ),
                     const DropdownMenuItem(
                       value: '__custom__',
@@ -1002,7 +1015,9 @@ class _VoiceFormDialogState extends State<_VoiceFormDialog> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                        _obscureApiKey
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () =>
                           setState(() => _obscureApiKey = !_obscureApiKey),
@@ -1041,7 +1056,8 @@ class _VoiceFormDialogState extends State<_VoiceFormDialog> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'tts-1', child: Text('tts-1')),
-                    DropdownMenuItem(value: 'tts-1-hd', child: Text('tts-1-hd')),
+                    DropdownMenuItem(
+                        value: 'tts-1-hd', child: Text('tts-1-hd')),
                   ],
                   onChanged: (v) {
                     if (v != null) _modelIdController.text = v;

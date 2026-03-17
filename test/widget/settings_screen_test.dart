@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
+import 'package:voiceapp/models/agent_config.dart';
 import 'package:voiceapp/models/settings.dart';
+import 'package:voiceapp/models/voice_config.dart';
 import 'package:voiceapp/providers/agent_switcher_provider.dart';
 import 'package:voiceapp/screens/settings_screen.dart';
 
@@ -53,55 +55,6 @@ void main() {
       expect(find.text('Save'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows backend selection', (tester) async {
-      await pumpSettings(tester);
-
-      expect(find.text('AI Backend'), findsOneWidget);
-      expect(find.text('Claude'), findsAtLeastNWidgets(1));
-      expect(find.text('OpenAI / vLLM'), findsAtLeastNWidgets(1));
-    });
-
-    testWidgets('shows Claude settings when Claude backend is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.claude));
-
-      await pumpSettings(tester);
-
-      expect(find.text('Anthropic API Key'), findsOneWidget);
-      expect(find.text('Model'), findsAtLeastNWidgets(1));
-    });
-
-    testWidgets('shows OpenAI settings when OpenAI backend is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.openaiCompatible));
-
-      await pumpSettings(tester);
-
-      expect(find.text('Base URL'), findsOneWidget);
-    });
-
-    testWidgets('can switch backend from Claude to OpenAI', (tester) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.claude));
-
-      await pumpSettings(tester);
-
-      // Find and tap the OpenAI button
-      await tester.tap(find.text('OpenAI / vLLM'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // OpenAI-specific fields should now be visible
-      expect(find.text('Base URL'), findsOneWidget);
-    });
-
     testWidgets('shows system prompt field', (tester) async {
       await pumpSettings(tester);
 
@@ -109,109 +62,179 @@ void main() {
       expect(find.widgetWithText(TextField, 'System prompt'), findsOneWidget);
     });
 
-    testWidgets('shows TTS provider selection', (tester) async {
+    testWidgets('shows Agents section', (tester) async {
       await pumpSettings(tester);
 
-      expect(find.text('Text-to-Speech'), findsOneWidget);
-      expect(find.text('Provider'), findsAtLeastNWidgets(1));
+      expect(find.text('Agents'), findsOneWidget);
+      expect(find.text('Add Agent'), findsOneWidget);
     });
 
-    testWidgets('shows on-device TTS settings when selected', (tester) async {
+    testWidgets('shows Voice Providers section', (tester) async {
+      await pumpSettings(tester);
+
+      expect(find.text('Voice Providers'), findsOneWidget);
+      expect(find.text('Add Voice Provider'), findsOneWidget);
+    });
+
+    testWidgets('shows OpenClaw Servers section when servers exist',
+        (tester) async {
+      const server = OpenClawServer(
+        id: 'test-id',
+        name: 'Test Server',
+        baseUrl: 'http://localhost:3000/v1',
+      );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.onDevice));
+      ).thenReturn(const Settings(openclawServers: [server]));
 
       await pumpSettings(tester);
 
-      expect(find.text('Voice'), findsOneWidget);
-      expect(find.text('Speech Rate'), findsOneWidget);
-      expect(find.text('Pitch'), findsOneWidget);
+      expect(find.text('OpenClaw Servers'), findsOneWidget);
     });
 
-    testWidgets('shows OpenClaw instances section', (tester) async {
+    testWidgets('shows Conversational Mode section', (tester) async {
       await pumpSettings(tester);
 
-      expect(find.text('OpenClaw'), findsOneWidget);
-      expect(find.text('Add instance'), findsOneWidget);
+      expect(find.text('Conversational Mode'), findsOneWidget);
     });
 
-    testWidgets('shows no instances message when none configured', (
+    testWidgets('shows no agents message when none configured', (
       tester,
     ) async {
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawInstances: []));
+      ).thenReturn(const Settings(agents: []));
 
       await pumpSettings(tester);
 
-      expect(find.text('No instances configured'), findsOneWidget);
+      expect(find.text('No agents configured'), findsOneWidget);
     });
 
-    testWidgets('displays configured OpenClaw instances', (tester) async {
-      const instance = OpenClawInstance(
-        id: 'test-id',
-        name: 'Test Instance',
-        baseUrl: 'http://localhost:3000/v1',
-        sessionId: 'test-session',
+    testWidgets('displays configured agents', (tester) async {
+      final voice = VoiceConfig.system();
+      final agent = AgentConfig.claude(
+        name: 'Test Claude',
+        apiKey: 'test-key',
+        voiceId: voice.id,
+        model: 'claude-opus-4-6',
       );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawInstances: [instance]));
+      ).thenReturn(Settings(agents: [agent], voices: [voice]));
 
       await pumpSettings(tester);
 
-      expect(find.text('Test Instance'), findsOneWidget);
+      expect(find.text('Test Claude'), findsOneWidget);
+      // Subtitle shows model and voice
+      expect(find.textContaining('claude-opus-4-6'), findsOneWidget);
+    });
+
+    testWidgets('shows no voices message when none configured', (
+      tester,
+    ) async {
+      when(
+        mockProvider.settings,
+      ).thenReturn(const Settings(voices: []));
+
+      await pumpSettings(tester);
+
+      // Voice section is always shown, just without any voice tiles
+      expect(find.text('Voice Providers'), findsOneWidget);
+    });
+
+    testWidgets('displays configured voices', (tester) async {
+      final voice = VoiceConfig.system(rate: 0.5, pitch: 1.0);
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(voices: [voice]));
+
+      await pumpSettings(tester);
+
+      expect(find.text('System'), findsOneWidget);
+      expect(find.text('On-device TTS'), findsOneWidget);
+    });
+
+    testWidgets('shows no servers message when none configured', (
+      tester,
+    ) async {
+      when(
+        mockProvider.settings,
+      ).thenReturn(const Settings(openclawServers: []));
+
+      await pumpSettings(tester);
+
+      // Server section is not shown when no servers exist
+      expect(find.text('OpenClaw Servers'), findsNothing);
+    });
+
+    testWidgets('displays configured OpenClaw servers', (tester) async {
+      const server = OpenClawServer(
+        id: 'test-id',
+        name: 'Test Server',
+        baseUrl: 'http://localhost:3000/v1',
+      );
+      when(
+        mockProvider.settings,
+      ).thenReturn(const Settings(openclawServers: [server]));
+
+      await pumpSettings(tester);
+
+      expect(find.text('Test Server'), findsOneWidget);
       expect(find.text('http://localhost:3000/v1'), findsOneWidget);
     });
 
-    testWidgets('shows instance action buttons', (tester) async {
-      const instance = OpenClawInstance(
-        id: 'test-id',
-        name: 'Test Instance',
-        baseUrl: 'http://localhost:3000/v1',
-        sessionId: 'test-session',
+    testWidgets('shows agent action buttons', (tester) async {
+      final agent = AgentConfig.claude(
+        name: 'Test Agent',
+        apiKey: 'test-key',
+        voiceId: 'voice-1',
       );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawInstances: [instance]));
+      ).thenReturn(Settings(agents: [agent]));
 
       await pumpSettings(tester);
 
-      // Test connection, edit, and delete buttons
-      expect(find.byIcon(Icons.cable_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.edit_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
+      // Edit and delete buttons
+      expect(find.byIcon(Icons.edit_rounded), findsAtLeastNWidgets(1));
+      expect(
+          find.byIcon(Icons.delete_outline_rounded), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('shows add instance dialog when add button tapped', (
-      tester,
-    ) async {
+    testWidgets('shows voice action buttons', (tester) async {
+      // Use non-system voice so delete button is shown
+      final voice = VoiceConfig.elevenlabs(
+        name: 'Rachel',
+        voiceId: 'rachel-id',
+      );
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(voices: [voice]));
+
       await pumpSettings(tester);
 
-      await tester.tap(find.text('Add instance'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.text('Add Instance'), findsOneWidget);
-      expect(find.text('Name'), findsOneWidget);
-      expect(find.text('Base URL'), findsAtLeastNWidgets(1));
-      expect(find.text('Token'), findsOneWidget);
+      // Edit and delete buttons
+      expect(find.byIcon(Icons.edit_rounded), findsAtLeastNWidgets(1));
+      expect(
+          find.byIcon(Icons.delete_outline_rounded), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('validates instance form fields', (tester) async {
+    testWidgets('shows server action buttons', (tester) async {
+      const server = OpenClawServer(
+        id: 'test-id',
+        name: 'Test Server',
+        baseUrl: 'http://localhost:3000/v1',
+      );
+      when(
+        mockProvider.settings,
+      ).thenReturn(const Settings(openclawServers: [server]));
+
       await pumpSettings(tester);
 
-      await tester.tap(find.text('Add instance'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Try to submit with empty fields
-      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Dialog shows a SnackBar when Name or URL is empty
-      expect(find.text('Name and Base URL are required.'), findsOneWidget);
+      // Edit and delete buttons
+      expect(find.byIcon(Icons.edit_rounded), findsAtLeastNWidgets(1));
+      expect(
+          find.byIcon(Icons.delete_outline_rounded), findsAtLeastNWidgets(1));
     });
 
     testWidgets('calls updateSettings when Save button is tapped', (
@@ -241,20 +264,6 @@ void main() {
       verify(mockProvider.updateSettings(any)).called(1);
     });
 
-    testWidgets('can edit text in Claude API key field', (tester) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(backend: LLMBackend.claude));
-
-      await pumpSettings(tester);
-
-      final apiKeyField = find.widgetWithText(TextField, 'Anthropic API Key');
-      await tester.enterText(apiKeyField, 'sk-ant-test-key');
-      await tester.pump();
-
-      expect(find.text('sk-ant-test-key'), findsOneWidget);
-    });
-
     testWidgets('can edit system prompt', (tester) async {
       await pumpSettings(tester);
 
@@ -265,130 +274,144 @@ void main() {
       expect(find.text('Custom test prompt'), findsOneWidget);
     });
 
-    testWidgets('shows ElevenLabs settings when provider is selected', (
+    testWidgets('shows conversational mode switch', (tester) async {
+      when(
+        mockProvider.settings,
+      ).thenReturn(const Settings(conversationalMode: false));
+
+      await pumpSettings(tester);
+
+      expect(find.text('Conversational Mode'), findsOneWidget);
+      expect(find.byType(Switch), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('shows pause duration slider when conversational mode enabled',
+        (
       tester,
     ) async {
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.elevenlabs));
+      ).thenReturn(
+          const Settings(conversationalMode: true, pauseDuration: 1.5));
 
       await pumpSettings(tester);
 
-      // Change to ElevenLabs (it might already be selected based on mock)
-      expect(find.text('ElevenLabs API Key'), findsOneWidget);
-      expect(find.text('Model ID'), findsOneWidget);
-      // Global voice picker is restored
-      expect(find.text('Voice'), findsOneWidget);
+      expect(find.text('Pause duration'), findsOneWidget);
+      expect(find.byType(Slider), findsOneWidget);
+    });
+
+    testWidgets('hides pause duration slider when conversational mode disabled',
+        (
+      tester,
+    ) async {
+      when(
+        mockProvider.settings,
+      ).thenReturn(const Settings(conversationalMode: false));
+
+      await pumpSettings(tester);
+
+      expect(find.text('Pause Duration'), findsNothing);
+      expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets('displays version info', (tester) async {
+      await pumpSettings(tester);
+
+      // Version info is displayed at the bottom
+      expect(find.textContaining('ClawTalk'), findsOneWidget);
+    });
+  });
+
+  group('SettingsScreen Agent Management', () {
+    testWidgets('shows agent type picker when add agent tapped', (
+      tester,
+    ) async {
+      await pumpSettings(tester);
+
+      await tester.tap(find.text('Add Agent'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Choose Agent Type'), findsOneWidget);
+      expect(find.text('Claude'), findsAtLeastNWidgets(1));
+      expect(find.text('OpenAI'), findsAtLeastNWidgets(1));
+      expect(find.text('OpenClaw'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('displays multiple agents', (tester) async {
+      final agent1 = AgentConfig.claude(
+        name: 'Claude Agent',
+        apiKey: 'key1',
+        voiceId: 'voice-1',
+      );
+      final agent2 = AgentConfig.openai(
+        name: 'OpenAI Agent',
+        apiKey: 'key2',
+        voiceId: 'voice-1',
+      );
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(agents: [agent1, agent2]));
+
+      await pumpSettings(tester);
+
+      expect(find.text('Claude Agent'), findsOneWidget);
+      expect(find.text('OpenAI Agent'), findsOneWidget);
+    });
+  });
+
+  group('SettingsScreen Voice Management', () {
+    testWidgets('shows voice type picker when add voice tapped', (
+      tester,
+    ) async {
+      await pumpSettings(tester);
+
+      await tester.tap(find.text('Add Voice Provider'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('Choose Voice Provider'), findsOneWidget);
+      expect(find.text('ElevenLabs'), findsAtLeastNWidgets(1));
+      expect(find.text('OpenAI TTS'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('displays multiple voices', (tester) async {
+      final voice1 = VoiceConfig.system(rate: 0.5, pitch: 1.0);
+      final voice2 = VoiceConfig.elevenlabs(
+        name: 'Rachel',
+        voiceId: 'rachel-id',
+      );
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(voices: [voice1, voice2]));
+
+      await pumpSettings(tester);
+
+      expect(find.text('System'), findsOneWidget);
       expect(find.text('Rachel'), findsOneWidget);
-      expect(find.text('Liam'), findsOneWidget);
-      expect(find.text('Custom Voice ID'), findsOneWidget);
-      expect(
-        find.text(
-          'Note: Per-agent voices can also be configured in OpenClaw instances above',
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('shows OpenAI TTS settings when provider is selected', (
-      tester,
-    ) async {
-      when(
-        mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.openai));
-
-      await pumpSettings(tester);
-
-      expect(find.text('Uses your OpenAI API key above'), findsOneWidget);
     });
   });
 
-  group('SettingsScreen Form Validation', () {
-    testWidgets('validates URL format in instance dialog', (tester) async {
-      await pumpSettings(tester);
-
-      await tester.tap(find.text('Add instance'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Enter invalid URL
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Name'),
-        'Test',
+  group('SettingsScreen Server Management', () {
+    testWidgets('displays multiple servers', (tester) async {
+      const server1 = OpenClawServer(
+        id: 'server-1',
+        name: 'Server 1',
+        baseUrl: 'http://localhost:3000/v1',
       );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Base URL'),
-        'not-a-url',
+      const server2 = OpenClawServer(
+        id: 'server-2',
+        name: 'Server 2',
+        baseUrl: 'http://10.0.0.1:8000/v1',
       );
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.textContaining('valid URL'), findsOneWidget);
-    });
-
-    testWidgets('accepts valid instance form data', (tester) async {
-      await pumpSettings(tester);
-
-      await tester.tap(find.text('Add instance'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Enter valid data
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Name'),
-        'Test Instance',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Base URL'),
-        'http://localhost:3000/v1',
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      await tester.tap(find.widgetWithText(FilledButton, 'Add'));
-      await tester.pump(const Duration(milliseconds: 300));
-      await tester.pump(const Duration(milliseconds: 300));
-
-      // Dialog should close (no longer visible)
-      expect(find.text('Add Instance'), findsNothing);
-    });
-  });
-
-  group('SettingsScreen Provider Switching', () {
-    testWidgets('switching TTS provider updates UI', (tester) async {
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(ttsProvider: TtsProvider.onDevice));
+      ).thenReturn(const Settings(openclawServers: [server1, server2]));
 
       await pumpSettings(tester);
 
-      // pumpSettings uses a tall viewport so all ListView items are built
-      expect(find.text('Speech Rate'), findsOneWidget);
-      expect(find.text('Pitch'), findsOneWidget);
-    });
-
-    testWidgets('shows speech rate text', (tester) async {
-      when(mockProvider.settings).thenReturn(
-        const Settings(ttsProvider: TtsProvider.onDevice, ttsRate: 0.5),
-      );
-
-      await pumpSettings(tester);
-
-      expect(find.text('Speech Rate'), findsOneWidget);
-    });
-
-    testWidgets('shows pitch text', (tester) async {
-      when(mockProvider.settings).thenReturn(
-        const Settings(ttsProvider: TtsProvider.onDevice, ttsPitch: 1.0),
-      );
-
-      await pumpSettings(tester);
-
-      expect(find.text('Pitch'), findsOneWidget);
+      expect(find.text('Server 1'), findsOneWidget);
+      expect(find.text('Server 2'), findsOneWidget);
     });
   });
 }

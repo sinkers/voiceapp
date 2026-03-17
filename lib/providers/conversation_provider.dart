@@ -231,8 +231,9 @@ class ConversationProvider extends ChangeNotifier {
       // When routing through an OpenClaw agent, suppress the app system prompt
       // so OpenClaw applies the agent's own persona (SOUL.md, IDENTITY.md, etc.)
       final selectedAgent = _settings.selectedAgent;
-      final effectiveSystemPrompt =
-          selectedAgent?.type == AgentType.openclaw ? '' : _settings.systemPrompt;
+      final effectiveSystemPrompt = selectedAgent?.type == AgentType.openclaw
+          ? ''
+          : _settings.systemPrompt;
       final stream = _llmService!.streamResponse(
         historyForLLM,
         effectiveSystemPrompt,
@@ -457,7 +458,8 @@ class ConversationProvider extends ChangeNotifier {
         final server = _settings.getServerById(selectedAgent.serverId ?? '');
         if (server != null) {
           // Use agent name as model ID with openclaw: prefix
-          final modelId = selectedAgent.agentName != null && selectedAgent.agentName!.contains(':')
+          final modelId = selectedAgent.agentName != null &&
+                  selectedAgent.agentName!.contains(':')
               ? selectedAgent.agentName!
               : 'openclaw:${selectedAgent.agentName ?? 'main'}';
 
@@ -466,7 +468,8 @@ class ConversationProvider extends ChangeNotifier {
             baseUrl: server.baseUrl,
             model: modelId,
             customHeaders: {
-              'x-openclaw-session-key': const Uuid().v4(), // Generate session ID
+              'x-openclaw-session-key':
+                  const Uuid().v4(), // Generate session ID
             },
             allowBadCertificate: server.allowBadCertificate,
           );

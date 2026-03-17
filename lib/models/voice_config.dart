@@ -9,7 +9,8 @@ class VoiceConfig {
   final String name;
   final VoiceProvider provider;
   final String? apiKey; // For elevenlabs/openai
-  final String? voiceId; // For elevenlabs: voice ID; for openai: voice name (alloy/echo/etc)
+  final String?
+      voiceId; // For elevenlabs: voice ID; for openai: voice name (alloy/echo/etc)
   final String? modelId; // For elevenlabs: model ID; for openai: tts-1/tts-1-hd
   final double? rate; // For onDevice only
   final double? pitch; // For onDevice only

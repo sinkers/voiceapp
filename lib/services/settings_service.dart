@@ -81,9 +81,7 @@ class SettingsService {
         }
         final apiKey =
             await _secureStorage.read(key: _agentApiKeyKey(agent.id));
-        return apiKey != null
-            ? agent.copyWith(apiKey: apiKey)
-            : agent;
+        return apiKey != null ? agent.copyWith(apiKey: apiKey) : agent;
       }),
     );
 
@@ -105,9 +103,7 @@ class SettingsService {
         }
         final apiKey =
             await _secureStorage.read(key: _voiceApiKeyKey(voice.id));
-        return apiKey != null
-            ? voice.copyWith(apiKey: apiKey)
-            : voice;
+        return apiKey != null ? voice.copyWith(apiKey: apiKey) : voice;
       }),
     );
 
@@ -306,8 +302,8 @@ class SettingsService {
     // 4. Migrate OpenClaw instances to servers + agents
     final instancesJson = prefs.getString(_keyOpenclawInstances);
     if (instancesJson != null) {
-      final oldInstances = (jsonDecode(instancesJson) as List)
-          .whereType<Map<String, dynamic>>();
+      final oldInstances =
+          (jsonDecode(instancesJson) as List).whereType<Map<String, dynamic>>();
 
       for (final instanceJson in oldInstances) {
         final instanceId = instanceJson['id'] as String;
@@ -340,8 +336,7 @@ class SettingsService {
         );
 
         // Find matching ElevenLabsVoice enum
-        final elevenLabsVoice =
-            ElevenLabsVoice.fromVoiceId(elevenLabsVoiceId);
+        final elevenLabsVoice = ElevenLabsVoice.fromVoiceId(elevenLabsVoiceId);
         final voiceName =
             elevenLabsVoice?.label ?? 'ElevenLabs ($instanceName)';
 
@@ -475,9 +470,7 @@ class SettingsService {
 
         // Save API keys to secure storage
         await Future.wait(
-          updatedVoices
-              .where((v) => v.apiKey != null)
-              .map(
+          updatedVoices.where((v) => v.apiKey != null).map(
                 (v) => _secureStorage.write(
                   key: _voiceApiKeyKey(v.id),
                   value: v.apiKey!,

@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:voiceapp/models/agent_config.dart';
 import 'package:voiceapp/models/conversation_state.dart';
 import 'package:voiceapp/models/settings.dart';
+import 'package:voiceapp/models/voice_config.dart';
 import 'package:voiceapp/providers/agent_switcher_provider.dart';
 import 'package:voiceapp/providers/conversation_provider.dart';
 import 'package:voiceapp/services/settings_service.dart';
@@ -25,6 +26,33 @@ class _FakeSettingsService extends SettingsService {
   Future<void> save(Settings settings) async {}
 }
 
+// Helper to create test agent configs
+AgentConfig _makeClaudeAgent(String id, String name, String voiceId) =>
+    AgentConfig(
+      id: id,
+      name: name,
+      type: AgentType.claude,
+      apiKey: 'test-key',
+      model: 'claude-opus-4-6',
+      voiceId: voiceId,
+    );
+
+AgentConfig _makeOpenClawAgent(
+  String id,
+  String name,
+  String serverId,
+  String agentName,
+  String voiceId,
+) =>
+    AgentConfig(
+      id: id,
+      name: name,
+      type: AgentType.openclaw,
+      serverId: serverId,
+      agentName: agentName,
+      voiceId: voiceId,
+    );
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -32,21 +60,32 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  const twoInstances = Settings(
-    openclawInstances: [
-      OpenClawInstance(
-        id: 'inst-1',
-        name: 'Pi Home',
-        baseUrl: 'http://10.0.0.1/v1',
-        sessionId: 'ses-1',
-      ),
-      OpenClawInstance(
-        id: 'inst-2',
-        name: 'Pi Work',
-        baseUrl: 'http://10.0.0.2/v1',
-        sessionId: 'ses-2',
-      ),
-    ],
+  final voiceSystem = VoiceConfig.system();
+  final agent1 = _makeClaudeAgent('agent-1', 'Claude 1', voiceSystem.id);
+  final agent2 = _makeClaudeAgent('agent-2', 'Claude 2', voiceSystem.id);
+  final agent3 = _makeOpenClawAgent(
+    'agent-3',
+    'OpenClaw 1',
+    'server-1',
+    'main',
+    voiceSystem.id,
+  );
+  final agent4 = _makeOpenClawAgent(
+    'agent-4',
+    'OpenClaw 2',
+    'server-2',
+    'main',
+    voiceSystem.id,
+  );
+
+  final twoAgents = Settings(
+    agents: [agent1, agent2],
+    voices: [voiceSystem],
+  );
+
+  final fourAgents = Settings(
+    agents: [agent1, agent2, agent3, agent4],
+    voices: [voiceSystem],
   );
 
   MockConversationProvider makeMockProvider() {
@@ -67,7 +106,7 @@ void main() {
   group('AgentSwitcherProvider', () {
     test('initializes with currentIndex 0', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(const Settings()),
+        settingsService: _FakeSettingsService(twoAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -78,25 +117,24 @@ void main() {
 
     test('agents list is built from settings', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(twoInstances),
+        settingsService: _FakeSettingsService(fourAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
       await switcher.initialize();
 
-      // 2 OpenClaw + 2 direct
       expect(switcher.agents.length, 4);
-      expect(switcher.agents[0], isA<OpenClawAgentConfig>());
-      expect(switcher.agents[1], isA<OpenClawAgentConfig>());
-      expect(switcher.agents[2], isA<DirectModelAgentConfig>());
-      expect(switcher.agents[3], isA<DirectModelAgentConfig>());
+      expect(switcher.agents[0].type, AgentType.claude);
+      expect(switcher.agents[1].type, AgentType.claude);
+      expect(switcher.agents[2].type, AgentType.openclaw);
+      expect(switcher.agents[3].type, AgentType.openclaw);
     });
 
     test(
       'setCurrentIndex changes currentIndex and persists to prefs',
       () async {
         final switcher = AgentSwitcherProvider(
-          settingsService: _FakeSettingsService(twoInstances),
+          settingsService: _FakeSettingsService(fourAgents),
           speechService: MockSpeechService(),
           providerFactory: makeMockProvider,
         );
@@ -113,7 +151,7 @@ void main() {
 
     test('setCurrentIndex ignores out-of-range values', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(const Settings()),
+        settingsService: _FakeSettingsService(twoAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -125,7 +163,7 @@ void main() {
 
     test('switching agent index changes active ConversationProvider', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(twoInstances),
+        settingsService: _FakeSettingsService(fourAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -143,7 +181,7 @@ void main() {
 
     test('providerFor returns a ConversationProvider for an agent', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(const Settings()),
+        settingsService: _FakeSettingsService(twoAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -157,7 +195,7 @@ void main() {
 
     test('providerFor returns the same instance on repeated calls', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(const Settings()),
+        settingsService: _FakeSettingsService(twoAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -172,7 +210,7 @@ void main() {
 
     test('different agents get different ConversationProviders', () async {
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(twoInstances),
+        settingsService: _FakeSettingsService(fourAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -185,15 +223,14 @@ void main() {
     });
 
     test('restores last active agent index from SharedPreferences', () async {
-      final agents = twoInstances.allAgents;
-      final targetId = agents[2].id; // third agent
+      final targetId = agent3.id; // third agent
 
       SharedPreferences.setMockInitialValues({
         'last_active_agent_id': targetId,
       });
 
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(twoInstances),
+        settingsService: _FakeSettingsService(fourAgents),
         speechService: MockSpeechService(),
         providerFactory: makeMockProvider,
       );
@@ -202,92 +239,12 @@ void main() {
       expect(switcher.currentIndex, 2);
     });
 
-    test('multi-agent instance expands to multiple pages', () async {
-      const multiAgentSettings = Settings(
-        openclawInstances: [
-          OpenClawInstance(
-            id: 'inst-1',
-            name: 'Multi-Agent',
-            baseUrl: 'http://localhost:3000/v1',
-            sessionId: 'ses-1',
-            agentIds: ['main', 'elysse'],
-          ),
-        ],
-      );
-
-      final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(multiAgentSettings),
-        speechService: MockSpeechService(),
-        providerFactory: makeMockProvider,
-      );
-      await switcher.initialize();
-
-      // 2 OpenClaw agents (from agentIds) + 2 direct = 4 total
-      expect(switcher.agents.length, 4);
-
-      // First two should be OpenClaw agents
-      expect(switcher.agents[0], isA<OpenClawAgentConfig>());
-      expect(switcher.agents[1], isA<OpenClawAgentConfig>());
-
-      final agent0 = switcher.agents[0] as OpenClawAgentConfig;
-      final agent1 = switcher.agents[1] as OpenClawAgentConfig;
-
-      expect(agent0.agentId, 'main');
-      expect(agent1.agentId, 'elysse');
-      expect(agent0.instance.id, 'inst-1');
-      expect(agent1.instance.id, 'inst-1');
-    });
-
-    test('OpenClawAgentConfig has correct agentId per agent', () async {
-      const multiAgentSettings = Settings(
-        openclawInstances: [
-          OpenClawInstance(
-            id: 'inst-1',
-            name: 'Multi-Agent',
-            baseUrl: 'http://localhost:3000/v1',
-            sessionId: 'ses-1',
-            agentIds: ['main', 'alex', 'elysse'],
-          ),
-        ],
-      );
-
-      final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(multiAgentSettings),
-        speechService: MockSpeechService(),
-        providerFactory: makeMockProvider,
-      );
-      await switcher.initialize();
-
-      // 3 OpenClaw + 2 direct = 5
-      expect(switcher.agents.length, 5);
-
-      final agent0 = switcher.agents[0] as OpenClawAgentConfig;
-      final agent1 = switcher.agents[1] as OpenClawAgentConfig;
-      final agent2 = switcher.agents[2] as OpenClawAgentConfig;
-
-      expect(agent0.agentId, 'main');
-      expect(agent1.agentId, 'alex');
-      expect(agent2.agentId, 'elysse');
-    });
-
-    test('providerFor initializes with correct agentId in settings', () async {
-      const multiAgentSettings = Settings(
-        openclawInstances: [
-          OpenClawInstance(
-            id: 'inst-1',
-            name: 'Multi-Agent',
-            baseUrl: 'http://localhost:3000/v1',
-            sessionId: 'ses-1',
-            agentIds: ['main', 'elysse'],
-          ),
-        ],
-      );
-
+    test('providerFor initializes with correct selectedAgentId', () async {
       Settings? capturedSettings0;
       Settings? capturedSettings1;
 
       final switcher = AgentSwitcherProvider(
-        settingsService: _FakeSettingsService(multiAgentSettings),
+        settingsService: _FakeSettingsService(twoAgents),
         speechService: MockSpeechService(),
         providerFactory: () {
           final mock = MockConversationProvider();
@@ -318,15 +275,12 @@ void main() {
       );
       await switcher.initialize();
 
-      final agent0 = switcher.agents[0] as OpenClawAgentConfig;
-      final agent1 = switcher.agents[1] as OpenClawAgentConfig;
-
-      switcher.providerFor(agent0);
       switcher.providerFor(agent1);
+      switcher.providerFor(agent2);
 
-      // Verify correct agentId was set for each provider
-      expect(capturedSettings0?.selectedAgentId, 'main');
-      expect(capturedSettings1?.selectedAgentId, 'elysse');
+      // Verify correct selectedAgentId was set for each provider
+      expect(capturedSettings0?.selectedAgentId, agent1.id);
+      expect(capturedSettings1?.selectedAgentId, agent2.id);
     });
   });
 }

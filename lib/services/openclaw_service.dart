@@ -31,15 +31,14 @@ class OpenClawService {
           .map((m) => m['id'] as String? ?? '')
           .where((id) => id.startsWith('openclaw:') || id.startsWith('agent:'))
           .map((id) {
-            // Strip openclaw: or agent: prefix to get just the agent name
-            if (id.startsWith('openclaw:')) {
-              return id.substring('openclaw:'.length);
-            } else if (id.startsWith('agent:')) {
-              return id.substring('agent:'.length);
-            }
-            return id;
-          })
-          .toList();
+        // Strip openclaw: or agent: prefix to get just the agent name
+        if (id.startsWith('openclaw:')) {
+          return id.substring('openclaw:'.length);
+        } else if (id.startsWith('agent:')) {
+          return id.substring('agent:'.length);
+        }
+        return id;
+      }).toList();
 
       return agents.isEmpty ? ['main'] : agents;
     } catch (e, s) {

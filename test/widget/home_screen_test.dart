@@ -17,9 +17,13 @@ import 'home_screen_test.mocks.dart';
 void main() {
   late MockConversationProvider mockProvider;
 
-  const dummyAgent = DirectModelAgentConfig(
-    backend: LLMBackend.claude,
-    modelName: 'claude-opus-4-6',
+  const dummyAgent = AgentConfig(
+    id: 'test-agent-1',
+    name: 'claude-opus-4-6',
+    type: AgentType.claude,
+    apiKey: 'test-key',
+    model: 'claude-opus-4-6',
+    voiceId: 'voice-1',
   );
 
   setUp(() {
