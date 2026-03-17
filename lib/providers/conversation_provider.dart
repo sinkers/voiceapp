@@ -149,9 +149,13 @@ class ConversationProvider extends ChangeNotifier {
     if (_settings.conversationalMode &&
         _state == ConversationState.speaking &&
         text.trim().isNotEmpty) {
-      // Stop TTS and LLM streaming, transition to listening
+      // Stop TTS and LLM streaming, transition to listening.
+      // _setState calls notifyListeners, so we update _partialSttText first
+      // and return early to avoid a redundant notifyListeners call.
       _stopOutputStreams();
+      _partialSttText = text;
       _setState(ConversationState.listening);
+      return;
     }
 
     _partialSttText = text;
