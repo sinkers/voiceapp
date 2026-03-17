@@ -50,9 +50,8 @@ class VoiceApp extends StatelessWidget {
     return ThemeData(
       colorScheme: colorScheme,
       useMaterial3: true,
-      scaffoldBackgroundColor: isDark
-          ? colorScheme.surface
-          : colorScheme.surface,
+      scaffoldBackgroundColor:
+          isDark ? colorScheme.surface : colorScheme.surface,
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         elevation: 0,

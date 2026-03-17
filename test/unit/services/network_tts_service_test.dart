@@ -18,10 +18,10 @@ void main() {
     // Mock the FlutterTts method channel to prevent MissingPluginException
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
-          MethodCall methodCall,
-        ) async {
-          return null;
-        });
+      MethodCall methodCall,
+    ) async {
+      return null;
+    });
   });
 
   tearDown(() {

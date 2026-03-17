@@ -71,9 +71,8 @@ class _MessageBubbleState extends State<MessageBubble>
   }
 
   Widget _buildText(ThemeData theme, bool isUser, bool isStreaming) {
-    final textColor = isUser
-        ? theme.colorScheme.onPrimary
-        : theme.colorScheme.onSurface;
+    final textColor =
+        isUser ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface;
 
     if (!isStreaming) {
       return Text(
