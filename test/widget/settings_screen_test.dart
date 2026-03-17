@@ -414,4 +414,89 @@ void main() {
       expect(find.text('Server 2'), findsOneWidget);
     });
   });
+
+  group('SettingsScreen OpenClaw Agent Discovery', () {
+    testWidgets('shows Test & Discover button in openclaw agent dialog', (
+      tester,
+    ) async {
+      final server = OpenClawServer(
+        id: 'test-id',
+        name: 'Test Server',
+        baseUrl: 'http://localhost:3000/v1',
+      );
+      final voice = VoiceConfig.system();
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(openclawServers: [server], voices: [voice]));
+
+      await pumpSettings(tester);
+
+      // Open Add Agent dialog
+      await tester.tap(find.text('Add Agent'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Select OpenClaw
+      await tester.tap(find.text('OpenClaw'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Should show Test & Discover button
+      expect(find.text('Test & Discover Agents'), findsOneWidget);
+      expect(find.widgetWithText(OutlinedButton, 'Test & Discover Agents'),
+          findsOneWidget);
+    });
+
+    testWidgets('Test & Discover button is disabled when no server selected',
+        (tester) async {
+      final voice = VoiceConfig.system();
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(voices: [voice]));
+
+      await pumpSettings(tester);
+
+      // Open Add Agent dialog
+      await tester.tap(find.text('Add Agent'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Select OpenClaw
+      await tester.tap(find.text('OpenClaw'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Button should be disabled (no server in dropdown)
+      final button = tester.widget<OutlinedButton>(
+          find.widgetWithText(OutlinedButton, 'Test & Discover Agents'));
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('shows agent name TextFormField initially', (tester) async {
+      final server = OpenClawServer(
+        id: 'test-id',
+        name: 'Test Server',
+        baseUrl: 'http://localhost:3000/v1',
+      );
+      final voice = VoiceConfig.system();
+      when(
+        mockProvider.settings,
+      ).thenReturn(Settings(openclawServers: [server], voices: [voice]));
+
+      await pumpSettings(tester);
+
+      // Open Add Agent dialog
+      await tester.tap(find.text('Add Agent'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Select OpenClaw
+      await tester.tap(find.text('OpenClaw'));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Should show TextFormField for agent name before discovery
+      expect(find.widgetWithText(TextFormField, 'Agent Name'), findsOneWidget);
+    });
+  });
 }

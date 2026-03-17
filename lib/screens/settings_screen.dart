@@ -7,6 +7,7 @@ import '../models/elevenlabs_voice.dart';
 import '../models/settings.dart';
 import '../models/voice_config.dart';
 import '../providers/agent_switcher_provider.dart';
+import '../services/openclaw_service.dart';
 
 const _uuid = Uuid();
 
@@ -543,6 +544,13 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   final _formKey = GlobalKey<FormState>();
   OpenClawServer? _newServer;
 
+  // OpenClaw agent discovery state
+  final _openClawService = OpenClawService();
+  List<String>? _discoveredAgents;
+  bool _isDiscovering = false;
+  String? _discoveryError;
+  String? _selectedAgentName;
+
   @override
   void initState() {
     super.initState();
@@ -559,6 +567,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
         widget.agent?.voiceId ?? widget.voices.firstOrNull?.id ?? 'system';
     _selectedServerId = widget.agent?.serverId;
     _servers = widget.servers;
+    _selectedAgentName = widget.agent?.agentName;
   }
 
   String _defaultModel() {
@@ -569,6 +578,35 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
         return 'gpt-4o';
       case AgentType.openclaw:
         return '';
+    }
+  }
+
+  Future<void> _discoverAgents() async {
+    final server =
+        widget.servers.firstWhereOrNull((s) => s.id == _selectedServerId);
+    if (server == null) return;
+    setState(() {
+      _isDiscovering = true;
+      _discoveryError = null;
+    });
+    try {
+      final agents = await _openClawService.fetchAgents(server);
+      setState(() {
+        _discoveredAgents = agents;
+        _isDiscovering = false;
+        // Auto-select if current value is in list, else select first
+        if (_selectedAgentName != null && agents.contains(_selectedAgentName)) {
+          // keep current selection
+        } else {
+          _selectedAgentName = agents.first;
+          _agentNameController.text = agents.first;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isDiscovering = false;
+        _discoveryError = "Could not connect to server. Check URL and token.";
+      });
     }
   }
 
@@ -589,7 +627,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     final apiKey = _apiKeyController.text.trim();
     final model = _modelController.text.trim();
     final baseUrl = _baseUrlController.text.trim();
-    final agentName = _agentNameController.text.trim();
+    final agentName = _selectedAgentName ?? _agentNameController.text.trim();
 
     AgentConfig result;
     switch (widget.agentType) {
@@ -760,23 +798,82 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                         });
                       }
                     } else {
-                      setState(() => _selectedServerId = v);
+                      setState(() {
+                        _selectedServerId = v;
+                        // Reset discovery state when server changes
+                        _discoveredAgents = null;
+                        _discoveryError = null;
+                      });
                     }
                   },
                   validator: (v) => v == null ? 'Server is required' : null,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _agentNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Agent Name',
-                    hintText: 'main',
-                    border: OutlineInputBorder(),
+                // Test & Discover button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _selectedServerId == null || _isDiscovering
+                        ? null
+                        : _discoverAgents,
+                    child: _isDiscovering
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Test & Discover Agents'),
                   ),
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Agent name is required'
-                      : null,
                 ),
+                if (_discoveryError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _discoveryError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                // Agent name input - dropdown if discovered, textfield otherwise
+                if (_discoveredAgents != null)
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedAgentName,
+                    decoration: const InputDecoration(
+                      labelText: 'Agent Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _discoveredAgents!
+                        .map((name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() {
+                          _selectedAgentName = v;
+                          _agentNameController.text = v;
+                        });
+                      }
+                    },
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Agent name is required'
+                        : null,
+                  )
+                else
+                  TextFormField(
+                    controller: _agentNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Agent Name',
+                      hintText: 'main',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Agent name is required'
+                        : null,
+                  ),
               ],
 
               const SizedBox(height: 12),
