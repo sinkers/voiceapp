@@ -82,3 +82,14 @@ Follow the rules in `CLAUDE.md`:
 - No `print()` statements
 - `const` constructors where possible
 - `withValues(alpha: x)` not deprecated `withOpacity(x)`
+
+## Requirements Clarification
+
+Before starting work on any ticket, if there is **any doubt** about how a requirement should be interpreted:
+
+- Flag it to Elysse before writing code — not after
+- Ask one focused question, get an answer, then proceed
+- This is not a blocker; it's a brief check that saves rework
+- It is always better to clarify upfront than to implement the wrong behaviour and come back to it
+
+If the ticket spec is clear and unambiguous, proceed without asking.
