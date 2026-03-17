@@ -381,16 +381,6 @@ void main() {
       expect(provider.pauseDuration, 2.0);
     });
 
-    test('updateConversationalMode persists settings', () async {
-      await provider.initialize();
-
-      await provider.updateConversationalMode(true, 2.5);
-
-      expect(provider.conversationalMode, true);
-      expect(provider.pauseDuration, 2.5);
-      verify(mockSettingsService.save(any)).called(1);
-    });
-
     test('uses configurable pause duration when starting listening', () async {
       when(mockSettingsService.load()).thenAnswer(
         (_) async => const Settings(pauseDuration: 2.0),

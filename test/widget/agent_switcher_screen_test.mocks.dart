@@ -326,23 +326,6 @@ class MockConversationProvider extends _i1.Mock
       ) as _i6.Future<void>);
 
   @override
-  _i6.Future<void> updateConversationalMode(
-    bool? enabled,
-    double? pauseDuration,
-  ) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #updateConversationalMode,
-          [
-            enabled,
-            pauseDuration,
-          ],
-        ),
-        returnValue: _i6.Future<void>.value(),
-        returnValueForMissingStub: _i6.Future<void>.value(),
-      ) as _i6.Future<void>);
-
-  @override
   void dispose() => super.noSuchMethod(
         Invocation.method(
           #dispose,

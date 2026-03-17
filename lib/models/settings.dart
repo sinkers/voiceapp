@@ -5,6 +5,9 @@ import 'package:uuid/uuid.dart';
 
 const _uuid = Uuid();
 
+const bool kDefaultConversationalMode = false;
+const double kDefaultPauseDuration = 1.5;
+
 class OpenClawInstance {
   final String id;
   final String name;
@@ -134,8 +137,8 @@ class Settings {
     this.elevenLabsModelId = 'eleven_turbo_v2_5',
     this.openaiTtsVoice = 'alloy',
     this.openaiTtsModel = 'tts-1',
-    this.conversationalMode = false,
-    this.pauseDuration = 1.5,
+    this.conversationalMode = kDefaultConversationalMode,
+    this.pauseDuration = kDefaultPauseDuration,
   });
 
   String get activeModelName =>

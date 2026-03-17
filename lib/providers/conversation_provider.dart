@@ -129,16 +129,6 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Update conversational mode and persist to settings.
-  Future<void> updateConversationalMode(
-      bool enabled, double pauseDuration) async {
-    final newSettings = _settings.copyWith(
-      conversationalMode: enabled,
-      pauseDuration: pauseDuration,
-    );
-    await updateSettings(newSettings);
-  }
-
   void _startListening() {
     _errorMessage = null;
     _partialSttText = '';

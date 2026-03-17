@@ -85,8 +85,10 @@ class SettingsService {
           prefs.getString(_keyElevenLabsModelId) ?? 'eleven_turbo_v2_5',
       openaiTtsVoice: prefs.getString(_keyOpenaiTtsVoice) ?? 'alloy',
       openaiTtsModel: prefs.getString(_keyOpenaiTtsModel) ?? 'tts-1',
-      conversationalMode: prefs.getBool(_keyConversationalMode) ?? false,
-      pauseDuration: prefs.getDouble(_keyPauseDuration) ?? 1.5,
+      conversationalMode:
+          prefs.getBool(_keyConversationalMode) ?? kDefaultConversationalMode,
+      pauseDuration:
+          prefs.getDouble(_keyPauseDuration) ?? kDefaultPauseDuration,
     );
   }
 
