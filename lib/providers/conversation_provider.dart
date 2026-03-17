@@ -151,9 +151,7 @@ class ConversationProvider extends ChangeNotifier {
         _state == ConversationState.speaking &&
         text.trim().isNotEmpty) {
       // Stop TTS and LLM streaming, transition to listening
-      _llmSubscription?.cancel();
-      _llmSubscription = null;
-      _ttsService.stop();
+      _stopOutputStreams();
       _setState(ConversationState.listening);
     }
 
@@ -335,10 +333,14 @@ class ConversationProvider extends ChangeNotifier {
     }
   }
 
-  void _interrupt() {
+  void _stopOutputStreams() {
     _llmSubscription?.cancel();
     _llmSubscription = null;
     _ttsService.stop();
+  }
+
+  void _interrupt() {
+    _stopOutputStreams();
     _speechService.cancelListening();
     _setState(ConversationState.idle);
   }
