@@ -59,6 +59,8 @@ class ConversationProvider extends ChangeNotifier {
   bool get hasApiKey => _llmService != null;
   bool get conversationalMode => _settings.conversationalMode;
   double get pauseDuration => _settings.pauseDuration;
+  Duration get _pauseDuration =>
+      Duration(milliseconds: (_settings.pauseDuration * 1000).round());
 
   Future<void> initialize() async {
     _settings = await _settingsService.load();
@@ -134,8 +136,7 @@ class ConversationProvider extends ChangeNotifier {
     _partialSttText = '';
     _setState(ConversationState.listening);
     _speechService.startListening(
-      pauseDuration:
-          Duration(milliseconds: (_settings.pauseDuration * 1000).round()),
+      pauseDuration: _pauseDuration,
     );
   }
 
@@ -248,8 +249,7 @@ class ConversationProvider extends ChangeNotifier {
             // Start listening for barge-in in conversational mode
             if (_settings.conversationalMode) {
               _speechService.startListening(
-                pauseDuration: Duration(
-                    milliseconds: (_settings.pauseDuration * 1000).round()),
+                pauseDuration: _pauseDuration,
               );
             }
             firstChunk = false;
