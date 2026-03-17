@@ -245,6 +245,13 @@ class ConversationProvider extends ChangeNotifier {
 
           if (firstChunk) {
             _setState(ConversationState.speaking);
+            // Start listening for barge-in in conversational mode
+            if (_settings.conversationalMode) {
+              _speechService.startListening(
+                pauseDuration: Duration(
+                    milliseconds: (_settings.pauseDuration * 1000).round()),
+              );
+            }
             firstChunk = false;
           } else {
             notifyListeners();
@@ -281,8 +288,8 @@ class ConversationProvider extends ChangeNotifier {
       // In conversational mode, automatically start listening again
       if (_settings.conversationalMode &&
           _state == ConversationState.speaking) {
-        _setState(ConversationState.idle);
-        _startListening();
+        _speechService.cancelListening(); // cancel barge-in listener first
+        _startListening(); // fresh listening session
         return;
       }
     } catch (e) {
