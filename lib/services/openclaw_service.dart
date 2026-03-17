@@ -3,6 +3,11 @@ import '../models/agent_config.dart';
 import 'http_client_factory.dart';
 
 class OpenClawService {
+  /// Fetches available agents from an OpenClaw server.
+  ///
+  /// Returns a list of agent name strings (without the `openclaw:` prefix).
+  /// Throws an [Exception] if the server is unreachable, returns a non-200
+  /// status, or the response cannot be parsed.
   Future<List<String>> fetchAgents(OpenClawServer server) async {
     final client = buildHttpClient(
       allowBadCertificate: server.allowBadCertificate,
@@ -20,7 +25,10 @@ class OpenClawService {
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 5));
 
-      if (response.statusCode != 200) return ['main'];
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Server returned status ${response.statusCode}. Check URL and token.');
+      }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final models =
@@ -31,7 +39,6 @@ class OpenClawService {
           .map((m) => m['id'] as String? ?? '')
           .where((id) => id.startsWith('openclaw:') || id.startsWith('agent:'))
           .map((id) {
-        // Strip openclaw: or agent: prefix to get just the agent name
         if (id.startsWith('openclaw:')) {
           return id.substring('openclaw:'.length);
         } else if (id.startsWith('agent:')) {
@@ -40,11 +47,7 @@ class OpenClawService {
         return id;
       }).toList();
 
-      return agents.isEmpty ? ['main'] : agents;
-    } catch (e, s) {
-      // ignore: avoid_print
-      print('Failed to fetch OpenClaw agents: $e\n$s');
-      return ['main'];
+      return agents;
     } finally {
       client.close();
     }

@@ -7,6 +7,7 @@ import '../models/elevenlabs_voice.dart';
 import '../models/settings.dart';
 import '../models/voice_config.dart';
 import '../providers/agent_switcher_provider.dart';
+import '../services/openclaw_service.dart';
 
 const _uuid = Uuid();
 
@@ -15,6 +16,24 @@ class SettingsScreen extends StatefulWidget {
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
+
+  /// Exposed for testing only. Creates an _AgentFormDialog with optional
+  /// [openClawService] mock.
+  static Widget buildAgentFormDialogForTesting({
+    required AgentType agentType,
+    AgentConfig? agent,
+    required List<VoiceConfig> voices,
+    required List<OpenClawServer> servers,
+    OpenClawService? openClawService,
+  }) {
+    return _AgentFormDialog(
+      agentType: agentType,
+      agent: agent,
+      voices: voices,
+      servers: servers,
+      openClawService: openClawService,
+    );
+  }
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
@@ -518,12 +537,14 @@ class _AgentFormDialog extends StatefulWidget {
   final AgentConfig? agent;
   final List<VoiceConfig> voices;
   final List<OpenClawServer> servers;
+  final OpenClawService? openClawService;
 
   const _AgentFormDialog({
     required this.agentType,
     this.agent,
     required this.voices,
     required this.servers,
+    this.openClawService,
   });
 
   @override
@@ -543,9 +564,17 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   final _formKey = GlobalKey<FormState>();
   OpenClawServer? _newServer;
 
+  // OpenClaw agent discovery state
+  late final OpenClawService _openClawService;
+  List<String>? _discoveredAgents;
+  bool _isDiscovering = false;
+  String? _discoveryError;
+  String? _selectedAgentName;
+
   @override
   void initState() {
     super.initState();
+    _openClawService = widget.openClawService ?? OpenClawService();
     _nameController = TextEditingController(text: widget.agent?.name ?? '');
     _apiKeyController = TextEditingController(text: widget.agent?.apiKey ?? '');
     _modelController =
@@ -559,6 +588,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
         widget.agent?.voiceId ?? widget.voices.firstOrNull?.id ?? 'system';
     _selectedServerId = widget.agent?.serverId;
     _servers = widget.servers;
+    _selectedAgentName = widget.agent?.agentName;
   }
 
   String _defaultModel() {
@@ -570,6 +600,48 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
       case AgentType.openclaw:
         return '';
     }
+  }
+
+  void _resetDiscoveryState() {
+    _discoveredAgents = null;
+    _discoveryError = null;
+    _selectedAgentName = null;
+  }
+
+  Future<void> _discoverAgents() async {
+    final server = _servers.firstWhereOrNull((s) => s.id == _selectedServerId);
+    if (server == null) return;
+    setState(() {
+      _isDiscovering = true;
+      _discoveryError = null;
+    });
+
+    List<String>? agents;
+    String? error;
+    try {
+      final result = await _openClawService.fetchAgents(server);
+      if (result.isEmpty) {
+        error =
+            'No agents found on this server. Check your server configuration.';
+      } else {
+        agents = result;
+      }
+    } catch (e) {
+      error = 'Failed to discover agents: $e';
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isDiscovering = false;
+      _discoveryError = error;
+      _discoveredAgents = agents;
+      if (agents != null &&
+          (_selectedAgentName == null ||
+              !agents.contains(_selectedAgentName))) {
+        _selectedAgentName = agents.first;
+        _agentNameController.text = agents.first;
+      }
+    });
   }
 
   @override
@@ -589,7 +661,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     final apiKey = _apiKeyController.text.trim();
     final model = _modelController.text.trim();
     final baseUrl = _baseUrlController.text.trim();
-    final agentName = _agentNameController.text.trim();
+    final agentName = _selectedAgentName ?? _agentNameController.text.trim();
 
     AgentConfig result;
     switch (widget.agentType) {
@@ -752,31 +824,88 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                         builder: (_) => const _ServerFormDialog(),
                       );
                       if (newServer != null && mounted) {
-                        // Track new server to return to parent and add to local list
                         setState(() {
                           _servers = [..._servers, newServer];
                           _newServer = newServer;
                           _selectedServerId = newServer.id;
+                          _resetDiscoveryState();
                         });
                       }
                     } else {
-                      setState(() => _selectedServerId = v);
+                      setState(() {
+                        _selectedServerId = v;
+                        _resetDiscoveryState();
+                      });
                     }
                   },
                   validator: (v) => v == null ? 'Server is required' : null,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _agentNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Agent Name',
-                    hintText: 'main',
-                    border: OutlineInputBorder(),
+                // Test & Discover button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _selectedServerId == null || _isDiscovering
+                        ? null
+                        : _discoverAgents,
+                    child: _isDiscovering
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Test & Discover Agents'),
                   ),
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Agent name is required'
-                      : null,
                 ),
+                if (_discoveryError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    _discoveryError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                // Agent name input - dropdown if discovered, textfield otherwise
+                if (_discoveredAgents != null)
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedAgentName,
+                    decoration: const InputDecoration(
+                      labelText: 'Agent Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _discoveredAgents!
+                        .map((name) => DropdownMenuItem(
+                              value: name,
+                              child: Text(name),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() {
+                          _selectedAgentName = v;
+                          _agentNameController.text = v;
+                        });
+                      }
+                    },
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Agent name is required'
+                        : null,
+                  )
+                else
+                  TextFormField(
+                    controller: _agentNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Agent Name',
+                      hintText: 'main',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Agent name is required'
+                        : null,
+                  ),
               ],
 
               const SizedBox(height: 12),

@@ -30,8 +30,13 @@ import 'package:voiceapp/services/speech_service.dart' as _i9;
 // ignore_for_file: invalid_use_of_internal_member
 
 class _FakeSettings_0 extends _i1.SmartFake implements _i2.Settings {
-  _FakeSettings_0(Object parent, Invocation parentInvocation)
-      : super(parent, parentInvocation);
+  _FakeSettings_0(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(
+          parent,
+          parentInvocation,
+        );
 }
 
 /// A class which mocks [ConversationProvider].
@@ -67,18 +72,23 @@ class MockConversationProvider extends _i1.Mock
   @override
   _i2.Settings get settings => (super.noSuchMethod(
         Invocation.getter(#settings),
-        returnValue: _FakeSettings_0(this, Invocation.getter(#settings)),
+        returnValue: _FakeSettings_0(
+          this,
+          Invocation.getter(#settings),
+        ),
       ) as _i2.Settings);
 
   @override
-  bool get initialized =>
-      (super.noSuchMethod(Invocation.getter(#initialized), returnValue: false)
-          as bool);
+  bool get initialized => (super.noSuchMethod(
+        Invocation.getter(#initialized),
+        returnValue: false,
+      ) as bool);
 
   @override
-  bool get hasApiKey =>
-      (super.noSuchMethod(Invocation.getter(#hasApiKey), returnValue: false)
-          as bool);
+  bool get hasApiKey => (super.noSuchMethod(
+        Invocation.getter(#hasApiKey),
+        returnValue: false,
+      ) as bool);
 
   @override
   bool get conversationalMode => (super.noSuchMethod(
@@ -87,24 +97,32 @@ class MockConversationProvider extends _i1.Mock
       ) as bool);
 
   @override
-  double get pauseDuration =>
-      (super.noSuchMethod(Invocation.getter(#pauseDuration), returnValue: 0.0)
-          as double);
+  double get pauseDuration => (super.noSuchMethod(
+        Invocation.getter(#pauseDuration),
+        returnValue: 0.0,
+      ) as double);
 
   @override
-  bool get hasListeners =>
-      (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
-          as bool);
+  bool get hasListeners => (super.noSuchMethod(
+        Invocation.getter(#hasListeners),
+        returnValue: false,
+      ) as bool);
 
   @override
   void forceStateForTesting(_i4.ConversationState? state) => super.noSuchMethod(
-        Invocation.method(#forceStateForTesting, [state]),
+        Invocation.method(
+          #forceStateForTesting,
+          [state],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   _i7.Future<void> initialize() => (super.noSuchMethod(
-        Invocation.method(#initialize, []),
+        Invocation.method(
+          #initialize,
+          [],
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
@@ -112,33 +130,48 @@ class MockConversationProvider extends _i1.Mock
   @override
   _i7.Future<void> initializeForAgent(_i2.Settings? agentSettings) =>
       (super.noSuchMethod(
-        Invocation.method(#initializeForAgent, [agentSettings]),
+        Invocation.method(
+          #initializeForAgent,
+          [agentSettings],
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
 
   @override
   void toggleConversation() => super.noSuchMethod(
-        Invocation.method(#toggleConversation, []),
+        Invocation.method(
+          #toggleConversation,
+          [],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   void clearMessages() => super.noSuchMethod(
-        Invocation.method(#clearMessages, []),
+        Invocation.method(
+          #clearMessages,
+          [],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   void clearError() => super.noSuchMethod(
-        Invocation.method(#clearError, []),
+        Invocation.method(
+          #clearError,
+          [],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   _i7.Future<void> updateSettings(_i2.Settings? newSettings) =>
       (super.noSuchMethod(
-        Invocation.method(#updateSettings, [newSettings]),
+        Invocation.method(
+          #updateSettings,
+          [newSettings],
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
@@ -146,32 +179,47 @@ class MockConversationProvider extends _i1.Mock
   @override
   _i7.Future<void> applyAgentSettings(_i2.Settings? agentSettings) =>
       (super.noSuchMethod(
-        Invocation.method(#applyAgentSettings, [agentSettings]),
+        Invocation.method(
+          #applyAgentSettings,
+          [agentSettings],
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
-        Invocation.method(#dispose, []),
+        Invocation.method(
+          #dispose,
+          [],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   void addListener(_i8.VoidCallback? listener) => super.noSuchMethod(
-        Invocation.method(#addListener, [listener]),
+        Invocation.method(
+          #addListener,
+          [listener],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   void removeListener(_i8.VoidCallback? listener) => super.noSuchMethod(
-        Invocation.method(#removeListener, [listener]),
+        Invocation.method(
+          #removeListener,
+          [listener],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   void notifyListeners() => super.noSuchMethod(
-        Invocation.method(#notifyListeners, []),
+        Invocation.method(
+          #notifyListeners,
+          [],
+        ),
         returnValueForMissingStub: null,
       );
 }
@@ -185,14 +233,16 @@ class MockSpeechService extends _i1.Mock implements _i9.SpeechService {
   }
 
   @override
-  bool get isAvailable =>
-      (super.noSuchMethod(Invocation.getter(#isAvailable), returnValue: false)
-          as bool);
+  bool get isAvailable => (super.noSuchMethod(
+        Invocation.getter(#isAvailable),
+        returnValue: false,
+      ) as bool);
 
   @override
-  bool get isListening =>
-      (super.noSuchMethod(Invocation.getter(#isListening), returnValue: false)
-          as bool);
+  bool get isListening => (super.noSuchMethod(
+        Invocation.getter(#isListening),
+        returnValue: false,
+      ) as bool);
 
   @override
   bool get hasReportedStopForTesting => (super.noSuchMethod(
@@ -202,63 +252,88 @@ class MockSpeechService extends _i1.Mock implements _i9.SpeechService {
 
   @override
   set onFinalResult(dynamic Function(String)? value) => super.noSuchMethod(
-        Invocation.setter(#onFinalResult, value),
+        Invocation.setter(
+          #onFinalResult,
+          value,
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   set onPartialResult(dynamic Function(String)? value) => super.noSuchMethod(
-        Invocation.setter(#onPartialResult, value),
+        Invocation.setter(
+          #onPartialResult,
+          value,
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   set onStopped(dynamic Function()? value) => super.noSuchMethod(
-        Invocation.setter(#onStopped, value),
+        Invocation.setter(
+          #onStopped,
+          value,
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   void triggerStatusForTesting(String? status) => super.noSuchMethod(
-        Invocation.method(#triggerStatusForTesting, [status]),
+        Invocation.method(
+          #triggerStatusForTesting,
+          [status],
+        ),
         returnValueForMissingStub: null,
       );
 
   @override
   _i7.Future<bool> initialize() => (super.noSuchMethod(
-        Invocation.method(#initialize, []),
+        Invocation.method(
+          #initialize,
+          [],
+        ),
         returnValue: _i7.Future<bool>.value(false),
       ) as _i7.Future<bool>);
 
   @override
-  _i7.Future<void> startListening({
-    Duration? pauseDuration = const Duration(seconds: 4),
-  }) =>
+  _i7.Future<void> startListening(
+          {Duration? pauseDuration = const Duration(seconds: 4)}) =>
       (super.noSuchMethod(
-        Invocation.method(#startListening, [], {
-          #pauseDuration: pauseDuration,
-        }),
+        Invocation.method(
+          #startListening,
+          [],
+          {#pauseDuration: pauseDuration},
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
 
   @override
   _i7.Future<void> stopListening() => (super.noSuchMethod(
-        Invocation.method(#stopListening, []),
+        Invocation.method(
+          #stopListening,
+          [],
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
 
   @override
   _i7.Future<void> cancelListening() => (super.noSuchMethod(
-        Invocation.method(#cancelListening, []),
+        Invocation.method(
+          #cancelListening,
+          [],
+        ),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);
 
   @override
   void dispose() => super.noSuchMethod(
-        Invocation.method(#dispose, []),
+        Invocation.method(
+          #dispose,
+          [],
+        ),
         returnValueForMissingStub: null,
       );
 }
