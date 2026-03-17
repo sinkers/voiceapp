@@ -468,8 +468,7 @@ class ConversationProvider extends ChangeNotifier {
             baseUrl: server.baseUrl,
             model: modelId,
             customHeaders: {
-              'x-openclaw-session-key':
-                  const Uuid().v4(), // Generate session ID
+              'x-openclaw-session-key': server.sessionId,
             },
             allowBadCertificate: server.allowBadCertificate,
           );

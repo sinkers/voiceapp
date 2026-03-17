@@ -83,20 +83,20 @@ void main() {
     });
 
     test('saves and loads OpenClaw servers', () async {
-      const server1 = OpenClawServer(
+      final server1 = OpenClawServer(
         id: 'server-1',
         name: 'Test Server 1',
         baseUrl: 'http://localhost:3000/v1',
         token: 'test-token-1',
       );
-      const server2 = OpenClawServer(
+      final server2 = OpenClawServer(
         id: 'server-2',
         name: 'Test Server 2',
         baseUrl: 'http://10.0.0.1:8000/v1',
         token: 'test-token-2',
         allowBadCertificate: true,
       );
-      const settings = Settings(openclawServers: [server1, server2]);
+      final settings = Settings(openclawServers: [server1, server2]);
 
       await service.save(settings);
       final loaded = await service.load();
@@ -164,7 +164,7 @@ void main() {
         voiceId: 'voice-1',
       );
       final voice = VoiceConfig.system(rate: 0.75, pitch: 1.2);
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'server-1',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
@@ -173,7 +173,7 @@ void main() {
       final original = Settings(
         agents: [agent],
         voices: [voice],
-        openclawServers: const [server],
+        openclawServers: [server],
         selectedAgentId: agent.id,
         systemPrompt: 'Custom prompt',
         conversationalMode: true,
@@ -298,13 +298,13 @@ void main() {
     test(
       'OpenClaw server tokens are NOT stored in SharedPreferences',
       () async {
-        const server = OpenClawServer(
+        final server = OpenClawServer(
           id: 'test-id',
           name: 'Test Server',
           baseUrl: 'http://localhost:3000/v1',
           token: 'secret-bearer-token',
         );
-        const settings = Settings(openclawServers: [server]);
+        final settings = Settings(openclawServers: [server]);
 
         await service.save(settings);
         final prefs = await SharedPreferences.getInstance();
@@ -317,13 +317,13 @@ void main() {
     );
 
     test('OpenClaw server tokens are stored in secure storage', () async {
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'test-id',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
         token: 'secret-bearer-token',
       );
-      const settings = Settings(openclawServers: [server]);
+      final settings = Settings(openclawServers: [server]);
 
       await service.save(settings);
       final loaded = await service.load();
@@ -334,19 +334,19 @@ void main() {
     });
 
     test('multiple OpenClaw server tokens are stored securely', () async {
-      const server1 = OpenClawServer(
+      final server1 = OpenClawServer(
         id: 'id-1',
         name: 'Server 1',
         baseUrl: 'http://localhost:3000/v1',
         token: 'token-1',
       );
-      const server2 = OpenClawServer(
+      final server2 = OpenClawServer(
         id: 'id-2',
         name: 'Server 2',
         baseUrl: 'http://10.0.0.1:8000/v1',
         token: 'token-2',
       );
-      const settings = Settings(openclawServers: [server1, server2]);
+      final settings = Settings(openclawServers: [server1, server2]);
 
       await service.save(settings);
       final loaded = await service.load();
@@ -408,13 +408,13 @@ void main() {
 
     test('deleting servers removes their tokens from secure storage', () async {
       // First save with servers that have tokens
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'test-id',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
         token: 'test-token',
       );
-      const settings1 = Settings(openclawServers: [server]);
+      final settings1 = Settings(openclawServers: [server]);
       await service.save(settings1);
       var loaded = await service.load();
       expect(loaded.openclawServers.length, 1);
@@ -504,13 +504,13 @@ void main() {
 
         // Manually store configs as if they came from default_configs.json
         final prefs = await SharedPreferences.getInstance();
-        const server1 = OpenClawServer(
+        final server1 = OpenClawServer(
           id: 'test-server-1',
           name: 'Test Server 1',
           baseUrl: 'http://localhost:3000/v1',
           token: 'test-token-1',
         );
-        const server2 = OpenClawServer(
+        final server2 = OpenClawServer(
           id: 'test-server-2',
           name: 'Test Server 2',
           baseUrl: 'http://10.0.0.1:8000/v1',

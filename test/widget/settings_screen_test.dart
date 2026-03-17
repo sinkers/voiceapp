@@ -78,14 +78,14 @@ void main() {
 
     testWidgets('shows OpenClaw Servers section when servers exist',
         (tester) async {
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'test-id',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
       );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawServers: [server]));
+      ).thenReturn(Settings(openclawServers: [server]));
 
       await pumpSettings(tester);
 
@@ -168,14 +168,14 @@ void main() {
     });
 
     testWidgets('displays configured OpenClaw servers', (tester) async {
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'test-id',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
       );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawServers: [server]));
+      ).thenReturn(Settings(openclawServers: [server]));
 
       await pumpSettings(tester);
 
@@ -220,14 +220,14 @@ void main() {
     });
 
     testWidgets('shows server action buttons', (tester) async {
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'test-id',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
       );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawServers: [server]));
+      ).thenReturn(Settings(openclawServers: [server]));
 
       await pumpSettings(tester);
 
@@ -394,19 +394,19 @@ void main() {
 
   group('SettingsScreen Server Management', () {
     testWidgets('displays multiple servers', (tester) async {
-      const server1 = OpenClawServer(
+      final server1 = OpenClawServer(
         id: 'server-1',
         name: 'Server 1',
         baseUrl: 'http://localhost:3000/v1',
       );
-      const server2 = OpenClawServer(
+      final server2 = OpenClawServer(
         id: 'server-2',
         name: 'Server 2',
         baseUrl: 'http://10.0.0.1:8000/v1',
       );
       when(
         mockProvider.settings,
-      ).thenReturn(const Settings(openclawServers: [server1, server2]));
+      ).thenReturn(Settings(openclawServers: [server1, server2]));
 
       await pumpSettings(tester);
 

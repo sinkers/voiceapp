@@ -66,7 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (agentType == null || !mounted) return;
 
-    final agent = await showDialog<AgentConfig>(
+    final result = await showDialog<_AgentFormResult>(
       context: context,
       builder: (_) => _AgentFormDialog(
         agentType: agentType,
@@ -75,15 +75,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
-    if (agent != null) {
+    if (result != null) {
       setState(() {
-        _draft = _draft.copyWith(agents: [..._draft.agents, agent]);
+        // Add new server if created
+        if (result.newServer != null) {
+          _draft = _draft.copyWith(
+            openclawServers: [..._draft.openclawServers, result.newServer!],
+          );
+        }
+        // Add agent
+        _draft = _draft.copyWith(agents: [..._draft.agents, result.agent]);
       });
     }
   }
 
   Future<void> _editAgent(AgentConfig agent) async {
-    final result = await showDialog<AgentConfig>(
+    final result = await showDialog<_AgentFormResult>(
       context: context,
       builder: (_) => _AgentFormDialog(
         agentType: agent.type,
@@ -95,8 +102,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (result != null) {
       setState(() {
-        final updatedAgents =
-            _draft.agents.map((a) => a.id == result.id ? result : a).toList();
+        // Add new server if created
+        if (result.newServer != null) {
+          _draft = _draft.copyWith(
+            openclawServers: [..._draft.openclawServers, result.newServer!],
+          );
+        }
+        // Update agent
+        final updatedAgents = _draft.agents
+            .map((a) => a.id == result.agent.id ? result.agent : a)
+            .toList();
         _draft = _draft.copyWith(agents: updatedAgents);
       });
     }
@@ -421,6 +436,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
+// ============ Helper Classes ============
+
+class _AgentFormResult {
+  final AgentConfig agent;
+  final OpenClawServer? newServer;
+
+  const _AgentFormResult({
+    required this.agent,
+    this.newServer,
+  });
+}
+
 // ============ Dialogs ============
 
 class _AgentTypePickerDialog extends StatelessWidget {
@@ -512,6 +539,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   late String? _selectedServerId;
   bool _obscureApiKey = true;
   final _formKey = GlobalKey<FormState>();
+  OpenClawServer? _newServer;
 
   @override
   void initState() {
@@ -597,7 +625,10 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
       result = result.copyWith(id: widget.agent!.id);
     }
 
-    Navigator.pop(context, result);
+    Navigator.pop(
+      context,
+      _AgentFormResult(agent: result, newServer: _newServer),
+    );
   }
 
   @override
@@ -724,8 +755,11 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                         builder: (_) => const _ServerFormDialog(),
                       );
                       if (newServer != null && mounted) {
-                        // Add server to parent's draft (tricky - need to notify parent)
-                        setState(() => _selectedServerId = newServer.id);
+                        // Track new server to return to parent
+                        setState(() {
+                          _newServer = newServer;
+                          _selectedServerId = newServer.id;
+                        });
                       }
                     } else {
                       setState(() => _selectedServerId = v);

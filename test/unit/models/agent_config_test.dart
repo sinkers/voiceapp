@@ -186,7 +186,7 @@ void main() {
 
   group('OpenClawServer', () {
     test('creates server with required fields', () {
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'server-1',
         name: 'Test Server',
         baseUrl: 'http://localhost:3000/v1',
@@ -197,14 +197,44 @@ void main() {
       expect(server.baseUrl, 'http://localhost:3000/v1');
       expect(server.token, isNull);
       expect(server.allowBadCertificate, false);
+      expect(server.sessionId, isNotEmpty); // Generated automatically
     });
 
-    test('toJson excludes token', () {
-      const server = OpenClawServer(
+    test('generates unique sessionId when not provided', () {
+      final server1 = OpenClawServer(
+        id: 'server-1',
+        name: 'Server 1',
+        baseUrl: 'http://localhost:3000/v1',
+      );
+      final server2 = OpenClawServer(
+        id: 'server-2',
+        name: 'Server 2',
+        baseUrl: 'http://localhost:3000/v1',
+      );
+
+      expect(server1.sessionId, isNotEmpty);
+      expect(server2.sessionId, isNotEmpty);
+      expect(server1.sessionId, isNot(equals(server2.sessionId)));
+    });
+
+    test('preserves provided sessionId', () {
+      final server = OpenClawServer(
+        id: 'server-1',
+        name: 'Test Server',
+        baseUrl: 'http://localhost:3000/v1',
+        sessionId: 'my-custom-session-id',
+      );
+
+      expect(server.sessionId, 'my-custom-session-id');
+    });
+
+    test('toJson excludes token but includes sessionId', () {
+      final server = OpenClawServer(
         id: 'server-1',
         name: 'Test',
         baseUrl: 'http://localhost/v1',
         token: 'secret-token',
+        sessionId: 'test-session-id',
       );
 
       final json = server.toJson();
@@ -214,14 +244,16 @@ void main() {
       expect(json['baseUrl'], 'http://localhost/v1');
       expect(json.containsKey('token'), isFalse);
       expect(json['allowBadCertificate'], false);
+      expect(json['sessionId'], 'test-session-id');
     });
 
     test('fromJson/toJson round-trip', () {
-      const original = OpenClawServer(
+      final original = OpenClawServer(
         id: 'server-1',
         name: 'Test Server',
         baseUrl: 'http://localhost/v1',
         allowBadCertificate: true,
+        sessionId: 'test-session-id',
       );
 
       final json = original.toJson();
@@ -231,14 +263,16 @@ void main() {
       expect(restored.name, original.name);
       expect(restored.baseUrl, original.baseUrl);
       expect(restored.allowBadCertificate, original.allowBadCertificate);
+      expect(restored.sessionId, original.sessionId);
     });
 
     test('copyWith updates fields', () {
-      const original = OpenClawServer(
+      final original = OpenClawServer(
         id: 'server-1',
         name: 'Original',
         baseUrl: 'http://old/v1',
         token: 'token-1',
+        sessionId: 'original-session-id',
       );
 
       final updated = original.copyWith(
@@ -250,10 +284,25 @@ void main() {
       expect(updated.baseUrl, 'http://new/v1');
       expect(updated.id, original.id);
       expect(updated.token, original.token);
+      expect(updated.sessionId, original.sessionId); // Preserved
+    });
+
+    test('copyWith can update sessionId', () {
+      final original = OpenClawServer(
+        id: 'server-1',
+        name: 'Server',
+        baseUrl: 'http://localhost/v1',
+        sessionId: 'old-session-id',
+      );
+
+      final updated = original.copyWith(sessionId: 'new-session-id');
+
+      expect(updated.sessionId, 'new-session-id');
+      expect(updated.name, original.name);
     });
 
     test('copyWith can clear token', () {
-      const original = OpenClawServer(
+      final original = OpenClawServer(
         id: 'server-1',
         name: 'Server',
         baseUrl: 'http://localhost/v1',
@@ -264,6 +313,26 @@ void main() {
 
       expect(updated.token, isNull);
       expect(updated.name, original.name);
+    });
+  });
+
+  group('AgentConfig.fromJson error handling', () {
+    test('throws FormatException for unknown agent type', () {
+      final json = {
+        'id': 'agent-1',
+        'name': 'Test Agent',
+        'type': 'unknown_type',
+        'voiceId': 'voice-1',
+      };
+
+      expect(
+        () => AgentConfig.fromJson(json),
+        throwsA(isA<FormatException>().having(
+          (e) => e.message,
+          'message',
+          contains('Unknown AgentType: unknown_type'),
+        )),
+      );
     });
   });
 }

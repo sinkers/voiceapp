@@ -154,30 +154,30 @@ void main() {
     });
 
     test('getServerById returns correct server', () {
-      const server1 = OpenClawServer(
+      final server1 = OpenClawServer(
         id: 'server-1',
         name: 'Server 1',
         baseUrl: 'http://localhost:3000/v1',
       );
-      const server2 = OpenClawServer(
+      final server2 = OpenClawServer(
         id: 'server-2',
         name: 'Server 2',
         baseUrl: 'http://localhost:4000/v1',
       );
 
-      const settings = Settings(openclawServers: [server1, server2]);
+      final settings = Settings(openclawServers: [server1, server2]);
 
       expect(settings.getServerById('server-2'), server2);
       expect(settings.getServerById('server-2')?.name, 'Server 2');
     });
 
     test('getServerById returns null for non-existent ID', () {
-      const server = OpenClawServer(
+      final server = OpenClawServer(
         id: 'server-1',
         name: 'Server 1',
         baseUrl: 'http://localhost:3000/v1',
       );
-      const settings = Settings(openclawServers: [server]);
+      final settings = Settings(openclawServers: [server]);
 
       expect(settings.getServerById('non-existent-id'), isNull);
     });

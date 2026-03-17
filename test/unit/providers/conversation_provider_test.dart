@@ -308,7 +308,7 @@ void main() {
   group('ConversationProvider OpenClaw Agent', () {
     test('initializeForAgent with OpenClaw agent sets up service', () async {
       final openclawSettings = Settings(
-        openclawServers: const [
+        openclawServers: [
           OpenClawServer(
             id: 'server-1',
             name: 'Test Server',

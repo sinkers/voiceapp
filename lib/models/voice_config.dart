@@ -86,7 +86,8 @@ class VoiceConfig {
     final providerName = json['provider'] as String;
     final provider = VoiceProvider.values.firstWhere(
       (p) => p.name == providerName,
-      orElse: () => VoiceProvider.onDevice,
+      orElse: () =>
+          throw FormatException('Unknown VoiceProvider: $providerName'),
     );
 
     return VoiceConfig(

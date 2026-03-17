@@ -10,14 +10,16 @@ class OpenClawServer {
   final String baseUrl;
   final String? token;
   final bool allowBadCertificate;
+  final String sessionId;
 
-  const OpenClawServer({
+  OpenClawServer({
     required this.id,
     required this.name,
     required this.baseUrl,
     this.token,
     this.allowBadCertificate = false,
-  });
+    String? sessionId,
+  }) : sessionId = sessionId ?? _uuid.v4();
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -25,6 +27,7 @@ class OpenClawServer {
         'baseUrl': baseUrl,
         // token excluded - stored in secure storage
         'allowBadCertificate': allowBadCertificate,
+        'sessionId': sessionId,
       };
 
   factory OpenClawServer.fromJson(Map<String, dynamic> json) => OpenClawServer(
@@ -33,6 +36,7 @@ class OpenClawServer {
         baseUrl: json['baseUrl'] as String,
         token: json['token'] as String?, // may be set from secure storage
         allowBadCertificate: (json['allowBadCertificate'] as bool?) ?? false,
+        sessionId: json['sessionId'] as String?,
       );
 
   OpenClawServer copyWith({
@@ -42,6 +46,7 @@ class OpenClawServer {
     String? token,
     bool? allowBadCertificate,
     bool clearToken = false,
+    String? sessionId,
   }) =>
       OpenClawServer(
         id: id ?? this.id,
@@ -49,6 +54,7 @@ class OpenClawServer {
         baseUrl: baseUrl ?? this.baseUrl,
         token: clearToken ? null : (token ?? this.token),
         allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
+        sessionId: sessionId ?? this.sessionId,
       );
 }
 
@@ -154,7 +160,7 @@ class AgentConfig {
     final typeName = json['type'] as String;
     final type = AgentType.values.firstWhere(
       (t) => t.name == typeName,
-      orElse: () => AgentType.claude,
+      orElse: () => throw FormatException('Unknown AgentType: $typeName'),
     );
 
     return AgentConfig(
