@@ -602,6 +602,12 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     }
   }
 
+  void _resetDiscoveryState() {
+    _discoveredAgents = null;
+    _discoveryError = null;
+    _selectedAgentName = null;
+  }
+
   Future<void> _discoverAgents() async {
     final server =
         widget.servers.firstWhereOrNull((s) => s.id == _selectedServerId);
@@ -624,10 +630,9 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
       setState(() {
         _discoveredAgents = agents;
         _isDiscovering = false;
-        // Auto-select if current value is in list, else select first
-        if (_selectedAgentName != null && agents.contains(_selectedAgentName)) {
-          // keep current selection
-        } else {
+        // Auto-select current value if in list, else select first
+        if (_selectedAgentName == null ||
+            !agents.contains(_selectedAgentName)) {
           _selectedAgentName = agents.first;
           _agentNameController.text = agents.first;
         }
@@ -821,24 +826,17 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                         builder: (_) => const _ServerFormDialog(),
                       );
                       if (newServer != null && mounted) {
-                        // Track new server to return to parent and add to local list
                         setState(() {
                           _servers = [..._servers, newServer];
                           _newServer = newServer;
                           _selectedServerId = newServer.id;
-                          // Reset discovery state when server changes
-                          _discoveredAgents = null;
-                          _discoveryError = null;
-                          _selectedAgentName = null;
+                          _resetDiscoveryState();
                         });
                       }
                     } else {
                       setState(() {
                         _selectedServerId = v;
-                        // Reset discovery state when server changes
-                        _discoveredAgents = null;
-                        _discoveryError = null;
-                        _selectedAgentName = null;
+                        _resetDiscoveryState();
                       });
                     }
                   },
