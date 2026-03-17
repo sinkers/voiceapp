@@ -49,9 +49,9 @@ class SettingsService {
     final instancesJson = prefs.getString(_keyOpenclawInstances);
     final openclawInstancesWithoutTokens = instancesJson != null
         ? (jsonDecode(instancesJson) as List)
-            .whereType<Map<String, dynamic>>()
-            .map(OpenClawInstance.fromJson)
-            .toList()
+              .whereType<Map<String, dynamic>>()
+              .map(OpenClawInstance.fromJson)
+              .toList()
         : <OpenClawInstance>[];
 
     // Load tokens from secure storage for each instance (parallel reads)
@@ -59,7 +59,7 @@ class SettingsService {
       openclawInstancesWithoutTokens.map((instance) async {
         final token =
             await _secureStorage.read(key: _openClawTokenKey(instance.id)) ??
-                '';
+            '';
         return instance.copyWith(token: token);
       }),
     );
@@ -75,7 +75,8 @@ class SettingsService {
       claudeModelName:
           prefs.getString(_keyClaudeModelName) ?? 'claude-opus-4-6',
       openaiModelName: prefs.getString(_keyOpenaiModelName) ?? 'gpt-4o',
-      systemPrompt: prefs.getString(_keySystemPrompt) ??
+      systemPrompt:
+          prefs.getString(_keySystemPrompt) ??
           'You are a helpful voice assistant. Keep your responses concise and conversational, '
               'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
               'Speak naturally as if in a conversation.',
@@ -199,8 +200,9 @@ class SettingsService {
 
     // Try to load default configs from asset
     try {
-      final jsonString =
-          await rootBundle.loadString('assets/default_configs.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/default_configs.json',
+      );
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
 
       final openclawInstancesJson = json['openclaw_instances'] as List?;
@@ -225,10 +227,12 @@ class SettingsService {
       await Future.wait(
         instances
             .where((i) => i.token.isNotEmpty)
-            .map((i) => _secureStorage.write(
-                  key: _openClawTokenKey(i.id),
-                  value: i.token,
-                )),
+            .map(
+              (i) => _secureStorage.write(
+                key: _openClawTokenKey(i.id),
+                value: i.token,
+              ),
+            ),
       );
 
       // Load ElevenLabs API key

@@ -29,8 +29,9 @@ class ClaudeService implements LLMService {
       MessageCreateRequest(
         model: model,
         maxTokens: 4096,
-        system:
-            systemPrompt.isNotEmpty ? SystemPrompt.text(systemPrompt) : null,
+        system: systemPrompt.isNotEmpty
+            ? SystemPrompt.text(systemPrompt)
+            : null,
         messages: messages,
       ),
     );

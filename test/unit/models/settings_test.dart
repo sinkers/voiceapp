@@ -100,10 +100,7 @@ void main() {
     });
 
     test('copyWith updates conversational mode settings', () {
-      const original = Settings(
-        conversationalMode: false,
-        pauseDuration: 1.5,
-      );
+      const original = Settings(conversationalMode: false, pauseDuration: 1.5);
 
       final updated = original.copyWith(
         conversationalMode: true,

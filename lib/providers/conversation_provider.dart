@@ -24,6 +24,7 @@ class ConversationProvider extends ChangeNotifier {
   TtsService _ttsService;
   Settings _settings = const Settings();
   StreamSubscription<String>? _llmSubscription;
+  Completer<void>? _llmCompleter;
 
   ConversationState _state = ConversationState.idle;
   List<Message> _messages = [];
@@ -37,9 +38,9 @@ class ConversationProvider extends ChangeNotifier {
     required SpeechService speechService,
     required SettingsService settingsService,
     TtsService? ttsService,
-  })  : _speechService = speechService,
-        _settingsService = settingsService,
-        _ttsService = ttsService ?? OnDeviceTtsService() {
+  }) : _speechService = speechService,
+       _settingsService = settingsService,
+       _ttsService = ttsService ?? OnDeviceTtsService() {
     _speechService.onFinalResult = _onSpeechFinal;
     _speechService.onPartialResult = _onSpeechPartial;
     _speechService.onStopped = _onSpeechStopped;
@@ -135,9 +136,7 @@ class ConversationProvider extends ChangeNotifier {
     _errorMessage = null;
     _partialSttText = '';
     _setState(ConversationState.listening);
-    _speechService.startListening(
-      pauseDuration: _pauseDuration,
-    );
+    _speechService.startListening(pauseDuration: _pauseDuration);
   }
 
   void _stopListeningAndProcess() {
@@ -225,8 +224,9 @@ class ConversationProvider extends ChangeNotifier {
       final historyForLLM = _messages.sublist(0, _messages.length - 1);
       // When routing through an OpenClaw agent, suppress the app system prompt
       // so OpenClaw applies the agent's own persona (SOUL.md, IDENTITY.md, etc.)
-      final effectiveSystemPrompt =
-          _settings.selectedInstance != null ? '' : _settings.systemPrompt;
+      final effectiveSystemPrompt = _settings.selectedInstance != null
+          ? ''
+          : _settings.systemPrompt;
       final stream = _llmService!.streamResponse(
         historyForLLM,
         effectiveSystemPrompt,
@@ -234,6 +234,7 @@ class ConversationProvider extends ChangeNotifier {
 
       bool firstChunk = true;
       final completer = Completer<void>();
+      _llmCompleter = completer;
       _llmSubscription = stream.listen(
         (delta) {
           _streamingText += delta;
@@ -246,9 +247,7 @@ class ConversationProvider extends ChangeNotifier {
             _setState(ConversationState.speaking);
             // Start listening for barge-in in conversational mode
             if (_settings.conversationalMode) {
-              _speechService.startListening(
-                pauseDuration: _pauseDuration,
-              );
+              _speechService.startListening(pauseDuration: _pauseDuration);
             }
             firstChunk = false;
           } else {
@@ -270,15 +269,23 @@ class ConversationProvider extends ChangeNotifier {
           _updateLastMessage(_streamingText, isComplete: true);
           notifyListeners();
 
-          completer.complete();
+          if (!completer.isCompleted) completer.complete();
         },
         onError: (e) {
-          completer.completeError(e);
+          if (!completer.isCompleted) completer.completeError(e);
         },
         cancelOnError: true,
       );
 
       await completer.future;
+      _llmCompleter = null;
+
+      // If barge-in or interrupt stopped us while we were streaming, bail out.
+      // _stopOutputStreams() already cancelled the subscription and stopped TTS;
+      // the new turn (or idle state) will be managed by the caller.
+      if (_state != ConversationState.speaking) {
+        return;
+      }
 
       // Wait for TTS to finish
       await _ttsService.waitUntilDone();
@@ -291,6 +298,7 @@ class ConversationProvider extends ChangeNotifier {
         return;
       }
     } catch (e) {
+      _llmCompleter = null;
       final errMsg = _friendlyError(e);
       _errorMessage = errMsg;
       if (_messages.isNotEmpty &&
@@ -337,6 +345,10 @@ class ConversationProvider extends ChangeNotifier {
     _llmSubscription?.cancel();
     _llmSubscription = null;
     _ttsService.stop();
+    // Unblock any _processWithLLM suspended at await completer.future so it
+    // can exit cleanly instead of leaking the suspended async frame.
+    _llmCompleter?.complete();
+    _llmCompleter = null;
   }
 
   void _interrupt() {
@@ -372,7 +384,7 @@ class ConversationProvider extends ChangeNotifier {
       case TtsProvider.elevenlabs:
         final String voiceId =
             _settings.selectedInstance?.elevenLabsVoice.voiceId ??
-                _settings.elevenLabsVoiceId;
+            _settings.elevenLabsVoiceId;
         final svc = ElevenLabsTtsService(
           apiKey: _settings.elevenLabsApiKey ?? '',
           voiceId: voiceId,

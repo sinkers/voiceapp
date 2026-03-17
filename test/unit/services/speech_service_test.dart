@@ -32,21 +32,22 @@ void main() {
     });
 
     test(
-        'onStopped fires only once when both notListening and done are received',
-        () async {
-      await service.initialize();
+      'onStopped fires only once when both notListening and done are received',
+      () async {
+        await service.initialize();
 
-      int callCount = 0;
-      service.onStopped = () => callCount++;
+        int callCount = 0;
+        service.onStopped = () => callCount++;
 
-      await service.startListening();
+        await service.startListening();
 
-      // Simulate speech_to_text firing both status strings for the same session
-      service.triggerStatusForTesting('notListening');
-      service.triggerStatusForTesting('done');
+        // Simulate speech_to_text firing both status strings for the same session
+        service.triggerStatusForTesting('notListening');
+        service.triggerStatusForTesting('done');
 
-      expect(callCount, equals(1));
-    });
+        expect(callCount, equals(1));
+      },
+    );
 
     test('_hasReportedStop is reset when startListening is called', () async {
       await service.initialize();

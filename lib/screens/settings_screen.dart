@@ -153,8 +153,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _deleteInstance(OpenClawInstance instance) {
     final wasSelected = _draft.selectedInstanceId == instance.id;
     setState(() {
-      final updated =
-          _draft.openclawInstances.where((i) => i.id != instance.id).toList();
+      final updated = _draft.openclawInstances
+          .where((i) => i.id != instance.id)
+          .toList();
       _draft = _draft.copyWith(
         openclawInstances: updated,
         clearSelectedInstanceId: wasSelected,
@@ -328,8 +329,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         'For vLLM: http://localhost:8000/v1\n'
                         'For OpenClaw: http://localhost:3000/v1',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -359,8 +361,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       'No instances configured',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ),
@@ -374,8 +377,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           'Session: ${instance.sessionId.length > 8 ? instance.sessionId.substring(0, 8) : instance.sessionId}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
                       ],
@@ -544,16 +548,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             // Persist added agent into the selected instance's agentIds
                             final selId = _draft.selectedInstanceId;
                             if (selId != null) {
-                              final updatedInstances =
-                                  _draft.openclawInstances.map((i) {
-                                if (i.id == selId &&
-                                    !i.agentIds.contains(agentId)) {
-                                  return i.copyWith(
-                                    agentIds: [...i.agentIds, agentId],
-                                  );
-                                }
-                                return i;
-                              }).toList();
+                              final updatedInstances = _draft.openclawInstances
+                                  .map((i) {
+                                    if (i.id == selId &&
+                                        !i.agentIds.contains(agentId)) {
+                                      return i.copyWith(
+                                        agentIds: [...i.agentIds, agentId],
+                                      );
+                                    }
+                                    return i;
+                                  })
+                                  .toList();
                               _draft = _draft.copyWith(
                                 openclawInstances: updatedInstances,
                               );
@@ -670,8 +675,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Text(
                         'Use the buttons above or enter a custom voice ID',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                       ),
                     ),
@@ -685,8 +691,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'Note: Per-agent voices can also be configured in OpenClaw instances above',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -696,8 +703,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'Uses your OpenAI API key above',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -828,9 +836,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(fontSize: 12),
                     ),
                     value: _draft.conversationalMode,
-                    onChanged: (v) => setState(() => _draft = _draft.copyWith(
-                          conversationalMode: v,
-                        )),
+                    onChanged: (v) => setState(
+                      () => _draft = _draft.copyWith(conversationalMode: v),
+                    ),
                   ),
                   if (_draft.conversationalMode) ...[
                     const SizedBox(height: 12),
@@ -852,17 +860,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       min: 0.5,
                       max: 3.0,
                       divisions: 25,
-                      onChanged: (v) => setState(() => _draft = _draft.copyWith(
-                            pauseDuration: v,
-                          )),
+                      onChanged: (v) => setState(
+                        () => _draft = _draft.copyWith(pauseDuration: v),
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         'Silence duration before ending your turn',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                     ),
@@ -1050,9 +1059,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

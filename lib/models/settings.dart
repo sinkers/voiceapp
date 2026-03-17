@@ -33,16 +33,16 @@ class OpenClawInstance {
 
   // Token is stored in secure storage, not in JSON
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'baseUrl': baseUrl,
-        // token excluded - stored in flutter_secure_storage
-        'sessionId': sessionId,
-        'elevenLabsVoiceId': elevenLabsVoice.voiceId,
-        'elevenLabsSpeed': elevenLabsSpeed,
-        'agentIds': agentIds,
-        'allowBadCertificate': allowBadCertificate,
-      };
+    'id': id,
+    'name': name,
+    'baseUrl': baseUrl,
+    // token excluded - stored in flutter_secure_storage
+    'sessionId': sessionId,
+    'elevenLabsVoiceId': elevenLabsVoice.voiceId,
+    'elevenLabsSpeed': elevenLabsSpeed,
+    'agentIds': agentIds,
+    'allowBadCertificate': allowBadCertificate,
+  };
 
   factory OpenClawInstance.fromJson(Map<String, dynamic> json) =>
       OpenClawInstance(
@@ -51,12 +51,14 @@ class OpenClawInstance {
         baseUrl: json['baseUrl'] as String,
         token: (json['token'] as String?) ?? '',
         sessionId: json['sessionId'] as String? ?? _uuid.v4(),
-        elevenLabsVoice: ElevenLabsVoice.fromVoiceId(
+        elevenLabsVoice:
+            ElevenLabsVoice.fromVoiceId(
               json['elevenLabsVoiceId'] as String? ?? '',
             ) ??
             ElevenLabsVoice.rachel,
         elevenLabsSpeed: (json['elevenLabsSpeed'] as num?)?.toDouble() ?? 1.1,
-        agentIds: (json['agentIds'] as List<dynamic>?)
+        agentIds:
+            (json['agentIds'] as List<dynamic>?)
                 ?.map((e) => e as String)
                 .toList() ??
             const ['main'],
@@ -73,18 +75,17 @@ class OpenClawInstance {
     double? elevenLabsSpeed,
     List<String>? agentIds,
     bool? allowBadCertificate,
-  }) =>
-      OpenClawInstance(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        baseUrl: baseUrl ?? this.baseUrl,
-        token: token ?? this.token,
-        sessionId: sessionId ?? this.sessionId,
-        elevenLabsVoice: elevenLabsVoice ?? this.elevenLabsVoice,
-        elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
-        agentIds: agentIds ?? this.agentIds,
-        allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
-      );
+  }) => OpenClawInstance(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    baseUrl: baseUrl ?? this.baseUrl,
+    token: token ?? this.token,
+    sessionId: sessionId ?? this.sessionId,
+    elevenLabsVoice: elevenLabsVoice ?? this.elevenLabsVoice,
+    elevenLabsSpeed: elevenLabsSpeed ?? this.elevenLabsSpeed,
+    agentIds: agentIds ?? this.agentIds,
+    allowBadCertificate: allowBadCertificate ?? this.allowBadCertificate,
+  );
 }
 
 enum LLMBackend { claude, openaiCompatible }
@@ -123,8 +124,8 @@ class Settings {
     this.openaiModelName = 'gpt-4o',
     this.systemPrompt =
         'You are a helpful voice assistant. Keep your responses concise and conversational, '
-            'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
-            'Speak naturally as if in a conversation.',
+        'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
+        'Speak naturally as if in a conversation.',
     this.ttsRate = 0.5,
     this.ttsPitch = 1.0,
     this.openclawInstances = const [],
@@ -196,10 +197,12 @@ class Settings {
     bool clearElevenLabsApiKey = false,
   }) {
     return Settings(
-      claudeApiKey:
-          clearClaudeApiKey ? null : (claudeApiKey ?? this.claudeApiKey),
-      openaiApiKey:
-          clearOpenaiApiKey ? null : (openaiApiKey ?? this.openaiApiKey),
+      claudeApiKey: clearClaudeApiKey
+          ? null
+          : (claudeApiKey ?? this.claudeApiKey),
+      openaiApiKey: clearOpenaiApiKey
+          ? null
+          : (openaiApiKey ?? this.openaiApiKey),
       backend: backend ?? this.backend,
       openaiBaseUrl: openaiBaseUrl ?? this.openaiBaseUrl,
       claudeModelName: claudeModelName ?? this.claudeModelName,

@@ -14,21 +14,21 @@ void main() {
       // Mock the FlutterTts method channel to prevent MissingPluginException
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
-        MethodCall methodCall,
-      ) async {
-        switch (methodCall.method) {
-          case 'speak':
-          case 'stop':
-          case 'setLanguage':
-          case 'setSpeechRate':
-          case 'setPitch':
-          case 'awaitSpeakCompletion':
-          case 'setSharedInstance':
-            return null;
-          default:
-            return null;
-        }
-      });
+            MethodCall methodCall,
+          ) async {
+            switch (methodCall.method) {
+              case 'speak':
+              case 'stop':
+              case 'setLanguage':
+              case 'setSpeechRate':
+              case 'setPitch':
+              case 'awaitSpeakCompletion':
+              case 'setSharedInstance':
+                return null;
+              default:
+                return null;
+            }
+          });
     });
 
     tearDown(() {
@@ -168,13 +168,13 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
-        MethodCall methodCall,
-      ) async {
-        if (methodCall.method == 'stop') {
-          stopCalled = true;
-        }
-        return null;
-      });
+            MethodCall methodCall,
+          ) async {
+            if (methodCall.method == 'stop') {
+              stopCalled = true;
+            }
+            return null;
+          });
 
       service.enqueue('Test sentence');
 
@@ -194,10 +194,10 @@ void main() {
       // Mock the FlutterTts method channel
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
-        MethodCall methodCall,
-      ) async {
-        return null;
-      });
+            MethodCall methodCall,
+          ) async {
+            return null;
+          });
     });
 
     tearDown(() {

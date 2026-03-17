@@ -20,10 +20,10 @@ void main() {
   // Mock FlutterTts method channel
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(const MethodChannel('flutter_tts'), (
-    MethodCall methodCall,
-  ) async {
-    return null;
-  });
+        MethodCall methodCall,
+      ) async {
+        return null;
+      });
 
   late ConversationProvider provider;
   late MockSpeechService mockSpeechService;
@@ -56,9 +56,11 @@ void main() {
         provider.toggleConversation();
 
         expect(provider.state, ConversationState.listening);
-        verify(mockSpeechService.startListening(
-          pauseDuration: anyNamed('pauseDuration'),
-        )).called(1);
+        verify(
+          mockSpeechService.startListening(
+            pauseDuration: anyNamed('pauseDuration'),
+          ),
+        ).called(1);
       },
     );
 
@@ -156,31 +158,33 @@ void main() {
       },
     );
 
-    test('interrupts when toggleConversation called during processing state',
-        () async {
-      final mockTts = MockTtsService();
-      when(mockTts.stop()).thenAnswer((_) async {});
-      when(mockTts.dispose()).thenAnswer((_) async {});
+    test(
+      'interrupts when toggleConversation called during processing state',
+      () async {
+        final mockTts = MockTtsService();
+        when(mockTts.stop()).thenAnswer((_) async {});
+        when(mockTts.dispose()).thenAnswer((_) async {});
 
-      // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
-      // Injecting ttsService in the constructor is enough for this unit test.
-      final processingProvider = ConversationProvider(
-        speechService: mockSpeechService,
-        settingsService: mockSettingsService,
-        ttsService: mockTts,
-      );
+        // Do NOT call initialize() — it replaces _ttsService via _rebuildTtsService.
+        // Injecting ttsService in the constructor is enough for this unit test.
+        final processingProvider = ConversationProvider(
+          speechService: mockSpeechService,
+          settingsService: mockSettingsService,
+          ttsService: mockTts,
+        );
 
-      // Force into processing state via the @visibleForTesting helper
-      processingProvider.forceStateForTesting(ConversationState.processing);
-      expect(processingProvider.state, ConversationState.processing);
+        // Force into processing state via the @visibleForTesting helper
+        processingProvider.forceStateForTesting(ConversationState.processing);
+        expect(processingProvider.state, ConversationState.processing);
 
-      // toggleConversation in processing state should call _interrupt → idle
-      processingProvider.toggleConversation();
+        // toggleConversation in processing state should call _interrupt → idle
+        processingProvider.toggleConversation();
 
-      expect(processingProvider.state, ConversationState.idle);
-      verify(mockTts.stop()).called(1);
-      verify(mockSpeechService.cancelListening()).called(1);
-    });
+        expect(processingProvider.state, ConversationState.idle);
+        verify(mockTts.stop()).called(1);
+        verify(mockSpeechService.cancelListening()).called(1);
+      },
+    );
 
     test('partial STT text is updated during listening', () async {
       await provider.initialize();
@@ -294,8 +298,7 @@ void main() {
   });
 
   group('ConversationProvider OpenClaw Model ID', () {
-    test('initializeForAgent with bare agentId sets up OpenAI service',
-        () async {
+    test('initializeForAgent with bare agentId sets up OpenAI service', () async {
       const openclawSettings = Settings(
         backend: LLMBackend.openaiCompatible,
         openclawInstances: [
@@ -369,10 +372,8 @@ void main() {
 
     test('loads conversational mode settings from SettingsService', () async {
       when(mockSettingsService.load()).thenAnswer(
-        (_) async => const Settings(
-          conversationalMode: true,
-          pauseDuration: 2.0,
-        ),
+        (_) async =>
+            const Settings(conversationalMode: true, pauseDuration: 2.0),
       );
 
       await provider.initialize();
@@ -382,17 +383,19 @@ void main() {
     });
 
     test('uses configurable pause duration when starting listening', () async {
-      when(mockSettingsService.load()).thenAnswer(
-        (_) async => const Settings(pauseDuration: 2.0),
-      );
+      when(
+        mockSettingsService.load(),
+      ).thenAnswer((_) async => const Settings(pauseDuration: 2.0));
 
       await provider.initialize();
       provider.toggleConversation();
 
       // Verify startListening was called (we can't easily verify the exact Duration parameter)
-      verify(mockSpeechService.startListening(
-        pauseDuration: const Duration(milliseconds: 2000),
-      )).called(1);
+      verify(
+        mockSpeechService.startListening(
+          pauseDuration: const Duration(milliseconds: 2000),
+        ),
+      ).called(1);
     });
 
     test('barge-in interrupts TTS when speaking and speech detected', () async {
@@ -400,9 +403,9 @@ void main() {
       when(mockTts.stop()).thenAnswer((_) async {});
       when(mockTts.dispose()).thenAnswer((_) async {});
 
-      when(mockSettingsService.load()).thenAnswer(
-        (_) async => const Settings(conversationalMode: true),
-      );
+      when(
+        mockSettingsService.load(),
+      ).thenAnswer((_) async => const Settings(conversationalMode: true));
 
       // Create provider and initialize with conversational mode
       final conversationalProvider = ConversationProvider(
@@ -418,9 +421,9 @@ void main() {
       expect(conversationalProvider.conversationalMode, true);
 
       // Capture the onPartialResult callback
-      final onPartialCallback = verify(
-        mockSpeechService.onPartialResult = captureAny,
-      ).captured.last as Function(String);
+      final onPartialCallback =
+          verify(mockSpeechService.onPartialResult = captureAny).captured.last
+              as Function(String);
 
       // Force into speaking state
       conversationalProvider.forceStateForTesting(ConversationState.speaking);
@@ -438,9 +441,9 @@ void main() {
       when(mockTts.stop()).thenAnswer((_) async {});
       when(mockTts.dispose()).thenAnswer((_) async {});
 
-      when(mockSettingsService.load()).thenAnswer(
-        (_) async => const Settings(conversationalMode: false),
-      );
+      when(
+        mockSettingsService.load(),
+      ).thenAnswer((_) async => const Settings(conversationalMode: false));
 
       final nonConversationalProvider = ConversationProvider(
         speechService: mockSpeechService,
@@ -456,9 +459,9 @@ void main() {
       );
 
       // Trigger partial speech result
-      final onPartialCallback = verify(
-        mockSpeechService.onPartialResult = captureAny,
-      ).captured.last as Function(String);
+      final onPartialCallback =
+          verify(mockSpeechService.onPartialResult = captureAny).captured.last
+              as Function(String);
       onPartialCallback('hello');
 
       // Should NOT interrupt - just update partial text
@@ -471,9 +474,9 @@ void main() {
       when(mockTts.stop()).thenAnswer((_) async {});
       when(mockTts.dispose()).thenAnswer((_) async {});
 
-      when(mockSettingsService.load()).thenAnswer(
-        (_) async => const Settings(conversationalMode: true),
-      );
+      when(
+        mockSettingsService.load(),
+      ).thenAnswer((_) async => const Settings(conversationalMode: true));
 
       final conversationalProvider = ConversationProvider(
         speechService: mockSpeechService,
@@ -485,9 +488,9 @@ void main() {
       conversationalProvider.forceStateForTesting(ConversationState.speaking);
 
       // Trigger partial speech with empty text
-      final onPartialCallback = verify(
-        mockSpeechService.onPartialResult = captureAny,
-      ).captured.last as Function(String);
+      final onPartialCallback =
+          verify(mockSpeechService.onPartialResult = captureAny).captured.last
+              as Function(String);
       onPartialCallback('   ');
 
       // Should NOT interrupt with empty text
