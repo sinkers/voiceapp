@@ -8,6 +8,8 @@ import '../models/settings.dart';
 import '../models/voice_config.dart';
 import '../providers/agent_switcher_provider.dart';
 
+const _uuid = Uuid();
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -1155,7 +1157,7 @@ class _ServerFormDialogState extends State<_ServerFormDialog> {
     final token = _tokenController.text.trim();
 
     final result = OpenClawServer(
-      id: widget.server?.id ?? const Uuid().v4(),
+      id: widget.server?.id ?? _uuid.v4(),
       name: name,
       baseUrl: url,
       token: token.isNotEmpty ? token : null,
@@ -1200,7 +1202,7 @@ class _ServerFormDialogState extends State<_ServerFormDialog> {
                   }
                   final uri = Uri.tryParse(v.trim());
                   if (uri == null || uri.scheme.isEmpty || uri.host.isEmpty) {
-                    return 'Enter a valid URL';
+                    return 'Enter a valid URL (e.g. http://10.0.0.1:18789/v1)';
                   }
                   return null;
                 },

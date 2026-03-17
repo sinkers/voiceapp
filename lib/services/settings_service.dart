@@ -432,6 +432,41 @@ class SettingsService {
     );
 
     await save(migratedSettings);
+
+    // Clean up old SharedPreferences keys
+    for (final key in [
+      "backend",
+      "claude_model_name",
+      "openai_model_name",
+      "openai_base_url",
+      "openclaw_instances",
+      "selected_instance_id",
+      "selected_agent_id",
+      "tts_provider",
+      "elevenlabs_voice_id",
+      "elevenlabs_model_id",
+      "openai_tts_voice",
+      "openai_tts_model",
+      "tts_rate",
+      "tts_pitch",
+    ]) {
+      await prefs.remove(key);
+    }
+    // Clean up old secure storage keys
+    for (final key in [
+      "claude_api_key",
+      "openai_api_key",
+      "elevenlabs_api_key"
+    ]) {
+      await _secureStorage.delete(key: key);
+    }
+    // Clean up old openclaw instance tokens (pattern: openclaw_token_<id>)
+    final allSecureKeys = await _secureStorage.readAll();
+    await Future.wait(
+      allSecureKeys.keys
+          .where((k) => k.startsWith("openclaw_token_"))
+          .map((k) => _secureStorage.delete(key: k)),
+    );
   }
 
   /// Loads default voice providers on first launch if voices list is empty
@@ -444,9 +479,12 @@ class SettingsService {
     await prefs.setBool(_keyDefaultConfigsLoaded, true);
 
     // Check if voices already exist
-    final existingVoices = prefs.getString(_keyVoices);
-    if (existingVoices != null) {
-      return 0;
+    final existingVoicesJson = prefs.getString(_keyVoices);
+    if (existingVoicesJson != null) {
+      final decoded = jsonDecode(existingVoicesJson) as List?;
+      if (decoded != null && decoded.isNotEmpty) {
+        return 0;
+      }
     }
 
     // Load default voices
