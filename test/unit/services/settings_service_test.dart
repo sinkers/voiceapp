@@ -426,6 +426,79 @@ void main() {
       loaded = await service.load();
       expect(loaded.openclawServers, isEmpty);
     });
+
+    test(
+        'orphaned secrets are cleaned up when agents/voices/servers are removed',
+        () async {
+      // Create 2 agents, 2 voices, and 2 servers
+      final agent1 = AgentConfig.claude(
+        name: 'Agent 1',
+        apiKey: 'agent-key-1',
+        voiceId: 'voice-1',
+      );
+      final agent2 = AgentConfig.openai(
+        name: 'Agent 2',
+        apiKey: 'agent-key-2',
+        voiceId: 'voice-1',
+      );
+      final voice1 = VoiceConfig.elevenlabs(
+        name: 'Voice 1',
+        voiceId: 'voice-id-1',
+        apiKey: 'voice-key-1',
+      );
+      final voice2 = VoiceConfig.openai(
+        name: 'Voice 2',
+        voiceId: 'alloy',
+        apiKey: 'voice-key-2',
+      );
+      final server1 = OpenClawServer(
+        id: 'server-1',
+        name: 'Server 1',
+        baseUrl: 'http://localhost:3000/v1',
+        token: 'server-token-1',
+      );
+      final server2 = OpenClawServer(
+        id: 'server-2',
+        name: 'Server 2',
+        baseUrl: 'http://localhost:4000/v1',
+        token: 'server-token-2',
+      );
+
+      // Save initial settings with all items
+      final settings1 = Settings(
+        agents: [agent1, agent2],
+        voices: [voice1, voice2],
+        openclawServers: [server1, server2],
+      );
+      await service.save(settings1);
+
+      // Verify all secrets are stored
+      const secureStorage = FlutterSecureStorage();
+      final allKeys1 = await secureStorage.readAll();
+      expect(allKeys1.containsKey('agent_api_key_${agent1.id}'), true);
+      expect(allKeys1.containsKey('agent_api_key_${agent2.id}'), true);
+      expect(allKeys1.containsKey('voice_api_key_${voice1.id}'), true);
+      expect(allKeys1.containsKey('voice_api_key_${voice2.id}'), true);
+      expect(allKeys1.containsKey('server_token_${server1.id}'), true);
+      expect(allKeys1.containsKey('server_token_${server2.id}'), true);
+
+      // Save again with one agent, one voice, and one server removed
+      final settings2 = Settings(
+        agents: [agent1],
+        voices: [voice1],
+        openclawServers: [server1],
+      );
+      await service.save(settings2);
+
+      // Verify orphaned secrets are removed
+      final allKeys2 = await secureStorage.readAll();
+      expect(allKeys2.containsKey('agent_api_key_${agent1.id}'), true);
+      expect(allKeys2.containsKey('agent_api_key_${agent2.id}'), false);
+      expect(allKeys2.containsKey('voice_api_key_${voice1.id}'), true);
+      expect(allKeys2.containsKey('voice_api_key_${voice2.id}'), false);
+      expect(allKeys2.containsKey('server_token_${server1.id}'), true);
+      expect(allKeys2.containsKey('server_token_${server2.id}'), false);
+    });
   });
 
   group('SettingsService Default Configs (Issue #32)', () {

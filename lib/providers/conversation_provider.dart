@@ -378,6 +378,12 @@ class ConversationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _useDefaultTts() async {
+    final svc = OnDeviceTtsService();
+    await svc.initialize(rate: 0.5, pitch: 1.0);
+    _ttsService = svc;
+  }
+
   Future<void> _rebuildTtsService() async {
     await _ttsService.dispose();
 
@@ -385,18 +391,14 @@ class ConversationProvider extends ChangeNotifier {
     final selectedAgent = _settings.selectedAgent;
     if (selectedAgent == null) {
       // No agent selected - use default on-device TTS
-      final svc = OnDeviceTtsService();
-      await svc.initialize(rate: 0.5, pitch: 1.0);
-      _ttsService = svc;
+      await _useDefaultTts();
       return;
     }
 
     final voice = _settings.getVoiceById(selectedAgent.voiceId);
     if (voice == null) {
       // Voice not found - fall back to on-device
-      final svc = OnDeviceTtsService();
-      await svc.initialize(rate: 0.5, pitch: 1.0);
-      _ttsService = svc;
+      await _useDefaultTts();
       return;
     }
 

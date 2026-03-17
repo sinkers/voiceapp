@@ -537,6 +537,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   late final TextEditingController _agentNameController;
   late String _selectedVoiceId;
   late String? _selectedServerId;
+  late List<OpenClawServer> _servers;
   bool _obscureApiKey = true;
   final _formKey = GlobalKey<FormState>();
   OpenClawServer? _newServer;
@@ -556,6 +557,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     _selectedVoiceId =
         widget.agent?.voiceId ?? widget.voices.firstOrNull?.id ?? 'system';
     _selectedServerId = widget.agent?.serverId;
+    _servers = widget.servers;
   }
 
   String _defaultModel() {
@@ -606,12 +608,6 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
           voiceId: _selectedVoiceId,
         );
       case AgentType.openclaw:
-        if (_selectedServerId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select a server')),
-          );
-          return;
-        }
         result = AgentConfig.openclaw(
           name: name,
           serverId: _selectedServerId!,
@@ -740,7 +736,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                     border: OutlineInputBorder(),
                   ),
                   items: [
-                    ...widget.servers.map(
+                    ..._servers.map(
                       (s) => DropdownMenuItem(value: s.id, child: Text(s.name)),
                     ),
                     const DropdownMenuItem(
@@ -755,8 +751,9 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                         builder: (_) => const _ServerFormDialog(),
                       );
                       if (newServer != null && mounted) {
-                        // Track new server to return to parent
+                        // Track new server to return to parent and add to local list
                         setState(() {
+                          _servers = [..._servers, newServer];
                           _newServer = newServer;
                           _selectedServerId = newServer.id;
                         });

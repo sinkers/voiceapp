@@ -198,6 +198,32 @@ class SettingsService {
           ),
     );
 
+    // Clean up orphaned secrets
+    final allKeys = await _secureStorage.readAll();
+    final validAgentKeys =
+        settings.agents.map((a) => _agentApiKeyKey(a.id)).toSet();
+    final validVoiceKeys =
+        settings.voices.map((v) => _voiceApiKeyKey(v.id)).toSet();
+    final validServerKeys =
+        settings.openclawServers.map((s) => _serverTokenKey(s.id)).toSet();
+    final validKeys = {
+      ...validAgentKeys,
+      ...validVoiceKeys,
+      ...validServerKeys
+    };
+
+    final orphanedKeys = allKeys.keys
+        .where((k) =>
+            (k.startsWith('agent_api_key_') ||
+                k.startsWith('voice_api_key_') ||
+                k.startsWith('server_token_')) &&
+            !validKeys.contains(k))
+        .toList();
+
+    await Future.wait(
+      orphanedKeys.map((k) => _secureStorage.delete(key: k)),
+    );
+
     // Save other settings
     if (settings.selectedAgentId != null) {
       await prefs.setString(_keySelectedAgentId, settings.selectedAgentId!);
