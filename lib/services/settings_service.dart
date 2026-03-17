@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/settings.dart';
@@ -25,14 +26,22 @@ class SettingsService {
   static const _keyElevenLabsModelId = 'elevenlabs_model_id';
   static const _keyOpenaiTtsVoice = 'openai_tts_voice';
   static const _keyOpenaiTtsModel = 'openai_tts_model';
+  static const _keyDefaultConfigsLoaded = 'default_configs_loaded';
 
   static String _openClawTokenKey(String instanceId) =>
       'openclaw_token_$instanceId';
 
   final _secureStorage = const FlutterSecureStorage();
 
+  /// Number of default configs loaded on last first launch (used for banner)
+  int? lastLoadedConfigCount;
+
   Future<Settings> load() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Load default configs on first launch if not already loaded
+    lastLoadedConfigCount = await _loadDefaultConfigsIfNeeded(prefs);
+
     final backendIndex = prefs.getInt(_keyBackend) ?? 0;
 
     final instancesJson = prefs.getString(_keyOpenclawInstances);
@@ -159,5 +168,73 @@ class SettingsService {
     await prefs.setString(_keyElevenLabsModelId, settings.elevenLabsModelId);
     await prefs.setString(_keyOpenaiTtsVoice, settings.openaiTtsVoice);
     await prefs.setString(_keyOpenaiTtsModel, settings.openaiTtsModel);
+  }
+
+  /// Loads default configs from assets on first launch if:
+  /// - Default configs have not been loaded before
+  /// - No existing configs are present
+  /// - The asset file exists and contains non-empty configs
+  /// Returns the number of configs loaded (0 if none loaded).
+  Future<int> _loadDefaultConfigsIfNeeded(SharedPreferences prefs) async {
+    // Check if default configs have already been loaded
+    if (prefs.getBool(_keyDefaultConfigsLoaded) == true) {
+      return 0;
+    }
+
+    // Mark as loaded upfront to avoid checking again
+    await prefs.setBool(_keyDefaultConfigsLoaded, true);
+
+    // Check if configs already exist (don't clobber)
+    if (prefs.getString(_keyOpenclawInstances) != null) {
+      return 0;
+    }
+
+    // Try to load default configs from asset
+    try {
+      final jsonString =
+          await rootBundle.loadString('assets/default_configs.json');
+      final json = jsonDecode(jsonString) as Map<String, dynamic>;
+
+      final openclawInstancesJson = json['openclaw_instances'] as List?;
+      final elevenLabsApiKey = json['elevenlabs_api_key'] as String?;
+
+      if (openclawInstancesJson == null || openclawInstancesJson.isEmpty) {
+        return 0;
+      }
+
+      final instances = openclawInstancesJson
+          .whereType<Map<String, dynamic>>()
+          .map(OpenClawInstance.fromJson)
+          .toList();
+
+      // Save instances to SharedPreferences (without tokens)
+      await prefs.setString(
+        _keyOpenclawInstances,
+        jsonEncode(instances.map((i) => i.toJson()).toList()),
+      );
+
+      // Save tokens to secure storage using functional approach
+      await Future.wait(
+        instances
+            .where((i) => i.token.isNotEmpty)
+            .map((i) => _secureStorage.write(
+                  key: _openClawTokenKey(i.id),
+                  value: i.token,
+                )),
+      );
+
+      // Load ElevenLabs API key
+      if (elevenLabsApiKey != null && elevenLabsApiKey.isNotEmpty) {
+        await _secureStorage.write(
+          key: _secureKeyElevenLabsApiKey,
+          value: elevenLabsApiKey,
+        );
+      }
+
+      return instances.length;
+    } catch (e) {
+      // Asset not found or invalid JSON - already marked as loaded
+      return 0;
+    }
   }
 }
