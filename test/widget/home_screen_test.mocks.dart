@@ -80,6 +80,17 @@ class MockConversationProvider extends _i1.Mock
           as bool);
 
   @override
+  bool get conversationalMode => (super.noSuchMethod(
+        Invocation.getter(#conversationalMode),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  double get pauseDuration =>
+      (super.noSuchMethod(Invocation.getter(#pauseDuration), returnValue: 0.0)
+          as double);
+
+  @override
   bool get hasListeners =>
       (super.noSuchMethod(Invocation.getter(#hasListeners), returnValue: false)
           as bool);
@@ -127,6 +138,14 @@ class MockConversationProvider extends _i1.Mock
   _i7.Future<void> updateSettings(_i2.Settings? newSettings) =>
       (super.noSuchMethod(
         Invocation.method(#updateSettings, [newSettings]),
+        returnValue: _i7.Future<void>.value(),
+        returnValueForMissingStub: _i7.Future<void>.value(),
+      ) as _i7.Future<void>);
+
+  @override
+  _i7.Future<void> applyAgentSettings(_i2.Settings? agentSettings) =>
+      (super.noSuchMethod(
+        Invocation.method(#applyAgentSettings, [agentSettings]),
         returnValue: _i7.Future<void>.value(),
         returnValueForMissingStub: _i7.Future<void>.value(),
       ) as _i7.Future<void>);

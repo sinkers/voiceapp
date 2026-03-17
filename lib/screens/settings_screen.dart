@@ -336,6 +336,69 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 12),
+
+          // Conversational mode
+          const _SectionHeader(title: 'Conversational Mode'),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Conversational mode'),
+                    subtitle: const Text(
+                      'Automatically listen after assistant finishes speaking',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    value: _draft.conversationalMode,
+                    onChanged: (v) => setState(
+                      () => _draft = _draft.copyWith(conversationalMode: v),
+                    ),
+                  ),
+                  if (_draft.conversationalMode) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Pause duration',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                        Text(
+                          '${_draft.pauseDuration.toStringAsFixed(1)}s',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: _draft.pauseDuration,
+                      min: 0.5,
+                      max: 3.0,
+                      divisions: 25,
+                      onChanged: (v) => setState(
+                        () => _draft = _draft.copyWith(pauseDuration: v),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Silence duration before ending your turn',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+
           const SizedBox(height: 24),
           FilledButton(onPressed: _save, child: const Text('Save Settings')),
           const SizedBox(height: 24),

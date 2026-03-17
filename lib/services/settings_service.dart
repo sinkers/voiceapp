@@ -15,7 +15,10 @@ class SettingsService {
   static const _keyOpenClawServers = 'openclaw_servers_v2';
   static const _keySelectedAgentId = 'selected_agent_id_v2';
   static const _keySystemPrompt = 'system_prompt';
+  static const _keyConversationalMode = 'conversational_mode';
+  static const _keyPauseDuration = 'pause_duration';
   static const _keyMigrated = 'migrated_to_v2';
+  static const _keyDefaultConfigsLoaded = 'default_configs_loaded';
 
   // Old keys (for migration)
   static const _keyBackend = 'backend';
@@ -32,7 +35,6 @@ class SettingsService {
   static const _keyElevenLabsModelId = 'elevenlabs_model_id';
   static const _keyOpenaiTtsVoice = 'openai_tts_voice';
   static const _keyOpenaiTtsModel = 'openai_tts_model';
-  static const _keyDefaultConfigsLoaded = 'default_configs_loaded';
 
   // Secure storage keys
   static const _secureKeyClaudeApiKey = 'claude_api_key';
@@ -136,6 +138,10 @@ class SettingsService {
           'You are a helpful voice assistant. Keep your responses concise and conversational, '
               'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
               'Speak naturally as if in a conversation.',
+      conversationalMode:
+          prefs.getBool(_keyConversationalMode) ?? kDefaultConversationalMode,
+      pauseDuration:
+          prefs.getDouble(_keyPauseDuration) ?? kDefaultPauseDuration,
     );
   }
 
@@ -203,6 +209,8 @@ class SettingsService {
       await prefs.remove(_keySelectedAgentId);
     }
     await prefs.setString(_keySystemPrompt, settings.systemPrompt);
+    await prefs.setBool(_keyConversationalMode, settings.conversationalMode);
+    await prefs.setDouble(_keyPauseDuration, settings.pauseDuration);
   }
 
   /// Migrates old settings structure to new agents + voices model
@@ -382,7 +390,13 @@ class SettingsService {
       selectedAgentId = agents.first.id;
     }
 
-    // 6. Save migrated settings
+    // 6. Preserve conversational mode settings
+    final conversationalMode =
+        prefs.getBool(_keyConversationalMode) ?? kDefaultConversationalMode;
+    final pauseDuration =
+        prefs.getDouble(_keyPauseDuration) ?? kDefaultPauseDuration;
+
+    // 7. Save migrated settings
     final migratedSettings = Settings(
       agents: agents,
       voices: voices,
@@ -392,6 +406,8 @@ class SettingsService {
           'You are a helpful voice assistant. Keep your responses concise and conversational, '
               'as they will be spoken aloud. Avoid markdown formatting, bullet points, or numbered lists. '
               'Speak naturally as if in a conversation.',
+      conversationalMode: conversationalMode,
+      pauseDuration: pauseDuration,
     );
 
     await save(migratedSettings);
@@ -435,8 +451,9 @@ class SettingsService {
 
     // Try to load ElevenLabs API key from asset
     try {
-      final jsonString =
-          await rootBundle.loadString('assets/default_configs.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/default_configs.json',
+      );
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       final elevenLabsApiKey = json['elevenlabs_api_key'] as String?;
 

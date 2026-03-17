@@ -50,6 +50,12 @@ class MockSpeechService extends _i1.Mock implements _i3.SpeechService {
           as bool);
 
   @override
+  bool get hasReportedStopForTesting => (super.noSuchMethod(
+        Invocation.getter(#hasReportedStopForTesting),
+        returnValue: false,
+      ) as bool);
+
+  @override
   set onFinalResult(dynamic Function(String)? value) => super.noSuchMethod(
         Invocation.setter(#onFinalResult, value),
         returnValueForMissingStub: null,
@@ -68,14 +74,25 @@ class MockSpeechService extends _i1.Mock implements _i3.SpeechService {
       );
 
   @override
+  void triggerStatusForTesting(String? status) => super.noSuchMethod(
+        Invocation.method(#triggerStatusForTesting, [status]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
   _i4.Future<bool> initialize() => (super.noSuchMethod(
         Invocation.method(#initialize, []),
         returnValue: _i4.Future<bool>.value(false),
       ) as _i4.Future<bool>);
 
   @override
-  _i4.Future<void> startListening() => (super.noSuchMethod(
-        Invocation.method(#startListening, []),
+  _i4.Future<void> startListening({
+    Duration? pauseDuration = const Duration(seconds: 4),
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(#startListening, [], {
+          #pauseDuration: pauseDuration,
+        }),
         returnValue: _i4.Future<void>.value(),
         returnValueForMissingStub: _i4.Future<void>.value(),
       ) as _i4.Future<void>);
