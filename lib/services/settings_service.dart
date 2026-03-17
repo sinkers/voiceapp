@@ -366,13 +366,20 @@ class SettingsService {
         final voiceName =
             elevenLabsVoice?.label ?? 'ElevenLabs ($instanceName)';
 
-        final instanceVoice = VoiceConfig.elevenlabs(
-          name: voiceName,
-          voiceId: elevenLabsVoiceId,
-          apiKey: elevenLabsApiKey,
-          modelId: 'eleven_turbo_v2_5',
+        // Reuse existing voice if one with the same provider+voiceId already exists
+        final existingVoice = voices.firstWhereOrNull(
+          (v) =>
+              v.provider == VoiceProvider.elevenlabs &&
+              v.voiceId == elevenLabsVoiceId,
         );
-        voices.add(instanceVoice);
+        final instanceVoice = existingVoice ??
+            VoiceConfig.elevenlabs(
+              name: voiceName,
+              voiceId: elevenLabsVoiceId,
+              apiKey: elevenLabsApiKey,
+              modelId: 'eleven_turbo_v2_5',
+            );
+        if (existingVoice == null) voices.add(instanceVoice);
 
         // Create agents for each agentId in this instance
         final agentIds = (instanceJson['agentIds'] as List?)

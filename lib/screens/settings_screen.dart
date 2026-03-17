@@ -1275,13 +1275,15 @@ class _AgentTile extends StatelessWidget {
 
     switch (agent.type) {
       case AgentType.claude:
-        return '${agent.model} • $voiceLabel';
       case AgentType.openai:
-        return '${agent.model} • $voiceLabel';
+        final modelPart = agent.model ?? '';
+        return modelPart.isNotEmpty ? '$modelPart • $voiceLabel' : voiceLabel;
       case AgentType.openclaw:
         final server = servers.firstWhereOrNull((s) => s.id == agent.serverId);
         final serverLabel = server?.name ?? 'Unknown server';
-        return '$serverLabel / ${agent.agentName} • $voiceLabel';
+        final agentNamePart = agent.agentName ?? '';
+        final agentPart = agentNamePart.isNotEmpty ? ' / $agentNamePart' : '';
+        return '$serverLabel$agentPart • $voiceLabel';
     }
   }
 
