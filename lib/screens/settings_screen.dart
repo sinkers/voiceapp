@@ -609,8 +609,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   }
 
   Future<void> _discoverAgents() async {
-    final server =
-        widget.servers.firstWhereOrNull((s) => s.id == _selectedServerId);
+    final server = _servers.firstWhereOrNull((s) => s.id == _selectedServerId);
     if (server == null) return;
     setState(() {
       _isDiscovering = true;
@@ -641,7 +640,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
       if (!mounted) return;
       setState(() {
         _isDiscovering = false;
-        _discoveryError = 'Could not connect to server. Check URL and token.';
+        _discoveryError = 'Failed to discover agents: $e';
       });
     }
   }
