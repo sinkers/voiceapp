@@ -19,6 +19,8 @@ void main() {
       expect(settings.selectedInstanceId, isNull);
       expect(settings.selectedAgentId, isNull);
       expect(settings.ttsProvider, TtsProvider.onDevice);
+      expect(settings.conversationalMode, false);
+      expect(settings.pauseDuration, 1.5);
     });
 
     test('copyWith preserves unchanged values', () {
@@ -95,6 +97,18 @@ void main() {
       );
 
       expect(openaiSettings.activeModelName, 'gpt-test');
+    });
+
+    test('copyWith updates conversational mode settings', () {
+      const original = Settings(conversationalMode: false, pauseDuration: 1.5);
+
+      final updated = original.copyWith(
+        conversationalMode: true,
+        pauseDuration: 2.5,
+      );
+
+      expect(updated.conversationalMode, true);
+      expect(updated.pauseDuration, 2.5);
     });
 
     test('selectedInstance returns correct instance by ID', () {

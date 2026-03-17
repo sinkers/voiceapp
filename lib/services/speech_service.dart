@@ -30,13 +30,15 @@ class SpeechService {
     return _isInitialized;
   }
 
-  Future<void> startListening() async {
+  Future<void> startListening({
+    Duration pauseDuration = const Duration(seconds: 4),
+  }) async {
     if (!_isInitialized) return;
     _hasReportedStop = false;
     await _stt.listen(
       onResult: _onResult,
       listenFor: const Duration(seconds: 55), // Stay under iOS 60s limit
-      pauseFor: const Duration(seconds: 4),
+      pauseFor: pauseDuration,
       listenOptions: SpeechListenOptions(
         listenMode: ListenMode.dictation,
         cancelOnError: false,

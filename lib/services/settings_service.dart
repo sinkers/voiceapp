@@ -26,6 +26,8 @@ class SettingsService {
   static const _keyElevenLabsModelId = 'elevenlabs_model_id';
   static const _keyOpenaiTtsVoice = 'openai_tts_voice';
   static const _keyOpenaiTtsModel = 'openai_tts_model';
+  static const _keyConversationalMode = 'conversational_mode';
+  static const _keyPauseDuration = 'pause_duration';
   static const _keyDefaultConfigsLoaded = 'default_configs_loaded';
 
   static String _openClawTokenKey(String instanceId) =>
@@ -92,6 +94,10 @@ class SettingsService {
           prefs.getString(_keyElevenLabsModelId) ?? 'eleven_turbo_v2_5',
       openaiTtsVoice: prefs.getString(_keyOpenaiTtsVoice) ?? 'alloy',
       openaiTtsModel: prefs.getString(_keyOpenaiTtsModel) ?? 'tts-1',
+      conversationalMode:
+          prefs.getBool(_keyConversationalMode) ?? kDefaultConversationalMode,
+      pauseDuration:
+          prefs.getDouble(_keyPauseDuration) ?? kDefaultPauseDuration,
     );
   }
 
@@ -168,6 +174,8 @@ class SettingsService {
     await prefs.setString(_keyElevenLabsModelId, settings.elevenLabsModelId);
     await prefs.setString(_keyOpenaiTtsVoice, settings.openaiTtsVoice);
     await prefs.setString(_keyOpenaiTtsModel, settings.openaiTtsModel);
+    await prefs.setBool(_keyConversationalMode, settings.conversationalMode);
+    await prefs.setDouble(_keyPauseDuration, settings.pauseDuration);
   }
 
   /// Loads default configs from assets on first launch if:
@@ -191,8 +199,9 @@ class SettingsService {
 
     // Try to load default configs from asset
     try {
-      final jsonString =
-          await rootBundle.loadString('assets/default_configs.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/default_configs.json',
+      );
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
 
       final openclawInstancesJson = json['openclaw_instances'] as List?;
@@ -215,12 +224,12 @@ class SettingsService {
 
       // Save tokens to secure storage using functional approach
       await Future.wait(
-        instances
-            .where((i) => i.token.isNotEmpty)
-            .map((i) => _secureStorage.write(
-                  key: _openClawTokenKey(i.id),
-                  value: i.token,
-                )),
+        instances.where((i) => i.token.isNotEmpty).map(
+              (i) => _secureStorage.write(
+                key: _openClawTokenKey(i.id),
+                value: i.token,
+              ),
+            ),
       );
 
       // Load ElevenLabs API key

@@ -24,6 +24,7 @@ class ConversationProvider extends ChangeNotifier {
   TtsService _ttsService;
   Settings _settings = const Settings();
   StreamSubscription<String>? _llmSubscription;
+  Completer<void>? _llmCompleter;
 
   ConversationState _state = ConversationState.idle;
   List<Message> _messages = [];
@@ -57,6 +58,10 @@ class ConversationProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   bool get initialized => _initialized;
   bool get hasApiKey => _llmService != null;
+  bool get conversationalMode => _settings.conversationalMode;
+  double get pauseDuration => _settings.pauseDuration;
+  Duration get _pauseDuration =>
+      Duration(milliseconds: (_settings.pauseDuration * 1000).round());
 
   Future<void> initialize() async {
     _settings = await _settingsService.load();
@@ -131,7 +136,7 @@ class ConversationProvider extends ChangeNotifier {
     _errorMessage = null;
     _partialSttText = '';
     _setState(ConversationState.listening);
-    _speechService.startListening();
+    _speechService.startListening(pauseDuration: _pauseDuration);
   }
 
   void _stopListeningAndProcess() {
@@ -140,6 +145,19 @@ class ConversationProvider extends ChangeNotifier {
   }
 
   void _onSpeechPartial(String text) {
+    // Barge-in: if in conversational mode and speaking, interrupt TTS
+    if (_settings.conversationalMode &&
+        _state == ConversationState.speaking &&
+        text.trim().isNotEmpty) {
+      // Stop TTS and LLM streaming, transition to listening.
+      // _setState calls notifyListeners, so we update _partialSttText first
+      // and return early to avoid a redundant notifyListeners call.
+      _stopOutputStreams();
+      _partialSttText = text;
+      _setState(ConversationState.listening);
+      return;
+    }
+
     _partialSttText = text;
     notifyListeners();
   }
@@ -219,6 +237,7 @@ class ConversationProvider extends ChangeNotifier {
 
       bool firstChunk = true;
       final completer = Completer<void>();
+      _llmCompleter = completer;
       _llmSubscription = stream.listen(
         (delta) {
           _streamingText += delta;
@@ -229,6 +248,10 @@ class ConversationProvider extends ChangeNotifier {
 
           if (firstChunk) {
             _setState(ConversationState.speaking);
+            // Start listening for barge-in in conversational mode
+            if (_settings.conversationalMode) {
+              _speechService.startListening(pauseDuration: _pauseDuration);
+            }
             firstChunk = false;
           } else {
             notifyListeners();
@@ -249,19 +272,36 @@ class ConversationProvider extends ChangeNotifier {
           _updateLastMessage(_streamingText, isComplete: true);
           notifyListeners();
 
-          completer.complete();
+          if (!completer.isCompleted) completer.complete();
         },
         onError: (e) {
-          completer.completeError(e);
+          if (!completer.isCompleted) completer.completeError(e);
         },
         cancelOnError: true,
       );
 
       await completer.future;
+      _llmCompleter = null;
+
+      // If barge-in or interrupt stopped us while we were streaming, bail out.
+      // _stopOutputStreams() already cancelled the subscription and stopped TTS;
+      // the new turn (or idle state) will be managed by the caller.
+      if (_state != ConversationState.speaking) {
+        return;
+      }
 
       // Wait for TTS to finish
       await _ttsService.waitUntilDone();
+
+      // In conversational mode, automatically start listening again
+      if (_settings.conversationalMode &&
+          _state == ConversationState.speaking) {
+        _speechService.cancelListening(); // cancel barge-in listener first
+        _startListening(); // fresh listening session
+        return;
+      }
     } catch (e) {
+      _llmCompleter = null;
       final errMsg = _friendlyError(e);
       _errorMessage = errMsg;
       if (_messages.isNotEmpty &&
@@ -304,10 +344,18 @@ class ConversationProvider extends ChangeNotifier {
     }
   }
 
-  void _interrupt() {
+  void _stopOutputStreams() {
     _llmSubscription?.cancel();
     _llmSubscription = null;
     _ttsService.stop();
+    // Unblock any _processWithLLM suspended at await completer.future so it
+    // can exit cleanly instead of leaking the suspended async frame.
+    _llmCompleter?.complete();
+    _llmCompleter = null;
+  }
+
+  void _interrupt() {
+    _stopOutputStreams();
     _speechService.cancelListening();
     _setState(ConversationState.idle);
   }
