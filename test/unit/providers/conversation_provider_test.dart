@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:voiceapp/models/agent_config.dart';
 import 'package:voiceapp/models/conversation_state.dart';
 import 'package:voiceapp/models/message.dart';
 import 'package:voiceapp/models/settings.dart';
@@ -218,14 +219,21 @@ void main() {
     test('updates settings and saves them', () async {
       await provider.initialize();
 
-      const newSettings = Settings(
-        claudeApiKey: 'test-key',
-        backend: LLMBackend.claude,
+      final newSettings = Settings(
+        agents: [
+          AgentConfig.claude(
+            name: 'Test Agent',
+            apiKey: 'test-key',
+            voiceId: 'voice-1',
+          ),
+        ],
+        selectedAgentId: null,
       );
 
       await provider.updateSettings(newSettings);
 
-      expect(provider.settings.claudeApiKey, 'test-key');
+      expect(provider.settings.agents.length, 1);
+      expect(provider.settings.agents.first.apiKey, 'test-key');
       verify(mockSettingsService.save(newSettings)).called(1);
     });
 
@@ -297,65 +305,83 @@ void main() {
     });
   });
 
-  group('ConversationProvider OpenClaw Model ID', () {
-    test('initializeForAgent with bare agentId sets up OpenAI service',
-        () async {
-      const openclawSettings = Settings(
-        backend: LLMBackend.openaiCompatible,
-        openclawInstances: [
-          OpenClawInstance(
-            id: 'inst-1',
-            name: 'Test Instance',
+  group('ConversationProvider OpenClaw Agent', () {
+    test('initializeForAgent with OpenClaw agent sets up service', () async {
+      final openclawSettings = Settings(
+        openclawServers: [
+          OpenClawServer(
+            id: 'server-1',
+            name: 'Test Server',
             baseUrl: 'http://localhost:3000/v1',
-            sessionId: 'session-1',
             token: 'test-token',
           ),
         ],
-        selectedInstanceId: 'inst-1',
-        selectedAgentId: 'main',
+        agents: [
+          AgentConfig.openclaw(
+            name: 'OpenClaw Test',
+            serverId: 'server-1',
+            agentName: 'main',
+            voiceId: 'voice-1',
+          ),
+        ],
+        selectedAgentId: null,
       );
 
-      await provider.initializeForAgent(openclawSettings);
+      await provider.initializeForAgent(
+        openclawSettings.copyWith(
+          selectedAgentId: openclawSettings.agents.first.id,
+        ),
+      );
 
       // Verify provider is initialized and has an API key (via the LLM service)
       expect(provider.initialized, true);
       expect(provider.hasApiKey, true);
     });
 
-    test('initializeForAgent with prefixed agentId works correctly', () async {
-      const openclawSettings = Settings(
-        backend: LLMBackend.openaiCompatible,
-        openclawInstances: [
-          OpenClawInstance(
-            id: 'inst-1',
-            name: 'Test Instance',
-            baseUrl: 'http://localhost:3000/v1',
-            sessionId: 'session-1',
-            token: 'test-token',
+    test('initializeForAgent with OpenAI agent works correctly', () async {
+      final openaiSettings = Settings(
+        agents: [
+          AgentConfig.openai(
+            name: 'OpenAI Test',
+            apiKey: 'test-openai-key',
+            voiceId: 'voice-1',
+            model: 'gpt-4o',
+            baseUrl: 'https://api.openai.com/v1',
           ),
         ],
-        selectedInstanceId: 'inst-1',
-        selectedAgentId: 'openclaw:elysse',
+        selectedAgentId: null,
       );
 
-      await provider.initializeForAgent(openclawSettings);
+      await provider.initializeForAgent(
+        openaiSettings.copyWith(
+          selectedAgentId: openaiSettings.agents.first.id,
+        ),
+      );
 
-      // Verify provider is initialized
       expect(provider.initialized, true);
       expect(provider.hasApiKey, true);
     });
 
     test(
-      'initializeForAgent without instance falls back to OpenAI key',
+      'initializeForAgent with Claude agent works correctly',
       () async {
-        const directOpenAISettings = Settings(
-          backend: LLMBackend.openaiCompatible,
-          openaiApiKey: 'test-openai-key',
-          openaiBaseUrl: 'https://api.openai.com/v1',
-          openaiModelName: 'gpt-4o',
+        final claudeSettings = Settings(
+          agents: [
+            AgentConfig.claude(
+              name: 'Claude Test',
+              apiKey: 'test-claude-key',
+              voiceId: 'voice-1',
+              model: 'claude-opus-4-6',
+            ),
+          ],
+          selectedAgentId: null,
         );
 
-        await provider.initializeForAgent(directOpenAISettings);
+        await provider.initializeForAgent(
+          claudeSettings.copyWith(
+            selectedAgentId: claudeSettings.agents.first.id,
+          ),
+        );
 
         expect(provider.initialized, true);
         expect(provider.hasApiKey, true);

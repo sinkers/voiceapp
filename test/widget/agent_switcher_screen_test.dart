@@ -17,24 +17,22 @@ void main() {
   late MockAgentSwitcherProvider mockSwitcher;
   late MockConversationProvider mockProvider;
 
-  const instance1 = OpenClawAgentConfig(
-    instance: OpenClawInstance(
-      id: 'inst-1',
-      name: 'Pi Home',
-      baseUrl: 'http://10.0.0.1/v1',
-      sessionId: 'ses-1',
-    ),
-    agentId: 'main',
+  const agent1 = AgentConfig(
+    id: 'agent-1',
+    name: 'main',
+    type: AgentType.openclaw,
+    serverId: 'server-1',
+    agentName: 'main',
+    voiceId: 'voice-1',
   );
 
-  const instance2 = OpenClawAgentConfig(
-    instance: OpenClawInstance(
-      id: 'inst-2',
-      name: 'Pi Work',
-      baseUrl: 'http://10.0.0.2/v1',
-      sessionId: 'ses-2',
-    ),
-    agentId: 'assistant',
+  const agent2 = AgentConfig(
+    id: 'agent-2',
+    name: 'assistant',
+    type: AgentType.openclaw,
+    serverId: 'server-2',
+    agentName: 'assistant',
+    voiceId: 'voice-1',
   );
 
   setUp(() {
@@ -42,7 +40,7 @@ void main() {
     mockProvider = MockConversationProvider();
 
     // AgentSwitcherProvider defaults
-    when(mockSwitcher.agents).thenReturn([instance1, instance2]);
+    when(mockSwitcher.agents).thenReturn([agent1, agent2]);
     when(mockSwitcher.currentIndex).thenReturn(0);
     when(mockSwitcher.initialized).thenReturn(true);
     when(mockSwitcher.settings).thenReturn(const Settings());
@@ -90,7 +88,7 @@ void main() {
       await tester.pumpWidget(createHomeScreen());
       await tester.pump();
 
-      // instance1.displayName == 'main' (the agentId)
+      // agent1.displayName == 'main' (the name)
       expect(find.text('main'), findsOneWidget);
     });
 
@@ -98,7 +96,7 @@ void main() {
       await tester.pumpWidget(createHomeScreen());
       await tester.pump();
 
-      expect(find.text('OpenClaw · Pi Home'), findsOneWidget);
+      expect(find.text('OpenClaw'), findsOneWidget);
     });
 
     testWidgets('shows page indicator dots', (tester) async {
@@ -125,14 +123,14 @@ void main() {
       tester,
     ) async {
       when(mockSwitcher.currentIndex).thenReturn(1);
-      when(mockSwitcher.agents).thenReturn([instance1, instance2]);
+      when(mockSwitcher.agents).thenReturn([agent1, agent2]);
 
       await tester.pumpWidget(createHomeScreen());
       // HomeScreen reads currentIndex=1 for PageController initialPage
       await tester.pump();
 
-      // The PageController initialPage=1, so instance2 page is first visible.
-      // instance2.displayName == 'assistant'
+      // The PageController initialPage=1, so agent2 page is first visible.
+      // agent2.displayName == 'assistant'
       expect(find.text('assistant'), findsOneWidget);
     });
   });

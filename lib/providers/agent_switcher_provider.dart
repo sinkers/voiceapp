@@ -31,7 +31,7 @@ class AgentSwitcherProvider extends ChangeNotifier {
         _speechService = speechService,
         _providerFactory = providerFactory;
 
-  List<AgentConfig> get agents => _settings.allAgents;
+  List<AgentConfig> get agents => _settings.agents;
   int get currentIndex => _currentIndex;
   Settings get settings => _settings;
   bool get initialized => _initialized;
@@ -51,22 +51,8 @@ class AgentSwitcherProvider extends ChangeNotifier {
   }
 
   void _initProviderForAgent(ConversationProvider provider, AgentConfig agent) {
-    // Build agent-specific settings by applying agent config to base settings
-    Settings agentSettings;
-    switch (agent) {
-      case OpenClawAgentConfig(:final instance, :final agentId):
-        agentSettings = _settings.copyWith(
-          backend: LLMBackend.openaiCompatible,
-          selectedInstanceId: instance.id,
-          selectedAgentId: agentId,
-        );
-      case DirectModelAgentConfig(:final backend):
-        agentSettings = _settings.copyWith(
-          backend: backend,
-          clearSelectedInstanceId: true,
-          clearSelectedAgentId: true,
-        );
-    }
+    // Build agent-specific settings by selecting the agent
+    final agentSettings = _settings.copyWith(selectedAgentId: agent.id);
     provider.initializeForAgent(agentSettings);
   }
 
@@ -90,21 +76,7 @@ class AgentSwitcherProvider extends ChangeNotifier {
     for (final entry in _providers.entries) {
       final agent = agents.firstWhereOrNull((a) => a.id == entry.key);
       if (agent != null) {
-        Settings agentSettings;
-        switch (agent) {
-          case OpenClawAgentConfig(:final instance, :final agentId):
-            agentSettings = _settings.copyWith(
-              backend: LLMBackend.openaiCompatible,
-              selectedInstanceId: instance.id,
-              selectedAgentId: agentId,
-            );
-          case DirectModelAgentConfig(:final backend):
-            agentSettings = _settings.copyWith(
-              backend: backend,
-              clearSelectedInstanceId: true,
-              clearSelectedAgentId: true,
-            );
-        }
+        final agentSettings = _settings.copyWith(selectedAgentId: agent.id);
         await entry.value.applyAgentSettings(agentSettings);
       }
     }
