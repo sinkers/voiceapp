@@ -16,6 +16,24 @@ class SettingsScreen extends StatefulWidget {
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
+
+  /// Exposed for testing only. Creates an _AgentFormDialog with optional
+  /// [openClawService] mock.
+  static Widget buildAgentFormDialogForTesting({
+    required AgentType agentType,
+    AgentConfig? agent,
+    required List<VoiceConfig> voices,
+    required List<OpenClawServer> servers,
+    OpenClawService? openClawService,
+  }) {
+    return _AgentFormDialog(
+      agentType: agentType,
+      agent: agent,
+      voices: voices,
+      servers: servers,
+      openClawService: openClawService,
+    );
+  }
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
@@ -519,12 +537,14 @@ class _AgentFormDialog extends StatefulWidget {
   final AgentConfig? agent;
   final List<VoiceConfig> voices;
   final List<OpenClawServer> servers;
+  final OpenClawService? openClawService;
 
   const _AgentFormDialog({
     required this.agentType,
     this.agent,
     required this.voices,
     required this.servers,
+    this.openClawService,
   });
 
   @override
@@ -545,7 +565,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   OpenClawServer? _newServer;
 
   // OpenClaw agent discovery state
-  final _openClawService = OpenClawService();
+  late final OpenClawService _openClawService;
   List<String>? _discoveredAgents;
   bool _isDiscovering = false;
   String? _discoveryError;
@@ -554,6 +574,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
   @override
   void initState() {
     super.initState();
+    _openClawService = widget.openClawService ?? OpenClawService();
     _nameController = TextEditingController(text: widget.agent?.name ?? '');
     _apiKeyController = TextEditingController(text: widget.agent?.apiKey ?? '');
     _modelController =
@@ -591,6 +612,14 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     });
     try {
       final agents = await _openClawService.fetchAgents(server);
+      if (agents.isEmpty) {
+        setState(() {
+          _isDiscovering = false;
+          _discoveryError =
+              'No agents found on this server. Check your server configuration.';
+        });
+        return;
+      }
       setState(() {
         _discoveredAgents = agents;
         _isDiscovering = false;
@@ -605,7 +634,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     } catch (e) {
       setState(() {
         _isDiscovering = false;
-        _discoveryError = "Could not connect to server. Check URL and token.";
+        _discoveryError = 'Could not connect to server. Check URL and token.';
       });
     }
   }
@@ -795,6 +824,10 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                           _servers = [..._servers, newServer];
                           _newServer = newServer;
                           _selectedServerId = newServer.id;
+                          // Reset discovery state when server changes
+                          _discoveredAgents = null;
+                          _discoveryError = null;
+                          _selectedAgentName = null;
                         });
                       }
                     } else {
@@ -803,6 +836,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
                         // Reset discovery state when server changes
                         _discoveredAgents = null;
                         _discoveryError = null;
+                        _selectedAgentName = null;
                       });
                     }
                   },
