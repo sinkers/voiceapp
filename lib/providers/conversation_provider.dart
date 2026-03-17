@@ -228,8 +228,8 @@ class ConversationProvider extends ChangeNotifier {
 
     try {
       final historyForLLM = _messages.sublist(0, _messages.length - 1);
-      // When routing through an OpenClaw agent, suppress the app system prompt
-      // so OpenClaw applies the agent's own persona (SOUL.md, IDENTITY.md, etc.)
+      // Suppress system prompt for OpenClaw agents — the server applies the
+      // agent's own persona (SOUL.md/IDENTITY.md). Sending our prompt would conflict.
       final selectedAgent = _settings.selectedAgent;
       final effectiveSystemPrompt = selectedAgent?.type == AgentType.openclaw
           ? ''

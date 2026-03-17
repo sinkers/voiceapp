@@ -9,7 +9,11 @@ class OpenClawServer {
   final String name;
   final String baseUrl;
   final String? token;
+
+  /// Allows self-signed TLS certificates (for development use).
   final bool allowBadCertificate;
+
+  /// Generated once per server and sent as x-openclaw-session-key header.
   final String sessionId;
 
   OpenClawServer({
@@ -65,9 +69,14 @@ class AgentConfig {
   final String? apiKey; // For Claude and OpenAI
   final String? model; // For Claude and OpenAI
   final String? baseUrl; // For OpenAI
-  final String? serverId; // For OpenClaw: reference to OpenClawServer
-  final String? agentName; // For OpenClaw: the agent name/ID on the server
-  final String voiceId; // Reference to VoiceConfig.id
+  /// For openclaw type: references OpenClawServer.id.
+  final String? serverId;
+
+  /// For openclaw type: the agent identifier within the server.
+  final String? agentName;
+
+  /// References VoiceConfig.id.
+  final String voiceId;
 
   const AgentConfig({
     required this.id,

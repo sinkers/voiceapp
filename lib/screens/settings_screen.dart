@@ -180,11 +180,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final agentsUsingVoice =
         _draft.agents.where((a) => a.voiceId == voice.id).toList();
     if (agentsUsingVoice.isNotEmpty) {
+      final names = agentsUsingVoice.map((a) => a.name).join(", ");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Cannot delete voice: used by ${agentsUsingVoice.length} agent(s)',
-          ),
+          content: Text('Cannot delete voice: used by $names'),
         ),
       );
       return;
