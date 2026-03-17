@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
+import '../models/agent_config.dart';
 import '../models/conversation_state.dart';
 import '../models/message.dart';
 import '../models/settings.dart';
+import '../models/voice_config.dart';
 import '../services/claude_service.dart';
 import '../services/elevenlabs_tts_service.dart';
 import '../services/llm_service.dart';
@@ -210,8 +212,9 @@ class ConversationProvider extends ChangeNotifier {
       final historyForLLM = _messages.sublist(0, _messages.length - 1);
       // When routing through an OpenClaw agent, suppress the app system prompt
       // so OpenClaw applies the agent's own persona (SOUL.md, IDENTITY.md, etc.)
+      final selectedAgent = _settings.selectedAgent;
       final effectiveSystemPrompt =
-          _settings.selectedInstance != null ? '' : _settings.systemPrompt;
+          selectedAgent?.type == AgentType.openclaw ? '' : _settings.systemPrompt;
       final stream = _llmService!.streamResponse(
         historyForLLM,
         effectiveSystemPrompt,
@@ -328,74 +331,98 @@ class ConversationProvider extends ChangeNotifier {
 
   Future<void> _rebuildTtsService() async {
     await _ttsService.dispose();
-    switch (_settings.ttsProvider) {
-      case TtsProvider.onDevice:
+
+    // Get voice config from selected agent
+    final selectedAgent = _settings.selectedAgent;
+    if (selectedAgent == null) {
+      // No agent selected - use default on-device TTS
+      final svc = OnDeviceTtsService();
+      await svc.initialize(rate: 0.5, pitch: 1.0);
+      _ttsService = svc;
+      return;
+    }
+
+    final voice = _settings.getVoiceById(selectedAgent.voiceId);
+    if (voice == null) {
+      // Voice not found - fall back to on-device
+      final svc = OnDeviceTtsService();
+      await svc.initialize(rate: 0.5, pitch: 1.0);
+      _ttsService = svc;
+      return;
+    }
+
+    switch (voice.provider) {
+      case VoiceProvider.onDevice:
         final svc = OnDeviceTtsService();
         await svc.initialize(
-          rate: _settings.ttsRate,
-          pitch: _settings.ttsPitch,
+          rate: voice.rate ?? 0.5,
+          pitch: voice.pitch ?? 1.0,
         );
         _ttsService = svc;
-      case TtsProvider.elevenlabs:
-        final String voiceId =
-            _settings.selectedInstance?.elevenLabsVoice.voiceId ??
-                _settings.elevenLabsVoiceId;
+      case VoiceProvider.elevenlabs:
         final svc = ElevenLabsTtsService(
-          apiKey: _settings.elevenLabsApiKey ?? '',
-          voiceId: voiceId,
-          modelId: _settings.elevenLabsModelId,
+          apiKey: voice.apiKey ?? '',
+          voiceId: voice.voiceId ?? '21m00Tcm4TlvDq8ikWAM',
+          modelId: voice.modelId ?? 'eleven_turbo_v2_5',
         );
         await svc.initialize();
         _ttsService = svc;
-      case TtsProvider.openai:
+      case VoiceProvider.openai:
         final svc = OpenAITtsService(
-          apiKey: _settings.openaiApiKey ?? '',
-          voice: _settings.openaiTtsVoice,
-          model: _settings.openaiTtsModel,
+          apiKey: voice.apiKey ?? '',
+          voice: voice.voiceId ?? 'alloy',
+          model: voice.modelId ?? 'tts-1',
         );
         await svc.initialize();
         _ttsService = svc;
     }
   }
 
-  /// Ensures agentId is prefixed for OpenClaw's model field (e.g. 'main' → 'openclaw:main').
-  String _toOpenClawModelId(String agentId) {
-    if (agentId.contains(':')) return agentId; // already prefixed
-    return 'openclaw:$agentId';
-  }
-
   void _rebuildLlmService() {
     _llmService?.dispose();
     _llmService = null;
 
-    if (_settings.backend == LLMBackend.claude) {
-      final key = _settings.claudeApiKey;
-      if (key != null && key.isNotEmpty) {
-        _llmService = ClaudeService(
-          apiKey: key,
-          model: _settings.claudeModelName,
-        );
-      }
-    } else {
-      final instance = _settings.selectedInstance;
-      if (instance != null) {
-        _llmService = OpenAIService(
-          apiKey: instance.token,
-          baseUrl: instance.baseUrl,
-          model: _toOpenClawModelId(_settings.selectedAgentId ?? 'main'),
-          customHeaders: {'x-openclaw-session-key': instance.sessionId},
-          allowBadCertificate: instance.allowBadCertificate,
-        );
-      } else {
-        final key = _settings.openaiApiKey;
-        if (key != null && key.isNotEmpty) {
-          _llmService = OpenAIService(
-            apiKey: key,
-            baseUrl: _settings.openaiBaseUrl,
-            model: _settings.openaiModelName,
+    final selectedAgent = _settings.selectedAgent;
+    if (selectedAgent == null) {
+      return;
+    }
+
+    switch (selectedAgent.type) {
+      case AgentType.claude:
+        final apiKey = selectedAgent.apiKey;
+        if (apiKey != null && apiKey.isNotEmpty) {
+          _llmService = ClaudeService(
+            apiKey: apiKey,
+            model: selectedAgent.model ?? 'claude-opus-4-6',
           );
         }
-      }
+      case AgentType.openai:
+        final apiKey = selectedAgent.apiKey;
+        if (apiKey != null && apiKey.isNotEmpty) {
+          _llmService = OpenAIService(
+            apiKey: apiKey,
+            baseUrl: selectedAgent.baseUrl ?? 'https://api.openai.com/v1',
+            model: selectedAgent.model ?? 'gpt-4o',
+          );
+        }
+      case AgentType.openclaw:
+        final server = _settings.getServerById(selectedAgent.serverId ?? '');
+        if (server != null) {
+          // Use agent name as model ID with openclaw: prefix
+          final modelId = selectedAgent.agentName != null && selectedAgent.agentName!.contains(':')
+              ? selectedAgent.agentName!
+              : 'openclaw:${selectedAgent.agentName ?? 'main'}';
+
+          _llmService = OpenAIService(
+            apiKey: server.token ?? '',
+            baseUrl: server.baseUrl,
+            model: modelId,
+            customHeaders: {
+              'x-openclaw-session-key': const Uuid().v4(), // Generate session ID
+            },
+            allowBadCertificate: server.allowBadCertificate,
+          );
+        }
     }
   }
 

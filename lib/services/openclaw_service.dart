@@ -1,26 +1,26 @@
 import 'dart:convert';
-import '../models/settings.dart';
+import '../models/agent_config.dart';
 import 'http_client_factory.dart';
 
 class OpenClawService {
-  Future<List<String>> fetchAgents(OpenClawInstance instance) async {
+  Future<List<String>> fetchAgents(OpenClawServer server) async {
     final client = buildHttpClient(
-      allowBadCertificate: instance.allowBadCertificate,
+      allowBadCertificate: server.allowBadCertificate,
     );
     try {
-      final base = instance.baseUrl.endsWith('/')
-          ? instance.baseUrl.substring(0, instance.baseUrl.length - 1)
-          : instance.baseUrl;
+      final base = server.baseUrl.endsWith('/')
+          ? server.baseUrl.substring(0, server.baseUrl.length - 1)
+          : server.baseUrl;
       final uri = Uri.parse('$base/models');
       final headers = <String, String>{};
-      if (instance.token.isNotEmpty) {
-        headers['Authorization'] = 'Bearer ${instance.token}';
+      if (server.token != null && server.token!.isNotEmpty) {
+        headers['Authorization'] = 'Bearer ${server.token}';
       }
       final response = await client
           .get(uri, headers: headers)
           .timeout(const Duration(seconds: 5));
 
-      if (response.statusCode != 200) return ['openclaw:main'];
+      if (response.statusCode != 200) return ['main'];
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final models =
@@ -30,13 +30,22 @@ class OpenClawService {
       final agents = models
           .map((m) => m['id'] as String? ?? '')
           .where((id) => id.startsWith('openclaw:') || id.startsWith('agent:'))
+          .map((id) {
+            // Strip openclaw: or agent: prefix to get just the agent name
+            if (id.startsWith('openclaw:')) {
+              return id.substring('openclaw:'.length);
+            } else if (id.startsWith('agent:')) {
+              return id.substring('agent:'.length);
+            }
+            return id;
+          })
           .toList();
 
-      return agents.isEmpty ? ['openclaw:main'] : agents;
+      return agents.isEmpty ? ['main'] : agents;
     } catch (e, s) {
       // ignore: avoid_print
       print('Failed to fetch OpenClaw agents: $e\n$s');
-      return ['openclaw:main'];
+      return ['main'];
     } finally {
       client.close();
     }

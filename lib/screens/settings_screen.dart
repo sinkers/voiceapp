@@ -1,10 +1,12 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import '../models/agent_config.dart';
 import '../models/elevenlabs_voice.dart';
 import '../models/settings.dart';
+import '../models/voice_config.dart';
 import '../providers/agent_switcher_provider.dart';
-import '../services/openclaw_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,18 +17,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late Settings _draft;
-  final _claudeKeyController = TextEditingController();
-  final _openaiKeyController = TextEditingController();
-  final _baseUrlController = TextEditingController();
-  final _claudeModelController = TextEditingController();
-  final _openaiModelController = TextEditingController();
   final _systemPromptController = TextEditingController();
-  final _elevenLabsKeyController = TextEditingController();
-  final _elevenLabsVoiceIdController = TextEditingController();
-  final _elevenLabsModelIdController = TextEditingController();
-  final _openClawService = OpenClawService();
-  List<String> _agents = [];
-  bool _loadingAgents = false;
   String _versionInfo = '';
 
   @override
@@ -34,22 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     final settings = context.read<AgentSwitcherProvider>().settings;
     _draft = settings;
-    _claudeKeyController.text = settings.claudeApiKey ?? '';
-    _openaiKeyController.text = settings.openaiApiKey ?? '';
-    _baseUrlController.text = settings.openaiBaseUrl;
-    _claudeModelController.text = settings.claudeModelName;
-    _openaiModelController.text = settings.openaiModelName;
     _systemPromptController.text = settings.systemPrompt;
-    _elevenLabsKeyController.text = settings.elevenLabsApiKey ?? '';
-    _elevenLabsVoiceIdController.text = settings.elevenLabsVoiceId;
-    _elevenLabsModelIdController.text = settings.elevenLabsModelId;
-
-    final selectedInstance = settings.selectedInstance;
-    if (selectedInstance != null) {
-      _loadingAgents = true;
-      _fetchAgentsForInstance(selectedInstance);
-    }
-
     _loadVersionInfo();
   }
 
@@ -62,165 +38,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _claudeKeyController.dispose();
-    _openaiKeyController.dispose();
-    _baseUrlController.dispose();
-    _claudeModelController.dispose();
-    _openaiModelController.dispose();
     _systemPromptController.dispose();
-    _elevenLabsKeyController.dispose();
-    _elevenLabsVoiceIdController.dispose();
-    _elevenLabsModelIdController.dispose();
     super.dispose();
   }
 
-  /// Updates [instance.agentIds] in the draft settings with [agents].
-  void _updateInstanceAgentIds(OpenClawInstance instance, List<String> agents) {
-    final updatedInstance = instance.copyWith(agentIds: agents);
-    final updatedInstances = _draft.openclawInstances
-        .map((i) => i.id == instance.id ? updatedInstance : i)
-        .toList();
-    _draft = _draft.copyWith(openclawInstances: updatedInstances);
-  }
-
-  Future<void> _fetchAgentsForInstance(OpenClawInstance instance) async {
-    final agents = await _openClawService.fetchAgents(instance);
-    if (!mounted) return;
-    setState(() {
-      _agents = agents;
-      _loadingAgents = false;
-      _updateInstanceAgentIds(instance, agents);
-      if (!agents.contains(_draft.selectedAgentId)) {
-        _draft = _draft.copyWith(
-          selectedAgentId: agents.isNotEmpty ? agents.first : null,
-        );
-      }
-    });
-  }
-
-  Future<void> _onInstanceSelected(String? id) async {
-    setState(() {
-      if (id == null) {
-        _draft = _draft.copyWith(
-          clearSelectedInstanceId: true,
-          clearSelectedAgentId: true,
-        );
-        _agents = [];
-        _loadingAgents = false;
-      } else {
-        _draft = _draft.copyWith(
-          selectedInstanceId: id,
-          clearSelectedAgentId: true,
-        );
-        _agents = [];
-        _loadingAgents = true;
-      }
-    });
-    if (id == null) return;
-    final instance = _draft.openclawInstances.firstWhere((i) => i.id == id);
-    await _fetchAgentsForInstance(instance);
-  }
-
-  Future<void> _addInstance() async {
-    final result = await showDialog<OpenClawInstance>(
-      context: context,
-      builder: (_) => const _InstanceFormDialog(),
-    );
-    if (result != null) {
-      setState(() {
-        _draft = _draft.copyWith(
-          openclawInstances: [..._draft.openclawInstances, result],
-        );
-      });
-    }
-  }
-
-  Future<void> _editInstance(OpenClawInstance instance) async {
-    final result = await showDialog<OpenClawInstance>(
-      context: context,
-      builder: (_) => _InstanceFormDialog(instance: instance),
-    );
-    if (result != null) {
-      setState(() {
-        final updated = _draft.openclawInstances
-            .map((i) => i.id == result.id ? result : i)
-            .toList();
-        _draft = _draft.copyWith(openclawInstances: updated);
-      });
-    }
-  }
-
-  void _deleteInstance(OpenClawInstance instance) {
-    final wasSelected = _draft.selectedInstanceId == instance.id;
-    setState(() {
-      final updated =
-          _draft.openclawInstances.where((i) => i.id != instance.id).toList();
-      _draft = _draft.copyWith(
-        openclawInstances: updated,
-        clearSelectedInstanceId: wasSelected,
-        clearSelectedAgentId: wasSelected,
-      );
-      if (wasSelected) _agents = [];
-    });
-  }
-
-  Future<void> _testInstance(OpenClawInstance instance) async {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        const SnackBar(
-          content: Text('Testing connection...'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    final agents = await _openClawService.fetchAgents(instance);
-    if (!mounted) return;
-    setState(() => _updateInstanceAgentIds(instance, agents));
-    final message = agents.length == 1 && agents.first == 'main'
-        ? 'Connected (no OpenClaw agents found, using fallback)'
-        : 'Found ${agents.length} agent(s): ${agents.join(', ')}';
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
-      );
-  }
-
   Future<void> _save() async {
-    final claudeKey = _claudeKeyController.text.trim();
-    final openaiKey = _openaiKeyController.text.trim();
-    final elevenLabsKey = _elevenLabsKeyController.text.trim();
-
     final newSettings = _draft.copyWith(
-      claudeApiKey: claudeKey.isNotEmpty ? claudeKey : null,
-      clearClaudeApiKey: claudeKey.isEmpty,
-      openaiApiKey: openaiKey.isNotEmpty ? openaiKey : null,
-      clearOpenaiApiKey: openaiKey.isEmpty,
-      openaiBaseUrl: _baseUrlController.text.trim().isNotEmpty
-          ? _baseUrlController.text.trim()
-          : 'https://api.openai.com/v1',
-      claudeModelName: _claudeModelController.text.trim().isNotEmpty
-          ? _claudeModelController.text.trim()
-          : 'claude-opus-4-6',
-      openaiModelName: _openaiModelController.text.trim().isNotEmpty
-          ? _openaiModelController.text.trim()
-          : 'gpt-4o',
       systemPrompt: _systemPromptController.text,
-      elevenLabsApiKey: elevenLabsKey.isNotEmpty ? elevenLabsKey : null,
-      clearElevenLabsApiKey: elevenLabsKey.isEmpty,
-      elevenLabsVoiceId: _elevenLabsVoiceIdController.text.trim().isNotEmpty
-          ? _elevenLabsVoiceIdController.text.trim()
-          : '21m00Tcm4TlvDq8ikWAM',
-      elevenLabsModelId: _elevenLabsModelIdController.text.trim().isNotEmpty
-          ? _elevenLabsModelIdController.text.trim()
-          : 'eleven_turbo_v2_5',
-      selectedInstanceId: _draft.selectedInstanceId,
-      selectedAgentId: _draft.selectedAgentId,
     );
-
     await context.read<AgentSwitcherProvider>().updateSettings(newSettings);
-
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -229,6 +55,168 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
+  }
+
+  // ============ Agent Management ============
+
+  Future<void> _addAgent() async {
+    final agentType = await showDialog<AgentType>(
+      context: context,
+      builder: (_) => const _AgentTypePickerDialog(),
+    );
+    if (agentType == null || !mounted) return;
+
+    final agent = await showDialog<AgentConfig>(
+      context: context,
+      builder: (_) => _AgentFormDialog(
+        agentType: agentType,
+        voices: _draft.voices,
+        servers: _draft.openclawServers,
+      ),
+    );
+
+    if (agent != null) {
+      setState(() {
+        _draft = _draft.copyWith(agents: [..._draft.agents, agent]);
+      });
+    }
+  }
+
+  Future<void> _editAgent(AgentConfig agent) async {
+    final result = await showDialog<AgentConfig>(
+      context: context,
+      builder: (_) => _AgentFormDialog(
+        agentType: agent.type,
+        agent: agent,
+        voices: _draft.voices,
+        servers: _draft.openclawServers,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        final updatedAgents =
+            _draft.agents.map((a) => a.id == result.id ? result : a).toList();
+        _draft = _draft.copyWith(agents: updatedAgents);
+      });
+    }
+  }
+
+  void _deleteAgent(AgentConfig agent) {
+    final wasSelected = _draft.selectedAgentId == agent.id;
+    setState(() {
+      final updatedAgents =
+          _draft.agents.where((a) => a.id != agent.id).toList();
+      _draft = _draft.copyWith(
+        agents: updatedAgents,
+        clearSelectedAgentId: wasSelected,
+      );
+    });
+  }
+
+  // ============ Voice Management ============
+
+  Future<void> _addVoice() async {
+    final voiceProvider = await showDialog<VoiceProvider>(
+      context: context,
+      builder: (_) => const _VoiceProviderPickerDialog(),
+    );
+    if (voiceProvider == null || !mounted) return;
+
+    final voice = await showDialog<VoiceConfig>(
+      context: context,
+      builder: (_) => _VoiceFormDialog(provider: voiceProvider),
+    );
+
+    if (voice != null) {
+      setState(() {
+        _draft = _draft.copyWith(voices: [..._draft.voices, voice]);
+      });
+    }
+  }
+
+  Future<void> _editVoice(VoiceConfig voice) async {
+    final result = await showDialog<VoiceConfig>(
+      context: context,
+      builder: (_) => _VoiceFormDialog(provider: voice.provider, voice: voice),
+    );
+
+    if (result != null) {
+      setState(() {
+        final updatedVoices =
+            _draft.voices.map((v) => v.id == result.id ? result : v).toList();
+        _draft = _draft.copyWith(voices: updatedVoices);
+      });
+    }
+  }
+
+  void _deleteVoice(VoiceConfig voice) {
+    // Don't allow deleting system voice
+    if (voice.id == 'system') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot delete system voice')),
+      );
+      return;
+    }
+
+    // Check if any agent is using this voice
+    final agentsUsingVoice =
+        _draft.agents.where((a) => a.voiceId == voice.id).toList();
+    if (agentsUsingVoice.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Cannot delete voice: used by ${agentsUsingVoice.length} agent(s)',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      final updatedVoices = _draft.voices.where((v) => v.id != voice.id).toList();
+      _draft = _draft.copyWith(voices: updatedVoices);
+    });
+  }
+
+  // ============ OpenClaw Server Management ============
+
+  Future<void> _editServer(OpenClawServer server) async {
+    final result = await showDialog<OpenClawServer>(
+      context: context,
+      builder: (_) => _ServerFormDialog(server: server),
+    );
+
+    if (result != null) {
+      setState(() {
+        final updatedServers = _draft.openclawServers
+            .map((s) => s.id == result.id ? result : s)
+            .toList();
+        _draft = _draft.copyWith(openclawServers: updatedServers);
+      });
+    }
+  }
+
+  void _deleteServer(OpenClawServer server) {
+    // Check if any agent is using this server
+    final agentsUsingServer =
+        _draft.agents.where((a) => a.serverId == server.id).toList();
+    if (agentsUsingServer.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Cannot delete server: used by ${agentsUsingServer.length} agent(s)',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      final updatedServers =
+          _draft.openclawServers.where((s) => s.id != server.id).toList();
+      _draft = _draft.copyWith(openclawServers: updatedServers);
+    });
   }
 
   @override
@@ -243,122 +231,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Backend selection
-          const _SectionHeader(title: 'AI Backend'),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Provider', style: theme.textTheme.labelMedium),
-                  const SizedBox(height: 8),
-                  SegmentedButton<LLMBackend>(
-                    segments: const [
-                      ButtonSegment(
-                        value: LLMBackend.claude,
-                        label: Text('Claude'),
-                        icon: Icon(Icons.auto_awesome),
-                      ),
-                      ButtonSegment(
-                        value: LLMBackend.openaiCompatible,
-                        label: Text('OpenAI / vLLM'),
-                        icon: Icon(Icons.settings_ethernet),
-                      ),
-                    ],
-                    selected: {_draft.backend},
-                    onSelectionChanged: (s) => setState(
-                      () => _draft = _draft.copyWith(backend: s.first),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Claude settings
-          if (_draft.backend == LLMBackend.claude) ...[
-            const _SectionHeader(title: 'Claude'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    _ApiKeyField(
-                      controller: _claudeKeyController,
-                      label: 'Anthropic API Key',
-                      hint: 'sk-ant-...',
-                    ),
-                    const SizedBox(height: 12),
-                    _TextField(
-                      controller: _claudeModelController,
-                      label: 'Model',
-                      hint: 'claude-opus-4-6',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-
-          // OpenAI-compatible settings
-          if (_draft.backend == LLMBackend.openaiCompatible) ...[
-            const _SectionHeader(title: 'OpenAI / Compatible API'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    _ApiKeyField(
-                      controller: _openaiKeyController,
-                      label: 'API Key',
-                      hint: 'sk-... or leave empty for local server',
-                    ),
-                    const SizedBox(height: 12),
-                    _TextField(
-                      controller: _baseUrlController,
-                      label: 'Base URL',
-                      hint: 'https://api.openai.com/v1',
-                    ),
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'For vLLM: http://localhost:8000/v1\n'
-                        'For OpenClaw: http://localhost:3000/v1',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _TextField(
-                      controller: _openaiModelController,
-                      label: 'Model',
-                      hint: 'gpt-4o or meta-llama/Meta-Llama-3-70B-Instruct',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 12),
-
-          // OpenClaw instances
-          const _SectionHeader(title: 'OpenClaw'),
+          // ============ Agents Section ============
+          const _SectionHeader(title: 'Agents'),
           Card(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_draft.openclawInstances.isEmpty)
+                if (_draft.agents.isEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     child: Text(
-                      'No instances configured',
+                      'No agents configured',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface.withValues(
                           alpha: 0.5,
@@ -366,46 +249,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                   ),
-                ..._draft.openclawInstances.map(
-                  (instance) => ListTile(
-                    title: Text(instance.name),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(instance.baseUrl, overflow: TextOverflow.ellipsis),
-                        Text(
-                          'Session: ${instance.sessionId.length > 8 ? instance.sessionId.substring(0, 8) : instance.sessionId}',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.cable_rounded, size: 20),
-                          tooltip: 'Test connection',
-                          onPressed: () => _testInstance(instance),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit_rounded, size: 20),
-                          tooltip: 'Edit',
-                          onPressed: () => _editInstance(instance),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline_rounded,
-                            size: 20,
-                          ),
-                          tooltip: 'Delete',
-                          onPressed: () => _deleteInstance(instance),
-                        ),
-                      ],
-                    ),
+                ..._draft.agents.map(
+                  (agent) => _AgentTile(
+                    agent: agent,
+                    voices: _draft.voices,
+                    servers: _draft.openclawServers,
+                    onEdit: () => _editAgent(agent),
+                    onDelete: () => _deleteAgent(agent),
                   ),
                 ),
                 Padding(
@@ -415,165 +265,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: TextButton.icon(
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add instance'),
-                    onPressed: _addInstance,
+                    label: const Text('Add Agent'),
+                    onPressed: _addAgent,
                   ),
                 ),
               ],
             ),
           ),
-
-          // Instance + agent selection
-          if (_draft.openclawInstances.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Active Instance', style: theme.textTheme.labelMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String?>(
-                      initialValue: _draft.selectedInstanceId,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text('None'),
-                        ),
-                        ..._draft.openclawInstances.map(
-                          (i) => DropdownMenuItem(
-                            value: i.id,
-                            child: Text(i.name),
-                          ),
-                        ),
-                      ],
-                      onChanged: _onInstanceSelected,
-                    ),
-                    if (_draft.selectedInstanceId != null) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Text('Agent', style: theme.textTheme.labelMedium),
-                          const Spacer(),
-                          if (_loadingAgents)
-                            const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          else
-                            IconButton(
-                              icon: const Icon(Icons.refresh, size: 18),
-                              tooltip: 'Refresh agent list',
-                              visualDensity: VisualDensity.compact,
-                              onPressed: () {
-                                final instance = _draft.openclawInstances
-                                    .where(
-                                      (i) => i.id == _draft.selectedInstanceId,
-                                    )
-                                    .firstOrNull;
-                                if (instance != null) {
-                                  _fetchAgentsForInstance(instance);
-                                }
-                              },
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Always show the agent list once we have at least one entry
-                      // (fallback 'main' counts). Empty only before first fetch.
-                      if (_agents.isNotEmpty)
-                        DropdownButtonFormField<String>(
-                          key: ValueKey(_agents.join(',')),
-                          initialValue: _agents.contains(_draft.selectedAgentId)
-                              ? _draft.selectedAgentId
-                              : _agents.first,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(),
-                            isDense: true,
-                          ),
-                          items: _agents
-                              .map(
-                                (a) =>
-                                    DropdownMenuItem(value: a, child: Text(a)),
-                              )
-                              .toList(),
-                          onChanged: (v) {
-                            if (v != null) {
-                              setState(
-                                () => _draft = _draft.copyWith(
-                                  selectedAgentId: v,
-                                ),
-                              );
-                            }
-                          },
-                        )
-                      else if (_loadingAgents)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            'Loading agents…',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        )
-                      else
-                        // No agents yet — prompt user to add one manually
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            'No agents found. Add one below.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      _AddAgentField(
-                        agents: _agents,
-                        onAdd: (agentId) {
-                          setState(() {
-                            if (!_agents.contains(agentId)) {
-                              _agents = [..._agents, agentId];
-                            }
-                            _draft = _draft.copyWith(selectedAgentId: agentId);
-                            // Persist added agent into the selected instance's agentIds
-                            final selId = _draft.selectedInstanceId;
-                            if (selId != null) {
-                              final updatedInstances =
-                                  _draft.openclawInstances.map((i) {
-                                if (i.id == selId &&
-                                    !i.agentIds.contains(agentId)) {
-                                  return i.copyWith(
-                                    agentIds: [...i.agentIds, agentId],
-                                  );
-                                }
-                                return i;
-                              }).toList();
-                              _draft = _draft.copyWith(
-                                openclawInstances: updatedInstances,
-                              );
-                            }
-                          });
-                        },
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-
           const SizedBox(height: 12),
 
-          // System prompt
+          // ============ Voice Providers Section ============
+          const _SectionHeader(title: 'Voice Providers'),
+          Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ..._draft.voices.map(
+                  (voice) => _VoiceTile(
+                    voice: voice,
+                    onEdit: () => _editVoice(voice),
+                    onDelete: () => _deleteVoice(voice),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 4,
+                  ),
+                  child: TextButton.icon(
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add Voice Provider'),
+                    onPressed: _addVoice,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ============ OpenClaw Servers Section ============
+          if (_draft.openclawServers.isNotEmpty) ...[
+            const _SectionHeader(title: 'OpenClaw Servers'),
+            Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: _draft.openclawServers.map(
+                  (server) => _ServerTile(
+                    server: server,
+                    onEdit: () => _editServer(server),
+                    onDelete: () => _deleteServer(server),
+                  ),
+                ).toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // ============ System Prompt ============
           const _SectionHeader(title: 'System Prompt'),
           Card(
             child: Padding(
@@ -588,235 +336,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Text-to-Speech section
-          const _SectionHeader(title: 'Text-to-Speech'),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Provider', style: theme.textTheme.labelMedium),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<TtsProvider>(
-                    initialValue: _draft.ttsProvider,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: TtsProvider.onDevice,
-                        child: Text('On-device'),
-                      ),
-                      DropdownMenuItem(
-                        value: TtsProvider.elevenlabs,
-                        child: Text('ElevenLabs'),
-                      ),
-                      DropdownMenuItem(
-                        value: TtsProvider.openai,
-                        child: Text('OpenAI'),
-                      ),
-                    ],
-                    onChanged: (v) {
-                      if (v != null) {
-                        setState(
-                          () => _draft = _draft.copyWith(ttsProvider: v),
-                        );
-                      }
-                    },
-                  ),
-                  if (_draft.ttsProvider == TtsProvider.elevenlabs) ...[
-                    const SizedBox(height: 12),
-                    _ApiKeyField(
-                      controller: _elevenLabsKeyController,
-                      label: 'ElevenLabs API Key',
-                      hint: 'Your ElevenLabs API key',
-                    ),
-                    const SizedBox(height: 12),
-                    Text('Voice', style: theme.textTheme.labelMedium),
-                    const SizedBox(height: 8),
-                    SegmentedButton<ElevenLabsVoice>(
-                      segments: const [
-                        ButtonSegment(
-                          value: ElevenLabsVoice.rachel,
-                          label: Text('Rachel'),
-                        ),
-                        ButtonSegment(
-                          value: ElevenLabsVoice.liam,
-                          label: Text('Liam'),
-                        ),
-                      ],
-                      selected: {
-                        ElevenLabsVoice.fromVoiceId(_draft.elevenLabsVoiceId) ??
-                            ElevenLabsVoice.rachel,
-                      },
-                      onSelectionChanged: (s) {
-                        final voiceId = s.first.voiceId;
-                        setState(() {
-                          _draft = _draft.copyWith(elevenLabsVoiceId: voiceId);
-                          _elevenLabsVoiceIdController.text = voiceId;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    _TextField(
-                      controller: _elevenLabsVoiceIdController,
-                      label: 'Custom Voice ID',
-                      hint: '21m00Tcm4TlvDq8ikWAM',
-                    ),
-                    const SizedBox(height: 4),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Use the buttons above or enter a custom voice ID',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _TextField(
-                      controller: _elevenLabsModelIdController,
-                      label: 'Model ID',
-                      hint: 'eleven_turbo_v2_5',
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Note: Per-agent voices can also be configured in OpenClaw instances above',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                  if (_draft.ttsProvider == TtsProvider.openai) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Uses your OpenAI API key above',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.6,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text('Voice', style: theme.textTheme.labelMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: _draft.openaiTtsVoice,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'alloy', child: Text('Alloy')),
-                        DropdownMenuItem(value: 'echo', child: Text('Echo')),
-                        DropdownMenuItem(value: 'fable', child: Text('Fable')),
-                        DropdownMenuItem(value: 'onyx', child: Text('Onyx')),
-                        DropdownMenuItem(value: 'nova', child: Text('Nova')),
-                        DropdownMenuItem(
-                          value: 'shimmer',
-                          child: Text('Shimmer'),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(
-                            () => _draft = _draft.copyWith(openaiTtsVoice: v),
-                          );
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 12),
-                    Text('Model', style: theme.textTheme.labelMedium),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      initialValue: _draft.openaiTtsModel,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'tts-1', child: Text('tts-1')),
-                        DropdownMenuItem(
-                          value: 'tts-1-hd',
-                          child: Text('tts-1-hd'),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(
-                            () => _draft = _draft.copyWith(openaiTtsModel: v),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          // Voice settings (on-device rate/pitch only)
-          if (_draft.ttsProvider == TtsProvider.onDevice) ...[
-            const SizedBox(height: 12),
-            const _SectionHeader(title: 'Voice'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Speech Rate', style: theme.textTheme.bodyMedium),
-                        Text(
-                          '${(_draft.ttsRate * 100).round()}%',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    Slider(
-                      value: _draft.ttsRate,
-                      min: 0.1,
-                      max: 1.0,
-                      divisions: 18,
-                      onChanged: (v) =>
-                          setState(() => _draft = _draft.copyWith(ttsRate: v)),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Pitch', style: theme.textTheme.bodyMedium),
-                        Text(
-                          '${(_draft.ttsPitch * 100).round()}%',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    Slider(
-                      value: _draft.ttsPitch,
-                      min: 0.5,
-                      max: 2.0,
-                      divisions: 30,
-                      onChanged: (v) =>
-                          setState(() => _draft = _draft.copyWith(ttsPitch: v)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-
           const SizedBox(height: 24),
           FilledButton(onPressed: _save, child: const Text('Save Settings')),
           const SizedBox(height: 24),
@@ -836,35 +355,678 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-class _InstanceFormDialog extends StatefulWidget {
-  final OpenClawInstance? instance;
+// ============ Dialogs ============
 
-  const _InstanceFormDialog({this.instance});
+class _AgentTypePickerDialog extends StatelessWidget {
+  const _AgentTypePickerDialog();
 
   @override
-  State<_InstanceFormDialog> createState() => _InstanceFormDialogState();
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Choose Agent Type'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.auto_awesome),
+            title: const Text('Claude'),
+            subtitle: const Text('Anthropic Claude models'),
+            onTap: () => Navigator.pop(context, AgentType.claude),
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_ethernet),
+            title: const Text('OpenAI'),
+            subtitle: const Text('OpenAI models'),
+            onTap: () => Navigator.pop(context, AgentType.openai),
+          ),
+          ListTile(
+            leading: const Icon(Icons.hub),
+            title: const Text('OpenClaw'),
+            subtitle: const Text('OpenClaw agent gateway'),
+            onTap: () => Navigator.pop(context, AgentType.openclaw),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _InstanceFormDialogState extends State<_InstanceFormDialog> {
-  static const _uuid = Uuid();
+class _VoiceProviderPickerDialog extends StatelessWidget {
+  const _VoiceProviderPickerDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Choose Voice Provider'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.record_voice_over),
+            title: const Text('ElevenLabs'),
+            subtitle: const Text('High-quality AI voices'),
+            onTap: () => Navigator.pop(context, VoiceProvider.elevenlabs),
+          ),
+          ListTile(
+            leading: const Icon(Icons.mic),
+            title: const Text('OpenAI TTS'),
+            subtitle: const Text('OpenAI text-to-speech'),
+            onTap: () => Navigator.pop(context, VoiceProvider.openai),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AgentFormDialog extends StatefulWidget {
+  final AgentType agentType;
+  final AgentConfig? agent;
+  final List<VoiceConfig> voices;
+  final List<OpenClawServer> servers;
+
+  const _AgentFormDialog({
+    required this.agentType,
+    this.agent,
+    required this.voices,
+    required this.servers,
+  });
+
+  @override
+  State<_AgentFormDialog> createState() => _AgentFormDialogState();
+}
+
+class _AgentFormDialogState extends State<_AgentFormDialog> {
   late final TextEditingController _nameController;
-  late final TextEditingController _urlController;
-  late final TextEditingController _tokenController;
-  bool _obscureToken = true;
+  late final TextEditingController _apiKeyController;
+  late final TextEditingController _modelController;
+  late final TextEditingController _baseUrlController;
+  late final TextEditingController _agentNameController;
+  late String _selectedVoiceId;
+  late String? _selectedServerId;
+  bool _obscureApiKey = true;
   final _formKey = GlobalKey<FormState>();
-  late bool _allowBadCertificate;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.instance?.name ?? '');
-    _urlController = TextEditingController(
-      text: widget.instance?.baseUrl ?? '',
+    _nameController = TextEditingController(text: widget.agent?.name ?? '');
+    _apiKeyController = TextEditingController(text: widget.agent?.apiKey ?? '');
+    _modelController = TextEditingController(text: widget.agent?.model ?? _defaultModel());
+    _baseUrlController = TextEditingController(
+      text: widget.agent?.baseUrl ?? 'https://api.openai.com/v1',
     );
-    _tokenController = TextEditingController(
-      text: widget.instance?.token ?? '',
+    _agentNameController = TextEditingController(text: widget.agent?.agentName ?? '');
+    _selectedVoiceId = widget.agent?.voiceId ?? widget.voices.firstOrNull?.id ?? 'system';
+    _selectedServerId = widget.agent?.serverId;
+  }
+
+  String _defaultModel() {
+    switch (widget.agentType) {
+      case AgentType.claude:
+        return 'claude-opus-4-6';
+      case AgentType.openai:
+        return 'gpt-4o';
+      case AgentType.openclaw:
+        return '';
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _apiKeyController.dispose();
+    _modelController.dispose();
+    _baseUrlController.dispose();
+    _agentNameController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final name = _nameController.text.trim();
+    final apiKey = _apiKeyController.text.trim();
+    final model = _modelController.text.trim();
+    final baseUrl = _baseUrlController.text.trim();
+    final agentName = _agentNameController.text.trim();
+
+    AgentConfig result;
+    switch (widget.agentType) {
+      case AgentType.claude:
+        result = AgentConfig.claude(
+          name: name,
+          apiKey: apiKey,
+          model: model.isNotEmpty ? model : 'claude-opus-4-6',
+          voiceId: _selectedVoiceId,
+        );
+      case AgentType.openai:
+        result = AgentConfig.openai(
+          name: name,
+          apiKey: apiKey,
+          model: model.isNotEmpty ? model : 'gpt-4o',
+          baseUrl: baseUrl.isNotEmpty ? baseUrl : 'https://api.openai.com/v1',
+          voiceId: _selectedVoiceId,
+        );
+      case AgentType.openclaw:
+        if (_selectedServerId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select a server')),
+          );
+          return;
+        }
+        result = AgentConfig.openclaw(
+          name: name,
+          serverId: _selectedServerId!,
+          agentName: agentName,
+          voiceId: _selectedVoiceId,
+        );
+    }
+
+    // Preserve ID if editing
+    if (widget.agent != null) {
+      result = result.copyWith(id: widget.agent!.id);
+    }
+
+    Navigator.pop(context, result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEdit = widget.agent != null;
+    return AlertDialog(
+      title: Text(isEdit ? 'Edit Agent' : 'Add Agent'),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  hintText: 'My Agent',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+              ),
+              const SizedBox(height: 12),
+
+              // Claude-specific fields
+              if (widget.agentType == AgentType.claude) ...[
+                TextFormField(
+                  controller: _apiKeyController,
+                  obscureText: _obscureApiKey,
+                  decoration: InputDecoration(
+                    labelText: 'API Key',
+                    hintText: 'sk-ant-...',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureApiKey = !_obscureApiKey),
+                    ),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty)
+                          ? 'API Key is required'
+                          : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _modelController,
+                  decoration: const InputDecoration(
+                    labelText: 'Model',
+                    hintText: 'claude-opus-4-6',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+
+              // OpenAI-specific fields
+              if (widget.agentType == AgentType.openai) ...[
+                TextFormField(
+                  controller: _apiKeyController,
+                  obscureText: _obscureApiKey,
+                  decoration: InputDecoration(
+                    labelText: 'API Key',
+                    hintText: 'sk-...',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureApiKey = !_obscureApiKey),
+                    ),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty)
+                          ? 'API Key is required'
+                          : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _baseUrlController,
+                  decoration: const InputDecoration(
+                    labelText: 'Base URL',
+                    hintText: 'https://api.openai.com/v1',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _modelController,
+                  decoration: const InputDecoration(
+                    labelText: 'Model',
+                    hintText: 'gpt-4o',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+
+              // OpenClaw-specific fields
+              if (widget.agentType == AgentType.openclaw) ...[
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedServerId,
+                  decoration: const InputDecoration(
+                    labelText: 'Server',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    ...widget.servers.map(
+                      (s) => DropdownMenuItem(value: s.id, child: Text(s.name)),
+                    ),
+                    const DropdownMenuItem(
+                      value: '__add_new__',
+                      child: Text('Add new server...'),
+                    ),
+                  ],
+                  onChanged: (v) async {
+                    if (v == '__add_new__') {
+                      final newServer = await showDialog<OpenClawServer>(
+                        context: context,
+                        builder: (_) => const _ServerFormDialog(),
+                      );
+                      if (newServer != null && mounted) {
+                        // Add server to parent's draft (tricky - need to notify parent)
+                        setState(() => _selectedServerId = newServer.id);
+                      }
+                    } else {
+                      setState(() => _selectedServerId = v);
+                    }
+                  },
+                  validator: (v) => v == null ? 'Server is required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _agentNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Agent Name',
+                    hintText: 'main',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty)
+                          ? 'Agent name is required'
+                          : null,
+                ),
+              ],
+
+              const SizedBox(height: 12),
+
+              // Voice picker
+              DropdownButtonFormField<String>(
+                initialValue: _selectedVoiceId,
+                decoration: const InputDecoration(
+                  labelText: 'Voice',
+                  border: OutlineInputBorder(),
+                ),
+                items: widget.voices.map((v) {
+                  return DropdownMenuItem(
+                    value: v.id,
+                    child: Text(v.name),
+                  );
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _selectedVoiceId = v);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _save,
+          child: Text(isEdit ? 'Save' : 'Add'),
+        ),
+      ],
     );
-    _allowBadCertificate = widget.instance?.allowBadCertificate ?? false;
+  }
+}
+
+class _VoiceFormDialog extends StatefulWidget {
+  final VoiceProvider provider;
+  final VoiceConfig? voice;
+
+  const _VoiceFormDialog({required this.provider, this.voice});
+
+  @override
+  State<_VoiceFormDialog> createState() => _VoiceFormDialogState();
+}
+
+class _VoiceFormDialogState extends State<_VoiceFormDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _apiKeyController;
+  late final TextEditingController _voiceIdController;
+  late final TextEditingController _modelIdController;
+  late double _rate;
+  late double _pitch;
+  bool _obscureApiKey = true;
+  String? _presetVoiceId;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.voice?.name ?? '');
+    _apiKeyController = TextEditingController(text: widget.voice?.apiKey ?? '');
+    _voiceIdController = TextEditingController(text: widget.voice?.voiceId ?? _defaultVoiceId());
+    _modelIdController = TextEditingController(text: widget.voice?.modelId ?? _defaultModelId());
+    _rate = widget.voice?.rate ?? 0.5;
+    _pitch = widget.voice?.pitch ?? 1.0;
+    _presetVoiceId = widget.voice?.voiceId;
+  }
+
+  String _defaultVoiceId() {
+    switch (widget.provider) {
+      case VoiceProvider.onDevice:
+        return '';
+      case VoiceProvider.elevenlabs:
+        return ElevenLabsVoice.rachel.voiceId;
+      case VoiceProvider.openai:
+        return 'alloy';
+    }
+  }
+
+  String _defaultModelId() {
+    switch (widget.provider) {
+      case VoiceProvider.onDevice:
+        return '';
+      case VoiceProvider.elevenlabs:
+        return 'eleven_turbo_v2_5';
+      case VoiceProvider.openai:
+        return 'tts-1';
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _apiKeyController.dispose();
+    _voiceIdController.dispose();
+    _modelIdController.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final name = _nameController.text.trim();
+
+    VoiceConfig result;
+    switch (widget.provider) {
+      case VoiceProvider.onDevice:
+        result = VoiceConfig.system(rate: _rate, pitch: _pitch);
+        result = result.copyWith(name: name.isNotEmpty ? name : 'System');
+      case VoiceProvider.elevenlabs:
+        final apiKey = _apiKeyController.text.trim();
+        final voiceId = _voiceIdController.text.trim();
+        final modelId = _modelIdController.text.trim();
+        result = VoiceConfig.elevenlabs(
+          name: name,
+          voiceId: voiceId.isNotEmpty ? voiceId : ElevenLabsVoice.rachel.voiceId,
+          apiKey: apiKey.isNotEmpty ? apiKey : null,
+          modelId: modelId.isNotEmpty ? modelId : 'eleven_turbo_v2_5',
+        );
+      case VoiceProvider.openai:
+        final apiKey = _apiKeyController.text.trim();
+        final voiceId = _voiceIdController.text.trim();
+        final modelId = _modelIdController.text.trim();
+        result = VoiceConfig.openai(
+          name: name,
+          voiceId: voiceId.isNotEmpty ? voiceId : 'alloy',
+          apiKey: apiKey.isNotEmpty ? apiKey : null,
+          modelId: modelId.isNotEmpty ? modelId : 'tts-1',
+        );
+    }
+
+    // Preserve ID if editing
+    if (widget.voice != null) {
+      result = result.copyWith(id: widget.voice!.id);
+    }
+
+    Navigator.pop(context, result);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEdit = widget.voice != null;
+    final theme = Theme.of(context);
+    return AlertDialog(
+      title: Text(isEdit ? 'Edit Voice' : 'Add Voice'),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  hintText: 'My Voice',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+              ),
+              const SizedBox(height: 12),
+
+              // On-device voice settings
+              if (widget.provider == VoiceProvider.onDevice) ...[
+                Text('Speech Rate', style: theme.textTheme.labelMedium),
+                Slider(
+                  value: _rate,
+                  min: 0.1,
+                  max: 1.0,
+                  divisions: 18,
+                  label: '${(_rate * 100).round()}%',
+                  onChanged: (v) => setState(() => _rate = v),
+                ),
+                const SizedBox(height: 8),
+                Text('Pitch', style: theme.textTheme.labelMedium),
+                Slider(
+                  value: _pitch,
+                  min: 0.5,
+                  max: 2.0,
+                  divisions: 30,
+                  label: '${(_pitch * 100).round()}%',
+                  onChanged: (v) => setState(() => _pitch = v),
+                ),
+              ],
+
+              // ElevenLabs voice settings
+              if (widget.provider == VoiceProvider.elevenlabs) ...[
+                TextFormField(
+                  controller: _apiKeyController,
+                  obscureText: _obscureApiKey,
+                  decoration: InputDecoration(
+                    labelText: 'API Key (optional)',
+                    hintText: 'Your ElevenLabs API key',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureApiKey = !_obscureApiKey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _presetVoiceId,
+                  decoration: const InputDecoration(
+                    labelText: 'Preset Voice',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    ...ElevenLabsVoice.values.map(
+                      (v) => DropdownMenuItem(value: v.voiceId, child: Text(v.label)),
+                    ),
+                    const DropdownMenuItem(
+                      value: '__custom__',
+                      child: Text('Custom...'),
+                    ),
+                  ],
+                  onChanged: (v) {
+                    setState(() {
+                      _presetVoiceId = v;
+                      if (v != null && v != '__custom__') {
+                        _voiceIdController.text = v;
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _voiceIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Voice ID',
+                    hintText: '21m00Tcm4TlvDq8ikWAM',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _modelIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Model ID',
+                    hintText: 'eleven_turbo_v2_5',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+
+              // OpenAI TTS voice settings
+              if (widget.provider == VoiceProvider.openai) ...[
+                TextFormField(
+                  controller: _apiKeyController,
+                  obscureText: _obscureApiKey,
+                  decoration: InputDecoration(
+                    labelText: 'API Key (optional)',
+                    hintText: 'Uses global OpenAI key if empty',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureApiKey ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setState(() => _obscureApiKey = !_obscureApiKey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _voiceIdController.text.isNotEmpty
+                      ? _voiceIdController.text
+                      : 'alloy',
+                  decoration: const InputDecoration(
+                    labelText: 'Voice',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'alloy', child: Text('Alloy')),
+                    DropdownMenuItem(value: 'echo', child: Text('Echo')),
+                    DropdownMenuItem(value: 'fable', child: Text('Fable')),
+                    DropdownMenuItem(value: 'onyx', child: Text('Onyx')),
+                    DropdownMenuItem(value: 'nova', child: Text('Nova')),
+                    DropdownMenuItem(value: 'shimmer', child: Text('Shimmer')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) _voiceIdController.text = v;
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _modelIdController.text.isNotEmpty
+                      ? _modelIdController.text
+                      : 'tts-1',
+                  decoration: const InputDecoration(
+                    labelText: 'Model',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'tts-1', child: Text('tts-1')),
+                    DropdownMenuItem(value: 'tts-1-hd', child: Text('tts-1-hd')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) _modelIdController.text = v;
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _save,
+          child: Text(isEdit ? 'Save' : 'Add'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ServerFormDialog extends StatefulWidget {
+  final OpenClawServer? server;
+
+  const _ServerFormDialog({this.server});
+
+  @override
+  State<_ServerFormDialog> createState() => _ServerFormDialogState();
+}
+
+class _ServerFormDialogState extends State<_ServerFormDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _urlController;
+  late final TextEditingController _tokenController;
+  bool _obscureToken = true;
+  late bool _allowBadCertificate;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.server?.name ?? '');
+    _urlController = TextEditingController(text: widget.server?.baseUrl ?? '');
+    _tokenController = TextEditingController(text: widget.server?.token ?? '');
+    _allowBadCertificate = widget.server?.allowBadCertificate ?? false;
   }
 
   @override
@@ -875,11 +1037,29 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
     super.dispose();
   }
 
+  void _save() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final name = _nameController.text.trim();
+    final url = _urlController.text.trim();
+    final token = _tokenController.text.trim();
+
+    final result = OpenClawServer(
+      id: widget.server?.id ?? const Uuid().v4(),
+      name: name,
+      baseUrl: url,
+      token: token.isNotEmpty ? token : null,
+      allowBadCertificate: _allowBadCertificate,
+    );
+
+    Navigator.pop(context, result);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isEdit = widget.instance != null;
+    final isEdit = widget.server != null;
     return AlertDialog(
-      title: Text(isEdit ? 'Edit Instance' : 'Add Instance'),
+      title: Text(isEdit ? 'Edit Server' : 'Add Server'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -910,7 +1090,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                   }
                   final uri = Uri.tryParse(v.trim());
                   if (uri == null || uri.scheme.isEmpty || uri.host.isEmpty) {
-                    return 'Enter a valid URL (e.g. http://10.0.0.1:18789/v1)';
+                    return 'Enter a valid URL';
                   }
                   return null;
                 },
@@ -920,8 +1100,8 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 controller: _tokenController,
                 obscureText: _obscureToken,
                 decoration: InputDecoration(
-                  labelText: 'Token',
-                  hintText: 'Bearer token (optional)',
+                  labelText: 'Token (optional)',
+                  hintText: 'Bearer token',
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -937,7 +1117,7 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Allow invalid TLS certificate'),
                 subtitle: const Text(
-                  'Use for self-signed certs on local/dev instances',
+                  'Use for self-signed certs',
                   style: TextStyle(fontSize: 12),
                 ),
                 value: _allowBadCertificate,
@@ -953,33 +1133,175 @@ class _InstanceFormDialogState extends State<_InstanceFormDialog> {
           child: const Text('Cancel'),
         ),
         FilledButton(
-          onPressed: () {
-            final name = _nameController.text.trim();
-            final url = _urlController.text.trim();
-            if (name.isEmpty || url.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Name and Base URL are required.'),
-                ),
-              );
-              return;
-            }
-            if (!_formKey.currentState!.validate()) return;
-            Navigator.pop(
-              context,
-              OpenClawInstance(
-                id: widget.instance?.id ?? _uuid.v4(),
-                name: name,
-                baseUrl: url,
-                token: _tokenController.text.trim(),
-                sessionId: widget.instance?.sessionId ?? _uuid.v4(),
-                allowBadCertificate: _allowBadCertificate,
-              ),
-            );
-          },
+          onPressed: _save,
           child: Text(isEdit ? 'Save' : 'Add'),
         ),
       ],
+    );
+  }
+}
+
+// ============ List Tiles ============
+
+class _AgentTile extends StatelessWidget {
+  final AgentConfig agent;
+  final List<VoiceConfig> voices;
+  final List<OpenClawServer> servers;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _AgentTile({
+    required this.agent,
+    required this.voices,
+    required this.servers,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  String _getSubtitle() {
+    final voice = voices.firstWhereOrNull((v) => v.id == agent.voiceId);
+    final voiceLabel = voice?.name ?? 'Unknown voice';
+
+    switch (agent.type) {
+      case AgentType.claude:
+        return '${agent.model} • $voiceLabel';
+      case AgentType.openai:
+        return '${agent.model} • $voiceLabel';
+      case AgentType.openclaw:
+        final server = servers.firstWhereOrNull((s) => s.id == agent.serverId);
+        final serverLabel = server?.name ?? 'Unknown server';
+        return '$serverLabel / ${agent.agentName} • $voiceLabel';
+    }
+  }
+
+  IconData _getIcon() {
+    switch (agent.type) {
+      case AgentType.claude:
+        return Icons.auto_awesome;
+      case AgentType.openai:
+        return Icons.settings_ethernet;
+      case AgentType.openclaw:
+        return Icons.hub;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(_getIcon()),
+      title: Text(agent.name),
+      subtitle: Text(_getSubtitle(), overflow: TextOverflow.ellipsis),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit_rounded, size: 20),
+            tooltip: 'Edit',
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, size: 20),
+            tooltip: 'Delete',
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VoiceTile extends StatelessWidget {
+  final VoiceConfig voice;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _VoiceTile({
+    required this.voice,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  String _getSubtitle() {
+    switch (voice.provider) {
+      case VoiceProvider.onDevice:
+        return 'On-device TTS';
+      case VoiceProvider.elevenlabs:
+        return 'ElevenLabs • ${voice.voiceId}';
+      case VoiceProvider.openai:
+        return 'OpenAI TTS • ${voice.voiceId}';
+    }
+  }
+
+  IconData _getIcon() {
+    switch (voice.provider) {
+      case VoiceProvider.onDevice:
+        return Icons.phone_android;
+      case VoiceProvider.elevenlabs:
+        return Icons.record_voice_over;
+      case VoiceProvider.openai:
+        return Icons.mic;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canDelete = voice.id != 'system';
+    return ListTile(
+      leading: Icon(_getIcon()),
+      title: Text(voice.name),
+      subtitle: Text(_getSubtitle(), overflow: TextOverflow.ellipsis),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit_rounded, size: 20),
+            tooltip: 'Edit',
+            onPressed: onEdit,
+          ),
+          if (canDelete)
+            IconButton(
+              icon: const Icon(Icons.delete_outline_rounded, size: 20),
+              tooltip: 'Delete',
+              onPressed: onDelete,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServerTile extends StatelessWidget {
+  final OpenClawServer server;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ServerTile({
+    required this.server,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.dns),
+      title: Text(server.name),
+      subtitle: Text(server.baseUrl, overflow: TextOverflow.ellipsis),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.edit_rounded, size: 20),
+            tooltip: 'Edit',
+            onPressed: onEdit,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, size: 20),
+            tooltip: 'Delete',
+            onPressed: onDelete,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -999,118 +1321,6 @@ class _SectionHeader extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
       ),
-    );
-  }
-}
-
-class _ApiKeyField extends StatefulWidget {
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-
-  const _ApiKeyField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-  });
-
-  @override
-  State<_ApiKeyField> createState() => _ApiKeyFieldState();
-}
-
-class _ApiKeyFieldState extends State<_ApiKeyField> {
-  bool _obscure = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller,
-      obscureText: _obscure,
-      decoration: InputDecoration(
-        labelText: widget.label,
-        hintText: widget.hint,
-        border: const OutlineInputBorder(),
-        suffixIcon: IconButton(
-          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-          onPressed: () => setState(() => _obscure = !_obscure),
-        ),
-      ),
-    );
-  }
-}
-
-class _TextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String label;
-  final String hint;
-
-  const _TextField({
-    required this.controller,
-    required this.label,
-    required this.hint,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-}
-
-class _AddAgentField extends StatefulWidget {
-  final List<String> agents;
-  final void Function(String agentId) onAdd;
-
-  const _AddAgentField({required this.agents, required this.onAdd});
-
-  @override
-  State<_AddAgentField> createState() => _AddAgentFieldState();
-}
-
-class _AddAgentFieldState extends State<_AddAgentField> {
-  final _controller = TextEditingController();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final value = _controller.text.trim();
-    if (value.isEmpty) return;
-    widget.onAdd(value);
-    _controller.clear();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              labelText: 'Add agent ID manually',
-              hintText: 'e.g. main, alex',
-              border: const OutlineInputBorder(),
-              isDense: true,
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.add),
-                tooltip: 'Add agent',
-                onPressed: _submit,
-              ),
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-        ),
-      ],
     );
   }
 }
