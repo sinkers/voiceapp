@@ -615,34 +615,33 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
       _isDiscovering = true;
       _discoveryError = null;
     });
+
+    List<String>? agents;
+    String? error;
     try {
-      final agents = await _openClawService.fetchAgents(server);
-      if (!mounted) return;
-      if (agents.isEmpty) {
-        setState(() {
-          _isDiscovering = false;
-          _discoveryError =
-              'No agents found on this server. Check your server configuration.';
-        });
-        return;
+      final result = await _openClawService.fetchAgents(server);
+      if (result.isEmpty) {
+        error =
+            'No agents found on this server. Check your server configuration.';
+      } else {
+        agents = result;
       }
-      setState(() {
-        _discoveredAgents = agents;
-        _isDiscovering = false;
-        // Auto-select current value if in list, else select first
-        if (_selectedAgentName == null ||
-            !agents.contains(_selectedAgentName)) {
-          _selectedAgentName = agents.first;
-          _agentNameController.text = agents.first;
-        }
-      });
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isDiscovering = false;
-        _discoveryError = 'Failed to discover agents: $e';
-      });
+      error = 'Failed to discover agents: $e';
     }
+
+    if (!mounted) return;
+    setState(() {
+      _isDiscovering = false;
+      _discoveryError = error;
+      _discoveredAgents = agents;
+      if (agents != null &&
+          (_selectedAgentName == null ||
+              !agents.contains(_selectedAgentName))) {
+        _selectedAgentName = agents.first;
+        _agentNameController.text = agents.first;
+      }
+    });
   }
 
   @override
