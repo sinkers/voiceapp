@@ -612,6 +612,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
     });
     try {
       final agents = await _openClawService.fetchAgents(server);
+      if (!mounted) return;
       if (agents.isEmpty) {
         setState(() {
           _isDiscovering = false;
@@ -632,6 +633,7 @@ class _AgentFormDialogState extends State<_AgentFormDialog> {
         }
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isDiscovering = false;
         _discoveryError = 'Could not connect to server. Check URL and token.';
